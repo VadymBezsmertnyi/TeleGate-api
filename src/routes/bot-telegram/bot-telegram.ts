@@ -12,6 +12,8 @@ const startBotTelegram = async () => {
     return;
   }
 
+  console.log("🔑 Токен знайдено, ініціалізація бота...");
+
   const bot = new Telegraf(token);
 
   bot.on("my_chat_member", async (ctx) => {
@@ -72,10 +74,28 @@ const startBotTelegram = async () => {
 
   try {
     console.log("🔄 Перезапуск бота...");
+
+    // Спробуємо спочатку отримати інформацію про бота
+    try {
+      const me = await bot.telegram.getMe();
+      console.log(`🤖 Інформація про бота: @${me.username} (ID: ${me.id})`);
+    } catch (tokenError) {
+      console.error("❌ Помилка токена або доступу до API:", tokenError);
+      return;
+    }
+
+    console.log("🚀 Запускаю бота...");
     await bot.launch();
-    console.log(`✅ Бот запущено. Username: @${bot.botInfo?.username}`);
-    process.once("SIGINT", () => bot.stop("SIGINT"));
-    process.once("SIGTERM", () => bot.stop("SIGTERM"));
+    console.log(`✅ Бот успішно запущено! Username: @${bot.botInfo?.username}`);
+
+    process.once("SIGINT", () => {
+      console.log("🛑 Отримано SIGINT, зупиняю бота...");
+      bot.stop("SIGINT");
+    });
+    process.once("SIGTERM", () => {
+      console.log("🛑 Отримано SIGTERM, зупиняю бота...");
+      bot.stop("SIGTERM");
+    });
   } catch (e) {
     console.error("❌ Помилка запуску бота:", e);
   }
