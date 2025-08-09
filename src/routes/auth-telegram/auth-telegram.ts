@@ -6,6 +6,7 @@ const router = Router();
 
 router.get("/me", async (req: Request, res: Response) => {
   try {
+    console.log("Fetching user data...", req.query);
   } catch (error) {
     console.error("Error fetching user data:", error);
     res.status(500).json({ error: "Internal Server Error" });
