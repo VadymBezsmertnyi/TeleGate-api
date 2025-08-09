@@ -44,14 +44,12 @@ export async function getTelegramUserInfo(
 
     return null;
   } catch (error: any) {
-    if (axios.isAxiosError(error)) {
+    if (axios.isAxiosError(error))
       if (
         error.response?.data?.error_code === 400 &&
         error.response?.data?.description?.includes("chat not found")
-      ) {
+      )
         return null;
-      }
-    }
 
     throw error;
   }
@@ -67,20 +65,14 @@ export async function validateTelegramToken(
 }> {
   try {
     const tokenParts = token.split("_");
-    if (tokenParts.length !== 3 || !tokenParts[0].startsWith("token")) {
+    if (tokenParts.length !== 3 || !tokenParts[0].startsWith("token"))
       return { isValid: false };
-    }
 
     const userId = parseInt(tokenParts[1]);
-    if (isNaN(userId)) {
-      return { isValid: false };
-    }
+    if (isNaN(userId)) return { isValid: false };
 
     const userData = await getTelegramUserInfo(userId, botToken);
-
-    if (!userData) {
-      return { isValid: false };
-    }
+    if (!userData) return { isValid: false };
 
     return {
       isValid: true,
