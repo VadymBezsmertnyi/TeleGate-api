@@ -14,6 +14,7 @@ import {
 
 // models
 import UserModel from "../users/users.model";
+import axios from "axios";
 
 dotenv.config();
 const router = Router();
@@ -277,6 +278,40 @@ router.post("/redirect", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error during POST redirect:", error);
     res.redirect(`telegate://auth-error?error=server_error`);
+  }
+});
+
+router.get("/user-groups/:userId", async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken)
+      return res.status(500).json({ error: "Bot token not configured" });
+    if (!userId || isNaN(parseInt(userId)))
+      return res.status(400).json({ error: "Invalid user ID" });
+
+    const telegramUserId = parseInt(userId);
+
+    const { data } = await axios(
+      `https://api.telegram.org/bot${botToken}/getChat?chat_id=${telegramUserId}`
+    );
+
+    if (!data || !data.ok)
+      return res.status(404).json({ error: "User not found" });
+
+    // Тут мав би бути код для отримання всіх груп де користувач є власником
+    // Але Telegram Bot API не дозволяє отримати список всіх груп користувача
+    // Потрібно зберігати інформацію про групи в базі даних при додаванні бота в групи
+
+    return res.json({
+      success: true,
+      message: "Feature requires bot to be added to groups to track them",
+      userInfo: data.result,
+      groups: [],
+    });
+  } catch (error) {
+    console.error("Error fetching user groups:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
