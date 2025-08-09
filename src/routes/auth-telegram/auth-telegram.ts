@@ -178,15 +178,15 @@ router.get("/redirect", async (req: Request, res: Response) => {
     } else {
       // No query params - return HTML page to process fragment
       console.log("No query params - returning fragment processor");
-      
+
       // Add cache-busting headers to prevent 304 responses
       res.set({
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'ETag': Math.random().toString() // Force different ETag each time
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+        ETag: Math.random().toString(), // Force different ETag each time
       });
-      
+
       res.send(`
         <html>
           <head>
