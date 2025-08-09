@@ -150,6 +150,20 @@ router.get("/close", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/debug", async (req: Request, res: Response) => {
+  try {
+    console.log("=== CLIENT DEBUG LOG ===");
+    console.log("Log:", req.body.log);
+    console.log("URL:", req.body.url);
+    console.log("Fragment:", req.body.fragment);
+    console.log("========================");
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error in debug endpoint:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/me", async (req: Request, res: Response) => {
   try {
     console.log("Fetching user data...", req.query);
@@ -206,15 +220,27 @@ router.get("/redirect", async (req: Request, res: Response) => {
               function addDebugLog(message) {
                 console.log(message);
                 debugDiv.innerHTML += message + '<br>';
+                // Also send to server for debugging
+                fetch('/api/auth-telegram/debug', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ log: message, url: window.location.href, fragment: window.location.hash })
+                }).catch(e => console.log('Debug log failed:', e));
               }
               
               addDebugLog("Fragment processor loaded at " + new Date().toISOString());
               addDebugLog("Full URL: " + window.location.href);
               addDebugLog("Fragment: " + window.location.hash);
+              addDebugLog("UserAgent: " + navigator.userAgent);
               
-              // Check for tgAuthResult in fragment
-              const fragment = window.location.hash;
-              if (fragment.includes('tgAuthResult=')) {
+              // Wait a bit for fragment to be available
+              setTimeout(() => {
+                addDebugLog("Checking fragment after delay...");
+                const fragment = window.location.hash;
+                addDebugLog("Fragment after delay: " + fragment);
+                
+                // Check for tgAuthResult in fragment
+                if (fragment.includes('tgAuthResult=')) {
                 try {
                   // Extract tgAuthResult data
                   const match = fragment.match(/tgAuthResult=([^&]+)/);
@@ -267,10 +293,11 @@ router.get("/redirect", async (req: Request, res: Response) => {
                   addDebugLog("ERROR processing auth data: " + error.message);
                   window.location.href = 'telegate://auth-error?error=parse_error';
                 }
-              } else {
-                addDebugLog("ERROR: No tgAuthResult in fragment");
-                window.location.href = 'telegate://auth-error?error=missing_fragment';
-              }
+                              } else {
+                  addDebugLog("ERROR: No tgAuthResult in fragment");
+                  window.location.href = 'telegate://auth-error?error=missing_fragment';
+                }
+              }, 500); // 500ms delay
             </script>
           </body>
         </html>
