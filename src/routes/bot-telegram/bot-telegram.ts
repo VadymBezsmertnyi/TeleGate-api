@@ -8,11 +8,11 @@ const startBotTelegram = async () => {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    console.error("❌ TELEGRAM_BOT_TOKEN не задано");
+    console.warn("❌ TELEGRAM_BOT_TOKEN не задано");
     return;
   }
 
-  console.log("🔑 Токен знайдено, ініціалізація бота...");
+  console.warn("🔑 Токен знайдено, ініціалізація бота...");
 
   const bot = new Telegraf(token);
 
@@ -25,7 +25,7 @@ const startBotTelegram = async () => {
       chat.type === "supergroup" ||
       chat.type === "channel"
     ) {
-      console.log("Назва:", chat.title);
+      console.warn("📝 Група:", chat.title);
       chat.title = chat.title || "Без назви";
       /* await saveChatToDB({
     chatId: chat.id,
@@ -34,7 +34,7 @@ const startBotTelegram = async () => {
     botStatus: newStatus,
   }); */
     } else {
-      console.log("Це приватний чат:", chat.username || chat.first_name);
+      console.warn("👤 Приватний чат:", chat.username || chat.first_name);
       /* await saveChatToDB({
     chatId: chat.id,
     title: chat.title,
@@ -48,7 +48,7 @@ const startBotTelegram = async () => {
   });
 
   bot.on("chat_member", async (ctx) => {
-    console.log("Новий статус чату:", ctx.update.chat_member);
+    console.warn("🔄 Зміна статусу в чаті:", ctx.update.chat_member);
     // new_chat_member.user — це сам користувач, якого торкнулась подія
     //await upsertUser(new_chat_member.user); // збережи user у БД
     /* await upsertMembership(
@@ -73,31 +73,36 @@ const startBotTelegram = async () => {
   });
 
   try {
-    console.log("🔄 Перезапуск бота...");
+    console.warn("🔄 Перезапуск бота...");
 
-    // Спробуємо спочатку отримати інформацію про бота
     try {
       const me = await bot.telegram.getMe();
-      console.log(`🤖 Інформація про бота: @${me.username} (ID: ${me.id})`);
+      console.warn(`🤖 Бот: @${me.username} (ID: ${me.id})`);
     } catch (tokenError) {
-      console.error("❌ Помилка токена або доступу до API:", tokenError);
+      console.warn("❌ Помилка токена:", tokenError);
       return;
     }
 
-    console.log("🚀 Запускаю бота...");
-    await bot.launch();
-    console.log(`✅ Бот успішно запущено! Username: @${bot.botInfo?.username}`);
+    console.warn("🚀 Запускаю бота...");
+
+    // Додаємо опції для локальної розробки
+    await bot.launch({
+      dropPendingUpdates: true,
+      allowedUpdates: ["message", "my_chat_member", "chat_member"],
+    });
+
+    console.warn(`✅ Бот запущено! @${bot.botInfo?.username}`);
 
     process.once("SIGINT", () => {
-      console.log("🛑 Отримано SIGINT, зупиняю бота...");
+      console.warn("🛑 Зупиняю бота (SIGINT)...");
       bot.stop("SIGINT");
     });
     process.once("SIGTERM", () => {
-      console.log("🛑 Отримано SIGTERM, зупиняю бота...");
+      console.warn("🛑 Зупиняю бота (SIGTERM)...");
       bot.stop("SIGTERM");
     });
   } catch (e) {
-    console.error("❌ Помилка запуску бота:", e);
+    console.warn("❌ Помилка запуску:", e);
   }
 };
 
