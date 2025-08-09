@@ -7,7 +7,6 @@ import {
   TELEGRAM_CLOSE_PAGE_HTML,
   TELEGRAM_CLOSE_PAGE_ERROR_HTML,
   TELEGRAM_FRAGMENT_PROCESSOR_HTML,
-  TELEGRAM_MISSING_PARAMS_HTML,
   TELEGRAM_SUCCESS_PAGE_HTML,
   TELEGRAM_ERROR_PAGE_HTML,
 } from "./auth-telegram.constants";
@@ -131,8 +130,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
 
-    if (id && auth_date && hash) {
-    } else {
+    if (!id || !auth_date || !hash) {
       res.set({
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
@@ -141,18 +139,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
       });
 
       res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
-      return;
-    }
-
-    if (!id || !auth_date || !hash) {
-      res
-        .status(400)
-        .send(
-          TELEGRAM_MISSING_PARAMS_HTML.replace(
-            "Received: {}",
-            `Received: ${JSON.stringify(req.query)}`
-          )
-        );
       return;
     }
 
@@ -257,21 +243,8 @@ router.post("/redirect", async (req: Request, res: Response) => {
     const params = { ...req.query, ...req.body };
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       params;
-    if (id && auth_date && hash) {
-    } else {
-      res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
-      return;
-    }
-
     if (!id || !auth_date || !hash) {
-      res
-        .status(400)
-        .send(
-          TELEGRAM_MISSING_PARAMS_HTML.replace(
-            "Received: {}",
-            `Received: ${JSON.stringify(params)}`
-          )
-        );
+      res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
       return;
     }
 

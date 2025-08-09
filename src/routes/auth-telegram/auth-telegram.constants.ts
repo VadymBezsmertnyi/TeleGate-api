@@ -159,20 +159,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
   </html>
 `;
 
-export const TELEGRAM_MISSING_PARAMS_HTML = `
-  <html>
-    <body>
-      <h1>Missing Parameters</h1>
-      <p>Required: id, auth_date, hash</p>
-      <script>
-        setTimeout(() => {
-          window.location.href = 'telegate://auth-error?error=missing_params';
-        }, 3000);
-      </script>
-    </body>
-  </html>
-`;
-
 export const TELEGRAM_SUCCESS_PAGE_HTML = `
   <html>
     <body style="font-family: Arial; padding: 40px; text-align: center;">
