@@ -7,6 +7,7 @@ import NodeCache from "node-cache";
 
 // routes
 import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
+import usersRouter from "./routes/users/users";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.listen(PORT, () => {
 });
 
 app.use("/api/auth-telegram", authTelegramRouter);
+app.use("/api/users", usersRouter);
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
