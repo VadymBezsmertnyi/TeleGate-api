@@ -38,7 +38,7 @@ app.listen(PORT, () => {
   return console.warn(`Express is listening at http://localhost:${PORT}`);
 });
 
-app.use("/auth-telegram", authTelegramRouter);
+app.use("/api/auth-telegram", authTelegramRouter);
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
