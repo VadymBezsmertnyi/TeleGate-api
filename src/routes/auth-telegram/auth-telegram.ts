@@ -322,113 +322,15 @@ router.get("/redirect", async (req: Request, res: Response) => {
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
     if (isMobile) {
-      // For mobile, create HTML page that triggers deep link
+      // For mobile WebView, redirect directly to deep link
       const deepLink = `telegate://auth-success?token=${token}&userId=${
         user.id
       }&username=${user.username || ""}&firstName=${
         user.first_name || ""
       }&lastName=${user.last_name || ""}&photoUrl=${user.photo_url || ""}`;
 
-      console.log("Creating redirect page for deep link:", deepLink);
-
-      res.send(`
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Authentication Success</title>
-          </head>
-          <body style="font-family: Arial; padding: 40px; text-align: center; background: #f0f8ff;">
-            <h1 style="color: #28a745;">✅ Authentication Successful!</h1>
-            <p style="font-size: 18px; margin: 20px 0;">Redirecting back to app...</p>
-            <div style="margin: 30px 0;">
-              <div style="
-                display: inline-block;
-                width: 40px;
-                height: 40px;
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #007bff;
-                border-radius: 50%;
-                animation: spin 2s linear infinite;
-              "></div>
-            </div>
-            <p style="color: #666; font-size: 14px;">
-              If not redirected automatically, the app should still receive the authentication.
-            </p>
-            
-            <style>
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            </style>
-            
-            <script>
-              console.log("🚀 Auth success page loaded");
-              console.log("🔗 Deep link:", "${deepLink}");
-              
-              // Multiple attempts to trigger deep link
-              function triggerDeepLink() {
-                try {
-                  // Method 1: Direct location change
-                  console.log("📱 Attempting location redirect...");
-                  window.location.href = "${deepLink}";
-                  
-                  // Method 2: Create invisible iframe
-                  setTimeout(() => {
-                    console.log("📱 Attempting iframe method...");
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = "${deepLink}";
-                    document.body.appendChild(iframe);
-                    
-                    // Clean up iframe after a moment
-                    setTimeout(() => {
-                      document.body.removeChild(iframe);
-                    }, 1000);
-                  }, 500);
-                  
-                  // Method 3: Create hidden link and click it
-                  setTimeout(() => {
-                    console.log("📱 Attempting link click method...");
-                    const link = document.createElement('a');
-                    link.href = "${deepLink}";
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }, 1000);
-                  
-                } catch (error) {
-                  console.error("❌ Error triggering deep link:", error);
-                }
-              }
-              
-              // Start trying immediately
-              triggerDeepLink();
-              
-              // Also try after page fully loads
-              window.addEventListener('load', () => {
-                console.log("📄 Page fully loaded, trying deep link again...");
-                setTimeout(triggerDeepLink, 100);
-              });
-              
-              // Keep trying every few seconds
-              let attempts = 0;
-              const interval = setInterval(() => {
-                attempts++;
-                console.log("🔄 Retry attempt:", attempts);
-                triggerDeepLink();
-                
-                if (attempts >= 5) {
-                  clearInterval(interval);
-                  console.log("⏰ Stopped retrying after 5 attempts");
-                }
-              }, 2000);
-            </script>
-          </body>
-        </html>
-      `);
+      console.log("Redirecting WebView to deep link:", deepLink);
+      res.redirect(deepLink);
     } else {
       // Browser - show success page with data
       res.send(`
@@ -461,47 +363,24 @@ router.get("/redirect", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error during redirect:", error);
 
-    // Create HTML page that triggers error deep link
-    const errorDeepLink = `telegate://auth-error?error=server_error`;
+    // For mobile WebView, redirect directly to error deep link
+    const userAgent = req.get("User-Agent") || "";
+    const isMobileError =
+      userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
-    res.send(`
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Authentication Error</title>
-        </head>
-        <body style="font-family: Arial; padding: 40px; text-align: center; background: #fff5f5;">
-          <h1 style="color: #dc3545;">❌ Authentication Failed</h1>
-          <p style="font-size: 18px; margin: 20px 0;">Returning to app...</p>
-          
-          <script>
-            console.log("🚀 Auth error page loaded");
-            console.log("🔗 Error deep link:", "${errorDeepLink}");
-            
-            function triggerErrorDeepLink() {
-              try {
-                window.location.href = "${errorDeepLink}";
-                
-                setTimeout(() => {
-                  const iframe = document.createElement('iframe');
-                  iframe.style.display = 'none';
-                  iframe.src = "${errorDeepLink}";
-                  document.body.appendChild(iframe);
-                  setTimeout(() => document.body.removeChild(iframe), 1000);
-                }, 500);
-                
-              } catch (error) {
-                console.error("❌ Error triggering error deep link:", error);
-              }
-            }
-            
-            triggerErrorDeepLink();
-            window.addEventListener('load', () => setTimeout(triggerErrorDeepLink, 100));
-          </script>
-        </body>
-      </html>
-    `);
+    if (isMobileError) {
+      res.redirect(`telegate://auth-error?error=server_error`);
+    } else {
+      res.send(`
+        <html>
+          <body style="font-family: Arial; padding: 40px; text-align: center; background: #fff5f5;">
+            <h1 style="color: #dc3545;">❌ Authentication Failed</h1>
+            <p>Server error occurred during authentication.</p>
+            <p><a href="javascript:history.back()">Go Back</a></p>
+          </body>
+        </html>
+      `);
+    }
     return;
   }
 });
