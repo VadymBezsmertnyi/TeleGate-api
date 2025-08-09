@@ -337,12 +337,15 @@ router.get("/redirect", async (req: Request, res: Response) => {
         })
       );
 
-      // For mobile, redirect to a special URL that includes auth data
-      // This will trigger WebBrowser to close and return the URL
-      const closeUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/api/auth-telegram/close?auth-data=${authData}`;
-      res.redirect(closeUrl);
+      // For mobile, redirect directly to deep link
+      const deepLink = `telegate://auth-success?token=${token}&userId=${
+        user.id
+      }&username=${user.username || ""}&firstName=${
+        user.first_name || ""
+      }&lastName=${user.last_name || ""}&photoUrl=${user.photo_url || ""}`;
+
+      console.log("Redirecting to deep link:", deepLink);
+      res.redirect(deepLink);
     } else {
       // Browser - show success page with data
       res.send(`
@@ -379,15 +382,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
     const isMobileError =
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
-    if (isMobileError) {
-      res.redirect(
-        `${req.protocol}://${req.get(
-          "host"
-        )}/api/auth-telegram/close?error=server_error`
-      );
-    } else {
-      res.redirect(`telegate://auth-error?error=server_error`);
-    }
+    res.redirect(`telegate://auth-error?error=server_error`);
     return;
   }
 });
