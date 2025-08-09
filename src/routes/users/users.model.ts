@@ -13,9 +13,6 @@ const userSM = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-userSM.index({ telegramId: 1 });
-userSM.index({ lastActivityAt: 1 });
-
 const UserModel = model("users", userSM);
 
 export default UserModel;
