@@ -40,15 +40,13 @@ router.get("/login", async (req: Request, res: Response) => {
   try {
     const botId =
       process.env.TELEGRAM_BOT_ID || process.env.EXPO_PUBLIC_TELEGRAM_BOT_ID;
-    const originDomain =
-      process.env.TELEGRAM_ORIGIN_DOMAIN ||
-      process.env.EXPO_PUBLIC_TELEGRAM_ORIGIN_DOMAIN;
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "TeleGateAuthBot";
     const redirectUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/auth-telegram/redirect`;
 
-    console.log("Redirecting to Telegram OAuth for bot:", botId);
-    console.log("Origin domain:", originDomain);
+    console.log("Preparing Telegram Login Widget for bot:", botId);
+    console.log("Bot username:", botUsername);
     console.log("Redirect URL:", redirectUrl);
 
     if (!botId) {
@@ -56,101 +54,83 @@ router.get("/login", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Bot ID not configured" });
     }
 
-    // Use Telegram Login Widget directly
-    console.log("Showing Telegram Login Widget for bot:", botId);
-
-    // Show clean login widget page
+    // Return minimal page that automatically initializes the Telegram Login Widget
     res.send(`
+      <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Telegram Login</title>
-          <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+              min-height: 100vh; 
+              background: #0088cc;
+              font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+            .container { 
+              text-align: center; 
+              background: white; 
+              padding: 30px; 
+              border-radius: 12px; 
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            .loading { 
+              color: #666; 
+              font-size: 16px; 
+              margin: 20px 0; 
+            }
+          </style>
         </head>
-        <body style="
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          margin: 0;
-          padding: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <div style="
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-          ">
-            <div style="margin-bottom: 30px;">
-              <h1 style="
-                margin: 0 0 10px 0;
-                color: #333;
-                font-size: 28px;
-                font-weight: 600;
-              ">🔐 Telegram Login</h1>
-              <p style="
-                margin: 0;
-                color: #666;
-                font-size: 16px;
-                line-height: 1.5;
-              ">Please authorize with your Telegram account to continue</p>
-            </div>
-            
-            <div style="margin: 30px 0;">
-              <script async src="https://telegram.org/js/telegram-widget.js?22"
-                data-telegram-login="${
-                  process.env.TELEGRAM_BOT_USERNAME || "TeleGateAuthBot"
-                }"
-                data-size="large"
-                data-auth-url="${redirectUrl}"
-                data-request-access="write">
-              </script>
-            </div>
-            
-            <div style="
-              margin-top: 30px;
-              padding: 15px;
-              background: #f8f9fa;
-              border-radius: 8px;
-              border-left: 4px solid #0088cc;
-            ">
-              <p style="
-                margin: 0;
-                font-size: 14px;
-                color: #666;
-                line-height: 1.4;
-              ">
-                <strong>Secure:</strong> This authorization is handled directly by Telegram
-              </p>
-            </div>
+        <body>
+          <div class="container">
+            <h2>🔐 Telegram Login</h2>
+            <div id="telegram-login-container"></div>
+            <div class="loading" id="loading">Loading...</div>
           </div>
           
+          <script async src="https://telegram.org/js/telegram-widget.js?22" 
+            data-telegram-login="${botUsername}"
+            data-size="large"
+            data-auth-url="${redirectUrl}"
+            data-request-access="write"
+            data-onauth="onTelegramAuth(user)"
+            data-corner-radius="8">
+          </script>
+          
           <script>
-            // Add loading state and error handling
-            document.addEventListener('DOMContentLoaded', function() {
-              console.log('Telegram Login Widget loaded');
+            function onTelegramAuth(user) {
+              console.log('Telegram auth success:', user);
+              document.getElementById('loading').textContent = 'Redirecting...';
               
-              // Check if widget loaded properly
-              setTimeout(() => {
-                const widget = document.querySelector('iframe[src*="oauth.telegram.org"]');
-                if (!widget) {
-                  console.warn('Login widget did not load properly');
-                }
-              }, 3000);
-            });
+              // Send auth data to our redirect endpoint
+              const params = new URLSearchParams();
+              Object.keys(user).forEach(key => {
+                if (user[key]) params.append(key, user[key].toString());
+              });
+              
+              window.location.href = '${redirectUrl}?' + params.toString();
+            }
+            
+            // Hide loading when widget loads
+            setTimeout(() => {
+              const widget = document.querySelector('iframe');
+              if (widget) {
+                document.getElementById('loading').style.display = 'none';
+              }
+            }, 2000);
           </script>
         </body>
       </html>
     `);
     return;
   } catch (error) {
-    console.error("Error redirecting to Telegram OAuth:", error);
+    console.error("Error preparing Telegram login:", error);
     res.status(500).json({ error: "Internal Server Error" });
     return;
   }
