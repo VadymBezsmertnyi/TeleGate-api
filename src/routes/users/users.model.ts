@@ -7,8 +7,6 @@ const userSM = new Schema({
   firstName: { type: String, default: null },
   lastName: { type: String, default: null },
   photoUrl: { type: String, default: null },
-  accessToken: { type: String, required: true, unique: true },
-  authDate: { type: Date, required: true },
   lastActivityAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
@@ -16,7 +14,6 @@ const userSM = new Schema({
 });
 
 userSM.index({ telegramId: 1 });
-userSM.index({ accessToken: 1 });
 userSM.index({ lastActivityAt: 1 });
 
 const UserModel = model("users", userSM);

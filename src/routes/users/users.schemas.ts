@@ -7,8 +7,6 @@ export const userSchema = z.object({
   firstName: z.string().nullable().default(null),
   lastName: z.string().nullable().default(null),
   photoUrl: z.string().nullable().default(null),
-  accessToken: z.string(),
-  authDate: z.date(),
   lastActivityAt: z.date(),
   isActive: z.boolean().default(true),
   createdAt: z.date(),
@@ -29,5 +27,4 @@ export const createUserSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   photoUrl: z.string().optional(),
-  authDate: z.date(),
 });
