@@ -36,6 +36,94 @@ function validateTelegramAuth(authData: any, botToken: string): boolean {
   return hmac === hash;
 }
 
+router.get("/login", async (req: Request, res: Response) => {
+  try {
+    const botUsername =
+      process.env.TELEGRAM_BOT_USERNAME ||
+      process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME ||
+      "TeleGateAuthBot";
+    const redirectUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/auth-telegram/redirect`;
+
+    console.log("Serving login page for bot:", botUsername);
+    console.log("Redirect URL:", redirectUrl);
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Telegram Login</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background-color: #f5f5f5;
+            }
+            .container {
+                text-align: center;
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            h1 {
+                margin-bottom: 30px;
+                color: #333;
+            }
+            .loading {
+                margin-top: 20px;
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Login with Telegram</h1>
+            <script 
+                async 
+                src="https://telegram.org/js/telegram-widget.js?22" 
+                data-telegram-login="${botUsername}"
+                data-size="large"
+                data-auth-url="${redirectUrl}"
+                data-request-access="write">
+            </script>
+            <div class="loading">
+                <p>Loading Telegram login widget...</p>
+            </div>
+        </div>
+        
+        <script>
+          // Add some debugging
+          console.log('Bot username:', '${botUsername}');
+          console.log('Redirect URL:', '${redirectUrl}');
+          
+          // Check if widget loaded
+          setTimeout(() => {
+            const widget = document.querySelector('iframe');
+            if (widget) {
+              document.querySelector('.loading').style.display = 'none';
+            }
+          }, 3000);
+        </script>
+    </body>
+    </html>
+    `;
+
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (error) {
+    console.error("Error serving login page:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/me", async (req: Request, res: Response) => {
   try {
     console.log("Fetching user data...", req.query);
