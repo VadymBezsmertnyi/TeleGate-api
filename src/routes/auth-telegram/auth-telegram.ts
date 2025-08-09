@@ -242,13 +242,48 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
     console.log("Authentication successful for user:", user.id);
 
-    res.redirect(
-      `telegate://auth-success?token=${token}&userId=${user.id}&username=${
-        user.username || ""
-      }&firstName=${user.first_name || ""}&lastName=${
-        user.last_name || ""
-      }&photoUrl=${user.photo_url || ""}`
-    );
+    // Check if request comes from mobile app or browser
+    const userAgent = req.get("User-Agent") || "";
+    const isMobile =
+      userAgent.includes("Expo") || userAgent.includes("TeleGate");
+
+    if (isMobile) {
+      // Mobile app - use deep link
+      res.redirect(
+        `telegate://auth-success?token=${token}&userId=${user.id}&username=${
+          user.username || ""
+        }&firstName=${user.first_name || ""}&lastName=${
+          user.last_name || ""
+        }&photoUrl=${user.photo_url || ""}`
+      );
+    } else {
+      // Browser - show success page with data
+      res.send(`
+        <html>
+          <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1>✅ Authentication Successful!</h1>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; margin: 20px 0;">
+              <h3>User Data:</h3>
+              <p><strong>ID:</strong> ${user.id}</p>
+              <p><strong>Username:</strong> ${user.username || "N/A"}</p>
+              <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
+              <p><strong>Token:</strong> ${token}</p>
+            </div>
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 10px;">
+              <p><strong>Deep Link (for mobile app):</strong></p>
+              <code style="word-break: break-all;">telegate://auth-success?token=${token}&userId=${
+        user.id
+      }&username=${user.username || ""}&firstName=${
+        user.first_name || ""
+      }&lastName=${user.last_name || ""}&photoUrl=${user.photo_url || ""}</code>
+            </div>
+            <p style="margin-top: 20px; color: #666;">
+              This page shows in browser. In mobile app, you would be redirected automatically.
+            </p>
+          </body>
+        </html>
+      `);
+    }
     return;
   } catch (error) {
     console.error("Error during redirect:", error);
