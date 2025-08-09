@@ -248,30 +248,51 @@ router.get("/redirect", async (req: Request, res: Response) => {
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
     if (isMobile) {
-      // Mobile app - use deep link with auto-close page
-      const deepLink = `telegate://auth-success?token=${token}&userId=${
-        user.id
-      }&username=${user.username || ""}&firstName=${
-        user.first_name || ""
-      }&lastName=${user.last_name || ""}&photoUrl=${user.photo_url || ""}`;
+      // Mobile app - close WebBrowser and return data via URL fragment
+      const authData = encodeURIComponent(
+        JSON.stringify({
+          success: true,
+          token,
+          user: {
+            id: user.id,
+            username: user.username,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            photo_url: user.photo_url,
+          },
+        })
+      );
 
       res.send(`
         <html>
           <body style="font-family: Arial; padding: 40px; text-align: center;">
-            <h1>✅ Success! Redirecting to app...</h1>
-            <p>Please wait while we redirect you back to the app.</p>
+            <h1>✅ Authentication Successful!</h1>
+            <p>Closing browser and returning to app...</p>
             <script>
-              // Try to redirect and close
+              // Update URL with auth data and close
               try {
-                window.location.href = "${deepLink}";
-                // Close the window after redirect attempt
+                // Add auth data to URL fragment so WebBrowser can read it
+                window.location.hash = 'auth-data=' + '${authData}';
+                
+                // Try different methods to close the browser
                 setTimeout(() => {
-                  window.close();
-                }, 1000);
+                  // Method 1: Try to close window
+                  if (window.close) {
+                    window.close();
+                  }
+                  
+                  // Method 2: Try to navigate back
+                  if (window.history && window.history.back) {
+                    window.history.back();
+                  }
+                  
+                  // Method 3: Try to navigate to a close URL
+                  window.location.href = 'about:blank';
+                }, 500);
+                
               } catch (e) {
-                console.log("Redirect attempt:", e);
-                // Fallback - show link
-                document.body.innerHTML += '<p><a href="${deepLink}">Click here if not redirected</a></p>';
+                console.log("Close attempt failed:", e);
+                document.body.innerHTML += '<p><button onclick="window.close()">Close Browser</button></p>';
               }
             </script>
           </body>
