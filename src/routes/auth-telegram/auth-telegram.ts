@@ -59,63 +59,94 @@ router.get("/login", async (req: Request, res: Response) => {
     // Ensure we have a valid origin domain
     const validOriginDomain = originDomain || req.get("host") || "localhost";
 
-    // Try Telegram Login Widget instead of OAuth
-    const loginWidgetUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(
-      validOriginDomain
-    )}&embed=1&request_access=write&return_to=${encodeURIComponent(
-      redirectUrl
-    )}`;
+    // Use Telegram Login Widget directly
+    console.log("Showing Telegram Login Widget for bot:", botId);
 
-    console.log("Telegram Login URL:", loginWidgetUrl);
-
-    // Show intermediate page with Telegram login widget
+    // Show clean login widget page
     res.send(`
       <html>
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Telegram Authorization</title>
+          <title>Telegram Login</title>
           <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
         </head>
-        <body style="font-family: Arial; padding: 40px; text-align: center; background: #f5f5f5;">
-          <h1>🔐 Telegram Authorization</h1>
-          <p>Please authorize with your Telegram account:</p>
-          
-          <div style="margin: 30px 0;">
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-              data-telegram-login="${
-                process.env.TELEGRAM_BOT_USERNAME || "TeleGateAuthBot"
-              }"
-              data-size="large"
-              data-auth-url="${redirectUrl}"
-              data-request-access="write">
-            </script>
-          </div>
-          
-          <div style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px;">
-            <p style="margin: 0; font-size: 14px; color: #1976d2;">
-              Click the button above to authorize with Telegram
-            </p>
-          </div>
-          
-          <div style="margin: 20px 0;">
-            <a href="${loginWidgetUrl}" style="
-              display: inline-block;
-              padding: 12px 24px;
-              background: #0088cc;
-              color: white;
-              text-decoration: none;
-              border-radius: 6px;
-              font-weight: bold;
-            ">Alternative: Direct OAuth</a>
+        <body style="
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          margin: 0;
+          padding: 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+          ">
+            <div style="margin-bottom: 30px;">
+              <h1 style="
+                margin: 0 0 10px 0;
+                color: #333;
+                font-size: 28px;
+                font-weight: 600;
+              ">🔐 Telegram Login</h1>
+              <p style="
+                margin: 0;
+                color: #666;
+                font-size: 16px;
+                line-height: 1.5;
+              ">Please authorize with your Telegram account to continue</p>
+            </div>
+            
+            <div style="margin: 30px 0;">
+              <script async src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="${
+                  process.env.TELEGRAM_BOT_USERNAME || "TeleGateAuthBot"
+                }"
+                data-size="large"
+                data-auth-url="${redirectUrl}"
+                data-request-access="write">
+              </script>
+            </div>
+            
+            <div style="
+              margin-top: 30px;
+              padding: 15px;
+              background: #f8f9fa;
+              border-radius: 8px;
+              border-left: 4px solid #0088cc;
+            ">
+              <p style="
+                margin: 0;
+                font-size: 14px;
+                color: #666;
+                line-height: 1.4;
+              ">
+                <strong>Secure:</strong> This authorization is handled directly by Telegram
+              </p>
+            </div>
           </div>
           
           <script>
-            // Auto-redirect to OAuth if widget fails
-            setTimeout(() => {
-              console.log("Widget timeout - redirecting to OAuth");
-              window.location.href = "${loginWidgetUrl}";
-            }, 10000);
+            // Add loading state and error handling
+            document.addEventListener('DOMContentLoaded', function() {
+              console.log('Telegram Login Widget loaded');
+              
+              // Check if widget loaded properly
+              setTimeout(() => {
+                const widget = document.querySelector('iframe[src*="oauth.telegram.org"]');
+                if (!widget) {
+                  console.warn('Login widget did not load properly');
+                }
+              }, 3000);
+            });
           </script>
         </body>
       </html>
