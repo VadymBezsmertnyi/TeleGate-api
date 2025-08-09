@@ -374,7 +374,11 @@ router.get("/redirect", async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error("Error during redirect:", error);
-    if (isMobile) {
+    // Check if mobile again since isMobile is not accessible here
+    const userAgent = req.get("User-Agent") || "";
+    const isMobileError = userAgent.includes("Expo") || userAgent.includes("TeleGate");
+    
+    if (isMobileError) {
       res.redirect(
         `${req.protocol}://${req.get(
           "host"
