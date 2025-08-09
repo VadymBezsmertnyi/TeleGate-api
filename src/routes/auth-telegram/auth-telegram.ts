@@ -40,13 +40,15 @@ router.get("/login", async (req: Request, res: Response) => {
   try {
     const botId =
       process.env.TELEGRAM_BOT_ID || process.env.EXPO_PUBLIC_TELEGRAM_BOT_ID;
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "TeleGateAuthBot";
+    const originDomain =
+      process.env.TELEGRAM_ORIGIN_DOMAIN ||
+      process.env.EXPO_PUBLIC_TELEGRAM_ORIGIN_DOMAIN;
     const redirectUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/auth-telegram/redirect`;
 
-    console.log("Preparing Telegram Login Widget for bot:", botId);
-    console.log("Bot username:", botUsername);
+    console.log("Direct Telegram OAuth redirect for bot:", botId);
+    console.log("Origin domain:", originDomain);
     console.log("Redirect URL:", redirectUrl);
 
     if (!botId) {
@@ -54,83 +56,21 @@ router.get("/login", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Bot ID not configured" });
     }
 
-    // Return minimal page that automatically initializes the Telegram Login Widget
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Telegram Login</title>
-          <style>
-            body { 
-              margin: 0; 
-              padding: 20px; 
-              display: flex; 
-              justify-content: center; 
-              align-items: center; 
-              min-height: 100vh; 
-              background: #0088cc;
-              font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            }
-            .container { 
-              text-align: center; 
-              background: white; 
-              padding: 30px; 
-              border-radius: 12px; 
-              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            }
-            .loading { 
-              color: #666; 
-              font-size: 16px; 
-              margin: 20px 0; 
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h2>🔐 Telegram Login</h2>
-            <div id="telegram-login-container"></div>
-            <div class="loading" id="loading">Loading...</div>
-          </div>
-          
-          <script async src="https://telegram.org/js/telegram-widget.js?22" 
-            data-telegram-login="${botUsername}"
-            data-size="large"
-            data-auth-url="${redirectUrl}"
-            data-request-access="write"
-            data-onauth="onTelegramAuth(user)"
-            data-corner-radius="8">
-          </script>
-          
-          <script>
-            function onTelegramAuth(user) {
-              console.log('Telegram auth success:', user);
-              document.getElementById('loading').textContent = 'Redirecting...';
-              
-              // Send auth data to our redirect endpoint
-              const params = new URLSearchParams();
-              Object.keys(user).forEach(key => {
-                if (user[key]) params.append(key, user[key].toString());
-              });
-              
-              window.location.href = '${redirectUrl}?' + params.toString();
-            }
-            
-            // Hide loading when widget loads
-            setTimeout(() => {
-              const widget = document.querySelector('iframe');
-              if (widget) {
-                document.getElementById('loading').style.display = 'none';
-              }
-            }, 2000);
-          </script>
-        </body>
-      </html>
-    `);
+    // Ensure we have a valid origin domain
+    const validOriginDomain = originDomain || req.get("host") || "localhost";
+
+    // Direct redirect to Telegram OAuth - no intermediate page
+    const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(
+      validOriginDomain
+    )}&embed=1&request_access=write&return_to=${encodeURIComponent(
+      redirectUrl
+    )}`;
+
+    console.log("Redirecting directly to Telegram OAuth:", telegramOAuthUrl);
+    res.redirect(telegramOAuthUrl);
     return;
   } catch (error) {
-    console.error("Error preparing Telegram login:", error);
+    console.error("Error redirecting to Telegram OAuth:", error);
     res.status(500).json({ error: "Internal Server Error" });
     return;
   }
