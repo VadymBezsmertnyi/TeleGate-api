@@ -56,9 +56,6 @@ router.get("/login", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Bot ID not configured" });
     }
 
-    // Ensure we have a valid origin domain
-    const validOriginDomain = originDomain || req.get("host") || "localhost";
-
     // Use Telegram Login Widget directly
     console.log("Showing Telegram Login Widget for bot:", botId);
 
