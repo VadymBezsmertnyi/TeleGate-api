@@ -289,13 +289,10 @@ router.get("/user-groups/:userId", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Bot token not configured" });
     if (!userId || isNaN(parseInt(userId)))
       return res.status(400).json({ error: "Invalid user ID" });
-
     const telegramUserId = parseInt(userId);
-
     const { data } = await axios(
       `https://api.telegram.org/bot${botToken}/getChat?chat_id=${telegramUserId}`
     );
-
     if (!data || !data.ok)
       return res.status(404).json({ error: "User not found" });
 
