@@ -9,6 +9,9 @@ import NodeCache from "node-cache";
 import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
 import usersRouter from "./routes/users/users";
 
+// start bot telegram
+import "./routes/bot-telegram/bot-telegram";
+
 const app = express();
 
 dotenv.config();
