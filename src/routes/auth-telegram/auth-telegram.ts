@@ -178,20 +178,39 @@ router.get("/redirect", async (req: Request, res: Response) => {
     } else {
       // No query params - return HTML page to process fragment
       console.log("No query params - returning fragment processor");
+      
+      // Add cache-busting headers to prevent 304 responses
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'ETag': Math.random().toString() // Force different ETag each time
+      });
+      
       res.send(`
         <html>
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+            <meta http-equiv="Pragma" content="no-cache">
+            <meta http-equiv="Expires" content="0">
             <title>Processing Authentication...</title>
           </head>
           <body style="font-family: Arial; padding: 40px; text-align: center;">
             <h1>🔄 Processing Authentication...</h1>
             <p>Please wait while we process your Telegram authentication.</p>
+            <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px;"></div>
             <script>
-              console.log("Fragment processor loaded");
-              console.log("Full URL:", window.location.href);
-              console.log("Fragment:", window.location.hash);
+              const debugDiv = document.getElementById('debug');
+              function addDebugLog(message) {
+                console.log(message);
+                debugDiv.innerHTML += message + '<br>';
+              }
+              
+              addDebugLog("Fragment processor loaded at " + new Date().toISOString());
+              addDebugLog("Full URL: " + window.location.href);
+              addDebugLog("Fragment: " + window.location.hash);
               
               // Check for tgAuthResult in fragment
               const fragment = window.location.hash;
@@ -201,14 +220,28 @@ router.get("/redirect", async (req: Request, res: Response) => {
                   const match = fragment.match(/tgAuthResult=([^&]+)/);
                   if (match) {
                     const encodedData = match[1];
-                    console.log("Encoded data:", encodedData);
+                    addDebugLog("Encoded data: " + encodedData);
                     
-                    // Decode the data
-                    const decodedData = decodeURIComponent(encodedData);
-                    console.log("Decoded data:", decodedData);
+                    // First try base64 decode (if it's base64)
+                    let decodedData;
+                    try {
+                      decodedData = atob(encodedData);
+                      addDebugLog("Base64 decoded: " + decodedData);
+                    } catch (e) {
+                      // If not base64, try URL decode
+                      decodedData = decodeURIComponent(encodedData);
+                      addDebugLog("URL decoded: " + decodedData);
+                    }
+                    
+                    // Check if result is "false" (failed auth)
+                    if (decodedData === 'false' || decodedData === false) {
+                      addDebugLog("Auth failed - received false");
+                      window.location.href = 'telegate://auth-error?error=auth_denied';
+                      return;
+                    }
                     
                     const authData = JSON.parse(decodedData);
-                    console.log("Parsed auth data:", authData);
+                    addDebugLog("Parsed auth data: " + JSON.stringify(authData));
                     
                     // Build query string from auth data
                     const params = new URLSearchParams();
@@ -222,18 +255,20 @@ router.get("/redirect", async (req: Request, res: Response) => {
                     
                     // Redirect to same endpoint with query params
                     const newUrl = window.location.pathname + '?' + params.toString();
-                    console.log("Redirecting to:", newUrl);
-                    window.location.href = newUrl;
+                    addDebugLog("Redirecting to: " + newUrl);
+                    setTimeout(() => {
+                      window.location.href = newUrl;
+                    }, 1000); // Small delay to see debug info
                   } else {
-                    console.error("No tgAuthResult found in fragment");
+                    addDebugLog("ERROR: No tgAuthResult found in fragment");
                     window.location.href = 'telegate://auth-error?error=no_auth_result';
                   }
                 } catch (error) {
-                  console.error("Error processing auth data:", error);
+                  addDebugLog("ERROR processing auth data: " + error.message);
                   window.location.href = 'telegate://auth-error?error=parse_error';
                 }
               } else {
-                console.error("No tgAuthResult in fragment");
+                addDebugLog("ERROR: No tgAuthResult in fragment");
                 window.location.href = 'telegate://auth-error?error=missing_fragment';
               }
             </script>
