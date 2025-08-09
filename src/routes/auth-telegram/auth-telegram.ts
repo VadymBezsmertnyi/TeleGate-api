@@ -168,8 +168,80 @@ router.get("/redirect", async (req: Request, res: Response) => {
     console.log("Method:", req.method);
     console.log("================================");
 
+    // Check if we have query params (direct access)
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
+
+    if (id && auth_date && hash) {
+      // We have direct query params - process normally
+      console.log("Processing direct query params");
+    } else {
+      // No query params - return HTML page to process fragment
+      console.log("No query params - returning fragment processor");
+      res.send(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Processing Authentication...</title>
+          </head>
+          <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1>🔄 Processing Authentication...</h1>
+            <p>Please wait while we process your Telegram authentication.</p>
+            <script>
+              console.log("Fragment processor loaded");
+              console.log("Full URL:", window.location.href);
+              console.log("Fragment:", window.location.hash);
+              
+              // Check for tgAuthResult in fragment
+              const fragment = window.location.hash;
+              if (fragment.includes('tgAuthResult=')) {
+                try {
+                  // Extract tgAuthResult data
+                  const match = fragment.match(/tgAuthResult=([^&]+)/);
+                  if (match) {
+                    const encodedData = match[1];
+                    console.log("Encoded data:", encodedData);
+                    
+                    // Decode the data
+                    const decodedData = decodeURIComponent(encodedData);
+                    console.log("Decoded data:", decodedData);
+                    
+                    const authData = JSON.parse(decodedData);
+                    console.log("Parsed auth data:", authData);
+                    
+                    // Build query string from auth data
+                    const params = new URLSearchParams();
+                    if (authData.id) params.append('id', authData.id.toString());
+                    if (authData.username) params.append('username', authData.username);
+                    if (authData.first_name) params.append('first_name', authData.first_name);
+                    if (authData.last_name) params.append('last_name', authData.last_name);
+                    if (authData.photo_url) params.append('photo_url', authData.photo_url);
+                    if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
+                    if (authData.hash) params.append('hash', authData.hash);
+                    
+                    // Redirect to same endpoint with query params
+                    const newUrl = window.location.pathname + '?' + params.toString();
+                    console.log("Redirecting to:", newUrl);
+                    window.location.href = newUrl;
+                  } else {
+                    console.error("No tgAuthResult found in fragment");
+                    window.location.href = 'telegate://auth-error?error=no_auth_result';
+                  }
+                } catch (error) {
+                  console.error("Error processing auth data:", error);
+                  window.location.href = 'telegate://auth-error?error=parse_error';
+                }
+              } else {
+                console.error("No tgAuthResult in fragment");
+                window.location.href = 'telegate://auth-error?error=missing_fragment';
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      return;
+    }
 
     if (!id || !auth_date || !hash) {
       console.error("Missing required params:", {
@@ -326,6 +398,77 @@ router.post("/redirect", async (req: Request, res: Response) => {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       params;
 
+    if (id && auth_date && hash) {
+      // We have direct params - process normally
+      console.log("Processing direct POST params");
+    } else {
+      // No params - return HTML page to process fragment (same as GET)
+      console.log("No POST params - returning fragment processor");
+      res.send(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Processing Authentication...</title>
+          </head>
+          <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1>🔄 Processing Authentication...</h1>
+            <p>Please wait while we process your Telegram authentication.</p>
+            <script>
+              console.log("Fragment processor loaded (POST)");
+              console.log("Full URL:", window.location.href);
+              console.log("Fragment:", window.location.hash);
+              
+              // Check for tgAuthResult in fragment
+              const fragment = window.location.hash;
+              if (fragment.includes('tgAuthResult=')) {
+                try {
+                  // Extract tgAuthResult data
+                  const match = fragment.match(/tgAuthResult=([^&]+)/);
+                  if (match) {
+                    const encodedData = match[1];
+                    console.log("Encoded data:", encodedData);
+                    
+                    // Decode the data
+                    const decodedData = decodeURIComponent(encodedData);
+                    console.log("Decoded data:", decodedData);
+                    
+                    const authData = JSON.parse(decodedData);
+                    console.log("Parsed auth data:", authData);
+                    
+                    // Build query string from auth data
+                    const params = new URLSearchParams();
+                    if (authData.id) params.append('id', authData.id.toString());
+                    if (authData.username) params.append('username', authData.username);
+                    if (authData.first_name) params.append('first_name', authData.first_name);
+                    if (authData.last_name) params.append('last_name', authData.last_name);
+                    if (authData.photo_url) params.append('photo_url', authData.photo_url);
+                    if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
+                    if (authData.hash) params.append('hash', authData.hash);
+                    
+                    // Redirect to GET endpoint with query params
+                    const newUrl = window.location.pathname.replace('/redirect', '/redirect') + '?' + params.toString();
+                    console.log("Redirecting to:", newUrl);
+                    window.location.href = newUrl;
+                  } else {
+                    console.error("No tgAuthResult found in fragment");
+                    window.location.href = 'telegate://auth-error?error=no_auth_result';
+                  }
+                } catch (error) {
+                  console.error("Error processing auth data:", error);
+                  window.location.href = 'telegate://auth-error?error=parse_error';
+                }
+              } else {
+                console.error("No tgAuthResult in fragment");
+                window.location.href = 'telegate://auth-error?error=missing_fragment';
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      return;
+    }
+
     if (!id || !auth_date || !hash) {
       console.error("Missing required params in POST:", {
         id: !!id,
@@ -350,6 +493,41 @@ router.post("/redirect", async (req: Request, res: Response) => {
       return;
     }
 
+    // Validate Telegram authentication
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      console.error("TELEGRAM_BOT_TOKEN not configured");
+      res.redirect(`telegate://auth-error?error=server_config`);
+      return;
+    }
+
+    const authData = {
+      id: id as string,
+      username: username as string,
+      first_name: first_name as string,
+      last_name: last_name as string,
+      photo_url: photo_url as string,
+      auth_date: auth_date as string,
+      hash: hash as string,
+    };
+
+    if (!validateTelegramAuth(authData, botToken)) {
+      console.error("Invalid Telegram authentication signature");
+      res.redirect(`telegate://auth-error?error=invalid_signature`);
+      return;
+    }
+
+    // Check auth_date (not older than 1 day)
+    const authDate = parseInt(auth_date as string);
+    const now = Math.floor(Date.now() / 1000);
+    const maxAge = 24 * 60 * 60; // 24 hours in seconds
+
+    if (now - authDate > maxAge) {
+      console.error("Auth data is too old");
+      res.redirect(`telegate://auth-error?error=expired`);
+      return;
+    }
+
     const user = {
       id: parseInt(id as string),
       username: username as string,
@@ -359,6 +537,8 @@ router.post("/redirect", async (req: Request, res: Response) => {
     };
 
     const token = `token_${user.id}_${Date.now()}`;
+
+    console.log("Authentication successful for user:", user.id);
 
     res.redirect(
       `telegate://auth-success?token=${token}&userId=${user.id}&username=${
