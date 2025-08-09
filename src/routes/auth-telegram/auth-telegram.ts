@@ -15,6 +15,17 @@ import {
 dotenv.config();
 const router = Router();
 
+interface TelegramUser {
+  id: number;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  photo_url?: string;
+  created_at: number;
+}
+
+const userTokens = new Map<string, TelegramUser>();
+
 function validateTelegramAuth(authData: any, botToken: string): boolean {
   const { hash, ...dataToCheck } = authData;
   if (!hash) return false;
@@ -77,11 +88,42 @@ router.get("/close", async (req: Request, res: Response) => {
 
 router.get("/me", async (req: Request, res: Response) => {
   try {
-    res.json({ message: "User data endpoint" });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer "))
+      return res
+        .status(401)
+        .json({ error: "Missing or invalid authorization header" });
+
+    const token = authHeader.substring(7);
+    if (!token) return res.status(401).json({ error: "Missing token" });
+
+    const user = userTokens.get(token);
+    if (!user)
+      return res.status(401).json({ error: "Invalid or expired token" });
+
+    const now = Math.floor(Date.now() / 1000);
+    const tokenAge = now - Math.floor(user.created_at / 1000);
+    const maxTokenAge = 30 * 24 * 60 * 60;
+    if (tokenAge > maxTokenAge) {
+      userTokens.delete(token);
+      return res.status(401).json({ error: "Token expired" });
+    }
+
+    const userData = {
+      id: user.id,
+      username: user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      photo_url: user.photo_url,
+    };
+
+    res.json(userData);
   } catch (error) {
     console.error("Error fetching user data:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+  return;
 });
 
 router.get("/redirect", async (req: Request, res: Response) => {
@@ -89,13 +131,8 @@ router.get("/redirect", async (req: Request, res: Response) => {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
 
-    if (id && auth_date && hash)
-      console.warn(
-        "Redirecting to Telegram OAuth with parameters:",
-        JSON.stringify(req.query)
-      );
-    // TODO: Handle the case where the request is made from a mobile app
-    else {
+    if (id && auth_date && hash) {
+    } else {
       res.set({
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
@@ -121,7 +158,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
-      console.error("TELEGRAM_BOT_TOKEN not configured");
       res.redirect(`telegate://auth-error?error=server_config`);
       return;
     }
@@ -157,6 +193,18 @@ router.get("/redirect", async (req: Request, res: Response) => {
       photo_url: photo_url as string,
     };
     const token = `token_${user.id}_${Date.now()}`;
+
+    const telegramUser: TelegramUser = {
+      id: user.id,
+      username: user.username || undefined,
+      first_name: user.first_name || undefined,
+      last_name: user.last_name || undefined,
+      photo_url: user.photo_url || undefined,
+      created_at: Date.now(),
+    };
+
+    userTokens.set(token, telegramUser);
+
     const userAgent = req.get("User-Agent") || "";
     const isMobile =
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
@@ -209,13 +257,8 @@ router.post("/redirect", async (req: Request, res: Response) => {
     const params = { ...req.query, ...req.body };
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       params;
-    if (id && auth_date && hash)
-      // TODO: Handle the case where the request is made from a mobile app
-      console.warn(
-        "Redirecting to Telegram OAuth with parameters:",
-        JSON.stringify(params)
-      );
-    else {
+    if (id && auth_date && hash) {
+    } else {
       res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
       return;
     }
@@ -268,6 +311,17 @@ router.post("/redirect", async (req: Request, res: Response) => {
       photo_url: photo_url as string,
     };
     const token = `token_${user.id}_${Date.now()}`;
+
+    const telegramUser: TelegramUser = {
+      id: user.id,
+      username: user.username || undefined,
+      first_name: user.first_name || undefined,
+      last_name: user.last_name || undefined,
+      photo_url: user.photo_url || undefined,
+      created_at: Date.now(),
+    };
+
+    userTokens.set(token, telegramUser);
 
     res.redirect(
       `telegate://auth-success?token=${token}&userId=${user.id}&username=${
