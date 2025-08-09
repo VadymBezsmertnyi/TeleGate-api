@@ -248,14 +248,35 @@ router.get("/redirect", async (req: Request, res: Response) => {
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
     if (isMobile) {
-      // Mobile app - use deep link
-      res.redirect(
-        `telegate://auth-success?token=${token}&userId=${user.id}&username=${
-          user.username || ""
-        }&firstName=${user.first_name || ""}&lastName=${
-          user.last_name || ""
-        }&photoUrl=${user.photo_url || ""}`
-      );
+      // Mobile app - use deep link with auto-close page
+      const deepLink = `telegate://auth-success?token=${token}&userId=${
+        user.id
+      }&username=${user.username || ""}&firstName=${
+        user.first_name || ""
+      }&lastName=${user.last_name || ""}&photoUrl=${user.photo_url || ""}`;
+
+      res.send(`
+        <html>
+          <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1>✅ Success! Redirecting to app...</h1>
+            <p>Please wait while we redirect you back to the app.</p>
+            <script>
+              // Try to redirect and close
+              try {
+                window.location.href = "${deepLink}";
+                // Close the window after redirect attempt
+                setTimeout(() => {
+                  window.close();
+                }, 1000);
+              } catch (e) {
+                console.log("Redirect attempt:", e);
+                // Fallback - show link
+                document.body.innerHTML += '<p><a href="${deepLink}">Click here if not redirected</a></p>';
+              }
+            </script>
+          </body>
+        </html>
+      `);
     } else {
       // Browser - show success page with data
       res.send(`
