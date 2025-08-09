@@ -10,7 +10,7 @@ import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
 import usersRouter from "./routes/users/users";
 
 // start bot telegram
-import "./routes/bot-telegram/bot-telegram";
+import startBotTelegram from "./routes/bot-telegram/bot-telegram";
 
 const app = express();
 
@@ -44,6 +44,8 @@ app.listen(PORT, () => {
 
 app.use("/api/auth-telegram", authTelegramRouter);
 app.use("/api/users", usersRouter);
+
+startBotTelegram();
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
