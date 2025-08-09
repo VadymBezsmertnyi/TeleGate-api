@@ -1,8 +1,40 @@
 import { Router, Request, Response } from "express";
+import { createHash, createHmac } from "crypto";
 import dotenv from "dotenv";
 
 dotenv.config();
 const router = Router();
+
+// Function to validate Telegram authentication
+function validateTelegramAuth(authData: any, botToken: string): boolean {
+  const { hash, ...dataToCheck } = authData;
+
+  if (!hash) return false;
+
+  // Create data-check-string
+  const dataCheckString = Object.keys(dataToCheck)
+    .filter(
+      (key) => dataToCheck[key] !== undefined && dataToCheck[key] !== null
+    )
+    .sort()
+    .map((key) => `${key}=${dataToCheck[key]}`)
+    .join("\n");
+
+  console.log("Data check string:", dataCheckString);
+
+  // Create secret key (SHA256 of bot token)
+  const secretKey = createHash("sha256").update(botToken).digest();
+
+  // Create HMAC-SHA256 signature
+  const hmac = createHmac("sha256", secretKey)
+    .update(dataCheckString)
+    .digest("hex");
+
+  console.log("Expected hash:", hmac);
+  console.log("Received hash:", hash);
+
+  return hmac === hash;
+}
 
 router.get("/me", async (req: Request, res: Response) => {
   try {
@@ -49,25 +81,53 @@ router.get("/redirect", async (req: Request, res: Response) => {
       return;
     }
 
-    const telegramParams = {
+    // Validate Telegram authentication
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      console.error("TELEGRAM_BOT_TOKEN not configured");
+      res.redirect(`telegate://auth-error?error=server_config`);
+      return;
+    }
+
+    const authData = {
+      id: id as string,
+      username: username as string,
+      first_name: first_name as string,
+      last_name: last_name as string,
+      photo_url: photo_url as string,
+      auth_date: auth_date as string,
+      hash: hash as string,
+    };
+
+    if (!validateTelegramAuth(authData, botToken)) {
+      console.error("Invalid Telegram authentication signature");
+      res.redirect(`telegate://auth-error?error=invalid_signature`);
+      return;
+    }
+
+    // Check auth_date (not older than 1 day)
+    const authDate = parseInt(auth_date as string);
+    const now = Math.floor(Date.now() / 1000);
+    const maxAge = 24 * 60 * 60; // 24 hours in seconds
+
+    if (now - authDate > maxAge) {
+      console.error("Auth data is too old");
+      res.redirect(`telegate://auth-error?error=expired`);
+      return;
+    }
+
+    const user = {
       id: parseInt(id as string),
       username: username as string,
       first_name: first_name as string,
       last_name: last_name as string,
       photo_url: photo_url as string,
-      auth_date: parseInt(auth_date as string),
-      hash: hash as string,
     };
 
-    const user = {
-      id: telegramParams.id,
-      username: telegramParams.username,
-      first_name: telegramParams.first_name,
-      last_name: telegramParams.last_name,
-      photo_url: telegramParams.photo_url,
-    };
-
+    // Generate a proper JWT token or session token here
     const token = `token_${user.id}_${Date.now()}`;
+
+    console.log("Authentication successful for user:", user.id);
 
     res.redirect(
       `telegate://auth-success?token=${token}&userId=${user.id}&username=${
