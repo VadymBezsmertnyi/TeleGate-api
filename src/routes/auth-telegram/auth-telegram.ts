@@ -322,21 +322,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
     if (isMobile) {
-      // Mobile app - close WebBrowser and return data via URL fragment
-      const authData = encodeURIComponent(
-        JSON.stringify({
-          success: true,
-          token,
-          user: {
-            id: user.id,
-            username: user.username,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            photo_url: user.photo_url,
-          },
-        })
-      );
-
       // For mobile, redirect directly to deep link
       const deepLink = `telegate://auth-success?token=${token}&userId=${
         user.id
@@ -377,11 +362,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error("Error during redirect:", error);
-    // Check if mobile again since isMobile is not accessible here
-    const userAgent = req.get("User-Agent") || "";
-    const isMobileError =
-      userAgent.includes("Expo") || userAgent.includes("TeleGate");
-
     res.redirect(`telegate://auth-error?error=server_error`);
     return;
   }
