@@ -21,23 +21,23 @@ router.get("/me", async (req: Request, res: Response) => {
     const token = authHeader.substring(7);
     if (!token) return res.status(401).json({ error: "Missing token" });
 
-    let user = await UserModel.findOne({
-      accessToken: token,
-      isActive: true,
-    }).lean();
-
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
       return res.status(500).json({ error: "Bot token not configured" });
 
+    const telegramValidation = await validateTelegramToken(token, botToken);
+    if (!telegramValidation.isValid || !telegramValidation.userData)
+      return res.status(401).json({ error: "Invalid or expired token" });
+
+    const telegramUser = telegramValidation.userData;
+    const now = new Date();
+
+    let user = await UserModel.findOne({
+      telegramId: telegramUser.id,
+      isActive: true,
+    }).lean();
+
     if (!user) {
-      const telegramValidation = await validateTelegramToken(token, botToken);
-      if (!telegramValidation.isValid || !telegramValidation.userData)
-        return res.status(401).json({ error: "Invalid or expired token" });
-
-      const telegramUser = telegramValidation.userData;
-      const now = new Date();
-
       const _id = new mongoose.Types.ObjectId();
       const newUser = await UserModel.create({
         _id,
@@ -46,39 +46,27 @@ router.get("/me", async (req: Request, res: Response) => {
         firstName: telegramUser.first_name || null,
         lastName: telegramUser.last_name || null,
         photoUrl: null,
-        accessToken: token,
-        authDate: now,
         lastActivityAt: now,
         isActive: true,
       });
 
       user = newUser.toObject();
     } else {
-      const now = new Date();
-      const tokenAge = now.getTime() - user.authDate.getTime();
-      const maxTokenAge = 30 * 24 * 60 * 60 * 1000;
+      await UserModel.findByIdAndUpdate(user._id, {
+        username: telegramUser.username || user.username,
+        firstName: telegramUser.first_name || user.firstName,
+        lastName: telegramUser.last_name || user.lastName,
+        lastActivityAt: now,
+        updatedAt: now,
+      });
 
-      if (tokenAge > maxTokenAge) {
-        const telegramValidation = await validateTelegramToken(token, botToken);
-
-        if (!telegramValidation.isValid) {
-          await UserModel.findByIdAndUpdate(user._id, { isActive: false });
-          return res.status(401).json({ error: "Token expired and invalid" });
-        }
-
-        await UserModel.findByIdAndUpdate(user._id, {
-          authDate: now,
-          lastActivityAt: now,
-          updatedAt: now,
-        });
-      } else
-        await UserModel.findByIdAndUpdate(user._id, {
-          lastActivityAt: now,
-          updatedAt: now,
-        });
+      user = await UserModel.findById(user._id).lean();
     }
 
-    console.log("User data:", user);
+    if (!user) {
+      return res.status(500).json({ error: "Failed to create or update user" });
+    }
+
     const userData = {
       id: user.telegramId,
       username: user.username,
@@ -86,6 +74,7 @@ router.get("/me", async (req: Request, res: Response) => {
       last_name: user.lastName,
       photo_url: user.photoUrl,
     };
+
     const resultCheckZod = userPublicSchema.safeParse(userData);
     if (!resultCheckZod.success)
       return res.status(500).json({ error: "Data validation error" });
