@@ -84,7 +84,6 @@ router.get("/close", async (req: Request, res: Response) => {
 router.get("/me", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer "))
       return res
         .status(401)
@@ -97,22 +96,17 @@ router.get("/me", async (req: Request, res: Response) => {
       accessToken: token,
       isActive: true,
     }).lean();
-
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) {
+    if (!botToken)
       return res.status(500).json({ error: "Bot token not configured" });
-    }
 
     if (!user) {
       const telegramValidation = await validateTelegramToken(token, botToken);
-
-      if (!telegramValidation.isValid || !telegramValidation.userData) {
+      if (!telegramValidation.isValid || !telegramValidation.userData)
         return res.status(401).json({ error: "Invalid or expired token" });
-      }
 
       const telegramUser = telegramValidation.userData;
       const now = new Date();
-
       const _id = new mongoose.Types.ObjectId();
       const newUser = await UserModel.create({
         _id,
@@ -146,14 +140,14 @@ router.get("/me", async (req: Request, res: Response) => {
           lastActivityAt: now,
           updatedAt: now,
         });
-      } else {
+      } else
         await UserModel.findByIdAndUpdate(user._id, {
           lastActivityAt: now,
           updatedAt: now,
         });
-      }
     }
 
+    console.log("User data:", user);
     const userData = {
       id: user.telegramId,
       username: user.username,
