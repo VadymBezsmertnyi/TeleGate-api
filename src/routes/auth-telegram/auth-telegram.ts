@@ -149,6 +149,80 @@ router.get("/login", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/close", async (req: Request, res: Response) => {
+  try {
+    const authData = req.query["auth-data"];
+    const error = req.query["error"];
+    console.log("Close page requested", { authData: !!authData, error });
+
+    const isSuccess = authData && !error;
+
+    res.send(`
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Authentication ${isSuccess ? "Complete" : "Failed"}</title>
+        </head>
+        <body style="font-family: Arial; padding: 40px; text-align: center; background: ${
+          isSuccess ? "#f0f8ff" : "#fff5f5"
+        };">
+          <h1 style="color: ${isSuccess ? "#28a745" : "#dc3545"};">
+            ${
+              isSuccess
+                ? "✅ Authentication Successful!"
+                : "❌ Authentication Failed"
+            }
+          </h1>
+          <p style="font-size: 18px; margin: 20px 0;">
+            ${
+              isSuccess
+                ? "You can now close this window."
+                : "Please try again or contact support."
+            }
+          </p>
+          <div style="margin: 30px 0;">
+            <button onclick="closeWindow()" style="
+              background: ${isSuccess ? "#007bff" : "#dc3545"};
+              color: white;
+              border: none;
+              padding: 15px 30px;
+              font-size: 16px;
+              border-radius: 5px;
+              cursor: pointer;
+            ">Close Window</button>
+          </div>
+          <script>
+            // Add data to URL fragment
+            if ('${authData}') {
+              window.location.hash = 'auth-data=' + '${authData}';
+            } else if ('${error}') {
+              window.location.hash = 'error=' + '${error}';
+            }
+            
+            function closeWindow() {
+              // Try multiple close methods
+              if (window.close) {
+                window.close();
+              }
+              // Also try to navigate away
+              window.location = 'about:blank';
+            }
+            
+            // Auto-attempt to close after a short delay
+            setTimeout(() => {
+              closeWindow();
+            }, 2000);
+          </script>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("Error serving close page:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/me", async (req: Request, res: Response) => {
   try {
     console.log("Fetching user data...", req.query);
@@ -263,41 +337,12 @@ router.get("/redirect", async (req: Request, res: Response) => {
         })
       );
 
-      res.send(`
-        <html>
-          <body style="font-family: Arial; padding: 40px; text-align: center;">
-            <h1>✅ Authentication Successful!</h1>
-            <p>Closing browser and returning to app...</p>
-            <script>
-              // Update URL with auth data and close
-              try {
-                // Add auth data to URL fragment so WebBrowser can read it
-                window.location.hash = 'auth-data=' + '${authData}';
-                
-                // Try different methods to close the browser
-                setTimeout(() => {
-                  // Method 1: Try to close window
-                  if (window.close) {
-                    window.close();
-                  }
-                  
-                  // Method 2: Try to navigate back
-                  if (window.history && window.history.back) {
-                    window.history.back();
-                  }
-                  
-                  // Method 3: Try to navigate to a close URL
-                  window.location.href = 'about:blank';
-                }, 500);
-                
-              } catch (e) {
-                console.log("Close attempt failed:", e);
-                document.body.innerHTML += '<p><button onclick="window.close()">Close Browser</button></p>';
-              }
-            </script>
-          </body>
-        </html>
-      `);
+      // For mobile, redirect to a special URL that includes auth data
+      // This will trigger WebBrowser to close and return the URL
+      const closeUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/api/auth-telegram/close?auth-data=${authData}`;
+      res.redirect(closeUrl);
     } else {
       // Browser - show success page with data
       res.send(`
@@ -329,7 +374,15 @@ router.get("/redirect", async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error("Error during redirect:", error);
-    res.redirect(`telegate://auth-error?error=server_error`);
+    if (isMobile) {
+      res.redirect(
+        `${req.protocol}://${req.get(
+          "host"
+        )}/api/auth-telegram/close?error=server_error`
+      );
+    } else {
+      res.redirect(`telegate://auth-error?error=server_error`);
+    }
     return;
   }
 });
