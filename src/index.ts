@@ -5,6 +5,9 @@ import mongoose from "mongoose";
 import cron from "node-cron";
 import NodeCache from "node-cache";
 
+// routes
+import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
+
 const app = express();
 
 dotenv.config();
@@ -34,6 +37,8 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   return console.warn(`Express is listening at http://localhost:${PORT}`);
 });
+
+app.use("/auth-telegram", authTelegramRouter);
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
