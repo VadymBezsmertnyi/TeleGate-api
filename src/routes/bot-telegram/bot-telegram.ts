@@ -17,6 +17,7 @@ const startBotTelegram = async () => {
   const bot = new Telegraf(token);
 
   bot.on("my_chat_member", async (ctx) => {
+    console.warn("📝 Зміна статусу бота в чаті:", JSON.stringify(ctx));
     const chat = ctx.update.my_chat_member.chat;
     const newStatus = ctx.update.my_chat_member.new_chat_member.status;
 
@@ -48,7 +49,7 @@ const startBotTelegram = async () => {
   });
 
   bot.on("chat_member", async (ctx) => {
-    console.warn("🔄 Зміна статусу в чаті:", ctx.update.chat_member);
+    console.warn("🔄 Зміна статусу в чаті:", JSON.stringify(ctx));
     // new_chat_member.user — це сам користувач, якого торкнулась подія
     //await upsertUser(new_chat_member.user); // збережи user у БД
     /* await upsertMembership(
@@ -60,7 +61,7 @@ const startBotTelegram = async () => {
 
   // 3) фіксуй активних дописувачів (коли privacy off)
   bot.on("message", async (ctx) => {
-    console.log("Новий допис:", ctx);
+    console.log("Новий допис:", JSON.stringify(ctx));
     /* await upsertUser(from);
   await upsertMembership(chat.id, from.id, "member"); // актуалізуй статус */
   });
