@@ -108,7 +108,7 @@ export const TelegramBotContextSchema = z.object({
   update: UpdateSchema,
   telegram: TelegramContextSchema,
   botInfo: BotInfoSchema,
-  state: z.record(z.any()).optional(),
+  state: z.record(z.any(), z.any()).optional(),
 });
 
 export const isMessageUpdate = (
