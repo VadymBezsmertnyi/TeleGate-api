@@ -58,6 +58,10 @@ export const createOrUpdateGroup = async (groupData: GroupData) => {
   if (existingGroup) {
     existingGroup.botStatus = groupData.botStatus;
     existingGroup.addedBy = groupData.addedBy as any;
+    if (groupData.title) existingGroup.title = groupData.title;
+    if (groupData.description)
+      existingGroup.description = groupData.description;
+    if (groupData.photoUrl) existingGroup.photoUrl = groupData.photoUrl;
     return await existingGroup.save();
   }
 
@@ -65,6 +69,8 @@ export const createOrUpdateGroup = async (groupData: GroupData) => {
     tgChatId: groupData.tgChatId,
     type: groupData.type,
     title: groupData.title,
+    description: groupData.description,
+    photoUrl: groupData.photoUrl,
     isForum: groupData.isForum,
     allMembersAreAdministrators: groupData.allMembersAreAdministrators,
     acceptedGiftTypes: groupData.acceptedGiftTypes,
@@ -124,5 +130,42 @@ export const determineRole = (
       return "member";
     default:
       return "member";
+  }
+};
+
+export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
+  try {
+    const chat = await bot.telegram.getChat(chatId);
+
+    let photoUrl: string | undefined;
+    if (chat.photo) {
+      try {
+        const file = await bot.telegram.getFile(chat.photo.big_file_id);
+        photoUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+      } catch (error) {
+        console.warn("Помилка при отриманні фото групи:", error);
+      }
+    }
+
+    const groupData: Partial<GroupData> = {
+      title: chat.title,
+      description: chat.description,
+      photoUrl,
+    };
+
+    const existingGroup = await GroupModel.findOne({ tgChatId: chatId });
+    if (existingGroup) {
+      if (groupData.title) existingGroup.title = groupData.title;
+      if (groupData.description)
+        existingGroup.description = groupData.description;
+      if (groupData.photoUrl) existingGroup.photoUrl = groupData.photoUrl;
+      await existingGroup.save();
+      return existingGroup;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Помилка при оновленні інформації про групу:", error);
+    return null;
   }
 };

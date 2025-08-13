@@ -19,6 +19,8 @@ const groupSM = new Schema(
       enum: ["private", "group", "supergroup", "channel"],
     },
     title: { type: String },
+    description: { type: String },
+    photoUrl: { type: String },
     isForum: { type: Boolean, default: false },
     allMembersAreAdministrators: { type: Boolean },
     acceptedGiftTypes: acceptedGiftTypesSchema,

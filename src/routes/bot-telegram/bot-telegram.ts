@@ -66,11 +66,28 @@ const startBotTelegram = async () => {
         is_forum?: boolean;
         all_members_are_administrators?: boolean;
         accepted_gift_types?: any;
+        description?: string;
+        photo?: any;
       };
+
+      let photoUrl: string | undefined;
+      if (currentChat.photo) {
+        try {
+          const file = await ctx.telegram.getFile(
+            currentChat.photo.big_file_id
+          );
+          photoUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+        } catch (error) {
+          console.warn("Помилка при отриманні фото групи:", error);
+        }
+      }
+
       const groupData: GroupData = {
         tgChatId: chat.id.toString(),
         type: chat.type,
         title: chat.title,
+        description: currentChat.description,
+        photoUrl,
         isForum: currentChat.is_forum,
         allMembersAreAdministrators: currentChat.all_members_are_administrators,
         acceptedGiftTypes: currentChat.accepted_gift_types,
@@ -371,6 +388,27 @@ const startBotTelegram = async () => {
     await ctx.reply(
       "Адміни:\n" + admins.map((a) => `• ${a.user.first_name}`).join("\n")
     );
+  });
+
+  bot.command("update_group_info", async (ctx) => {
+    try {
+      const { updateGroupInfoFromTelegram } = await import(
+        "./bot-telegram.helper"
+      );
+      const updatedGroup = await updateGroupInfoFromTelegram(
+        ctx.chat!.id.toString(),
+        ctx
+      );
+
+      if (updatedGroup) {
+        await ctx.reply("✅ Інформація про групу оновлена!");
+      } else {
+        await ctx.reply("❌ Не вдалося оновити інформацію про групу");
+      }
+    } catch (error) {
+      console.error("Помилка при оновленні інформації про групу:", error);
+      await ctx.reply("❌ Помилка при оновленні інформації про групу");
+    }
   });
 
   try {

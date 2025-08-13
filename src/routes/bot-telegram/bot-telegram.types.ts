@@ -71,6 +71,8 @@ export interface GroupData {
   tgChatId: string;
   type: "private" | "group" | "supergroup" | "channel";
   title?: string;
+  description?: string;
+  photoUrl?: string;
   isForum?: boolean;
   allMembersAreAdministrators?: boolean;
   acceptedGiftTypes?: {
