@@ -11,6 +11,9 @@ const forumTopicSM = new Schema(
     isActive: { type: Boolean, default: true },
     messageCount: { type: Number, default: 0 },
     lastMessageAt: { type: Date },
+    closedAt: { type: Date },
+    closedBy: { type: Schema.Types.ObjectId, ref: "Member" },
+    closedMessage: { type: Schema.Types.ObjectId, ref: "Message" },
   },
   {
     timestamps: true,
