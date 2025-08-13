@@ -83,6 +83,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
+    console.log("Redirect params:", JSON.stringify(req.query));
 
     if (!id || !auth_date || !hash) {
       res.set({
