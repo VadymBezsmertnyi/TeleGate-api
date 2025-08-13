@@ -405,6 +405,54 @@ const startBotTelegram = async () => {
           }
         }
       }
+
+      if (messageWithNewMembers.new_chat_photo) {
+        console.warn("Оновлено фото групи");
+        try {
+          const { updateGroupInfoFromTelegram } = await import(
+            "./bot-telegram.helper"
+          );
+          await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
+          console.warn("Оновлено фото групи в базі даних");
+        } catch (error) {
+          console.warn("Помилка при оновленні фото групи:", error);
+        }
+      }
+
+      if (messageWithNewMembers.delete_chat_photo) {
+        console.warn("Видалено фото групи");
+        try {
+          const existingGroup = await GroupModel.findOne({
+            tgChatId: chat.id.toString(),
+          });
+          if (existingGroup) {
+            existingGroup.photoUrl = undefined;
+            await existingGroup.save();
+            console.warn("Видалено фото групи з бази даних");
+          }
+        } catch (error) {
+          console.warn("Помилка при видаленні фото групи:", error);
+        }
+      }
+
+      if (messageWithNewMembers.new_chat_title) {
+        console.warn(
+          "Оновлено назву групи:",
+          messageWithNewMembers.new_chat_title
+        );
+        try {
+          const existingGroup = await GroupModel.findOne({
+            tgChatId: chat.id.toString(),
+          });
+          if (existingGroup) {
+            existingGroup.title = messageWithNewMembers.new_chat_title;
+            await existingGroup.save();
+            console.warn("Оновлено назву групи в базі даних");
+          }
+        } catch (error) {
+          console.warn("Помилка при оновленні назви групи:", error);
+        }
+      }
     } catch (error) {
       console.warn("Помилка при обробці повідомлення:", error);
     }
