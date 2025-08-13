@@ -87,15 +87,25 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
       <p>Please wait while we process your Telegram authentication.</p>
       <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px;"></div>
       <script>
+        console.log("Script started");
         const debugDiv = document.getElementById('debug');
         function addDebugLog(message) {
-          debugDiv.innerHTML += message + '<br>';
+          console.log("Debug:", message);
+          if (debugDiv) {
+            debugDiv.innerHTML += message + '<br>';
+          }
         }
         
         addDebugLog("Fragment processor loaded at " + new Date().toISOString());
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
+        addDebugLog("JavaScript is working!");
+        
+        // Простий тест
+        setTimeout(() => {
+          addDebugLog("Timeout test - JavaScript is still working");
+        }, 1000);
         
         function processFragment() {
           addDebugLog("Checking fragment...");
@@ -263,7 +273,17 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
           addDebugLog("Hash changed, reprocessing...");
           processFragment();
         });
+        
+        // Fallback якщо JavaScript не працює
+        addDebugLog("If you see this, JavaScript is working");
+        addDebugLog("If you don't see debug info, JavaScript is blocked");
       </script>
+      <noscript>
+        <div style="background: #ffebee; padding: 20px; margin: 20px 0; border: 1px solid #f44336;">
+          <h3>JavaScript is disabled</h3>
+          <p>This authentication requires JavaScript to work. Please enable JavaScript in your browser.</p>
+        </div>
+      </noscript>
     </body>
   </html>
 `;
