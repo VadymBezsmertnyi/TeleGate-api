@@ -133,32 +133,54 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 
                 // Custom Base64 decoder fallback
                 function customAtob(str) {
+                  addDebugLog("customAtob called with: " + JSON.stringify(str));
                   try {
-                    return atob(str);
+                    const result = atob(str);
+                    addDebugLog("Native atob succeeded: " + JSON.stringify(result));
+                    return result;
                   } catch (e) {
-                    addDebugLog("Native atob failed, using custom decoder");
+                    addDebugLog("Native atob failed: " + e.message);
+                    addDebugLog("Using custom decoder...");
+                    
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
                     let output = '';
                     str = String(str).replace(/=+$/, '');
+                    addDebugLog("Processed string: " + JSON.stringify(str));
+                    addDebugLog("String length: " + str.length);
+                    
                     if (str.length % 4 === 1) {
+                      addDebugLog("Invalid base64 string length");
                       throw new Error('Invalid base64 string');
                     }
+                    
                     for (let bc = 0, bs = 0, buffer, i = 0; buffer = str.charAt(i++);) {
-                      if (buffer = chars.indexOf(buffer)) {
-                        bs = bc % 4 ? bs * 64 + buffer : buffer;
-                        if (bc++ % 4) output += String.fromCharCode(255 & bs >> (-2 * bc & 6));
+                      const charIndex = chars.indexOf(buffer);
+                      addDebugLog("Char: " + buffer + ", Index: " + charIndex);
+                      if (charIndex !== -1) {
+                        bs = bc % 4 ? bs * 64 + charIndex : charIndex;
+                        if (bc++ % 4) {
+                          const charCode = 255 & (bs >> ((-2 * bc) & 6));
+                          const char = String.fromCharCode(charCode);
+                          output += char;
+                          addDebugLog("Added char: " + char + " (code: " + charCode + ")");
+                        }
                       }
                     }
+                    addDebugLog("Custom decoder result: " + JSON.stringify(output));
                     return output;
                   }
                 }
                 
                 try {
+                  addDebugLog("=== STARTING DECODE PROCESS ===");
                   decodedData = customAtob(encodedData);
-                  addDebugLog("Base64 decoded: " + decodedData);
+                  addDebugLog("=== DECODE COMPLETED ===");
+                  addDebugLog("Final decoded data: " + JSON.stringify(decodedData));
                 } catch (e) {
+                  addDebugLog("=== DECODE FAILED ===");
                   addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
                   try {
+                    addDebugLog("Trying URL decode...");
                     decodedData = decodeURIComponent(encodedData);
                     addDebugLog("URL decoded: " + decodedData);
                   } catch (e2) {
@@ -168,12 +190,17 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   }
                 }
                 
+                addDebugLog("=== DECODED DATA ANALYSIS ===");
                 addDebugLog("Decoded data: " + JSON.stringify(decodedData));
                 addDebugLog("Decoded data type: " + typeof decodedData);
-                addDebugLog("Is false check: " + (decodedData === 'false'));
-                addDebugLog("Is boolean false check: " + (decodedData === false));
                 addDebugLog("Decoded data length: " + decodedData.length);
                 addDebugLog("Decoded data char codes: " + Array.from(decodedData).map(c => c.charCodeAt(0)).join(','));
+                addDebugLog("Is false check: " + (decodedData === 'false'));
+                addDebugLog("Is boolean false check: " + (decodedData === false));
+                addDebugLog("Strict equality with 'false': " + (decodedData === 'false'));
+                addDebugLog("Strict equality with false: " + (decodedData === false));
+                addDebugLog("Includes 'false': " + decodedData.includes('false'));
+                addDebugLog("=== END ANALYSIS ===");
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");
