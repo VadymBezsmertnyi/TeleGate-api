@@ -168,13 +168,18 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 try {
                   decodedData = customAtob(encodedData);
                   addDebugLog("Final decoded data: " + decodedData);
+                  addDebugLog("Final decoded data type: " + typeof decodedData);
+                  addDebugLog("Final decoded data length: " + decodedData.length);
+                  addDebugLog("Is equal to 'false': " + (decodedData === 'false'));
+                  addDebugLog("Is equal to false: " + (decodedData === false));
                 } catch (e) {
                   addDebugLog("Decode failed: " + e.message);
                   decodedData = 'false';
                 }
                 
-                if (decodedData === 'false') {
+                if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false");
+                  addDebugLog("Redirecting to error page");
                   window.location.href = 'telegate://auth-error?error=auth_denied';
                   return;
                 }
