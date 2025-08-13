@@ -179,8 +179,15 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false");
-                  addDebugLog("Redirecting to error page");
-                  window.location.href = 'telegate://auth-error?error=auth_denied';
+                  addDebugLog("This might be a timing issue, retrying authorization...");
+                  addDebugLog("Redirecting to Telegram OAuth again");
+                  
+                  // Перенаправляємо на повторну авторизацію замість помилки
+                  // Використовуємо той самий URL що і в поточному запиті
+                  const currentUrl = window.location.href;
+                  const baseUrl = currentUrl.split('#')[0]; // Видаляємо фрагмент
+                  const retryUrl = baseUrl.replace('/redirect', '/login');
+                  window.location.href = retryUrl;
                   return;
                 }
                 

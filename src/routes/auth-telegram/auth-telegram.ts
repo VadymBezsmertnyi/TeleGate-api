@@ -159,14 +159,19 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
         if (decodedData === "false") {
           console.log("Auth failed - received false from Telegram");
-          console.log("Possible reasons:");
-          console.log("1. User cancelled authorization");
-          console.log("2. Bot ID is incorrect");
-          console.log("3. Origin domain not allowed");
-          console.log("4. Bot not properly configured");
-          res.redirect(
-            `telegate://auth-error?error=auth_denied&reason=user_cancelled`
-          );
+          console.log("This might be a timing issue, redirecting to retry...");
+
+          // Перенаправляємо на повторну авторизацію замість помилки
+          const retryUrl = `https://oauth.telegram.org/auth?bot_id=${
+            process.env.TELEGRAM_BOT_ID
+          }&origin=${encodeURIComponent(
+            process.env.TELEGRAM_ORIGIN_DOMAIN ||
+              "telegate-api-4b26ec7aa804.herokuapp.com"
+          )}&embed=1&request_access=write&return_to=${encodeURIComponent(
+            `${req.protocol}://${req.get("host")}/api/auth-telegram/redirect`
+          )}`;
+
+          res.redirect(retryUrl);
           return;
         }
 
