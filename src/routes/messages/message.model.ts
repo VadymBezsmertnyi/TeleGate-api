@@ -8,6 +8,8 @@ const forumTopicCreatedSchema = new Schema(
   { _id: false }
 );
 
+const forumTopicClosedSchema = new Schema({}, { _id: false });
+
 const messageSM = new Schema(
   {
     tgMessageId: { type: String, required: true },
@@ -17,6 +19,7 @@ const messageSM = new Schema(
     text: { type: String },
     messageThreadId: { type: Number },
     forumTopicCreated: forumTopicCreatedSchema,
+    forumTopicClosed: forumTopicClosedSchema,
     isTopicMessage: { type: Boolean, default: false },
     leftChatMember: { type: Schema.Types.ObjectId, ref: "Member" },
     newChatMember: { type: Schema.Types.ObjectId, ref: "Member" },
