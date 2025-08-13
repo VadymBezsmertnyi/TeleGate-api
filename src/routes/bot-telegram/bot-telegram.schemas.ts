@@ -21,6 +21,8 @@ export const ForumTopicCreatedSchema = z.object({
   icon_color: z.number(),
 });
 
+export const ForumTopicClosedSchema = z.object({});
+
 export const ChatSchema = z.object({
   id: z.number(),
   title: z.string().optional(),
@@ -50,6 +52,7 @@ export const ReplyMessageSchema = z.object({
   text: z.string().optional(),
   message_thread_id: z.number().optional(),
   forum_topic_created: ForumTopicCreatedSchema.optional(),
+  forum_topic_closed: ForumTopicClosedSchema.optional(),
   is_topic_message: z.boolean().optional(),
 });
 
@@ -61,6 +64,7 @@ export const MessageSchema = z.object({
   text: z.string().optional(),
   message_thread_id: z.number().optional(),
   forum_topic_created: ForumTopicCreatedSchema.optional(),
+  forum_topic_closed: ForumTopicClosedSchema.optional(),
   is_topic_message: z.boolean().optional(),
   reply_to_message: ReplyMessageSchema.optional(),
   left_chat_participant: UserSchema.optional(),

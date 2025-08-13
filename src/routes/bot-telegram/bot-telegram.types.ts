@@ -10,6 +10,7 @@ import {
   UpdateSchema,
   TelegramBotContextSchema,
   ForumTopicCreatedSchema,
+  ForumTopicClosedSchema,
   AcceptedGiftTypesSchema,
 } from "./bot-telegram.schemas";
 
@@ -23,6 +24,7 @@ export type TelegramContext = z.infer<typeof TelegramContextSchema>;
 export type Update = z.infer<typeof UpdateSchema>;
 export type TelegramBotContext = z.infer<typeof TelegramBotContextSchema>;
 export type ForumTopicCreated = z.infer<typeof ForumTopicCreatedSchema>;
+export type ForumTopicClosed = z.infer<typeof ForumTopicClosedSchema>;
 export type AcceptedGiftTypes = z.infer<typeof AcceptedGiftTypesSchema>;
 
 export interface ForumTopic {
