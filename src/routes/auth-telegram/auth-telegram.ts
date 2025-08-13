@@ -80,6 +80,8 @@ router.get("/close", async (req: Request, res: Response) => {
 });
 
 router.get("/redirect", async (req: Request, res: Response) => {
+  console.log("=== REDIRECT ROUTE CALLED ===");
+  console.log("Timestamp:", new Date().toISOString());
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
@@ -244,6 +246,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
         ETag: Math.random().toString(),
       });
 
+      console.log("Sending fragment processor HTML");
       res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
       return;
     }
@@ -342,6 +345,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error("Error during redirect:", error);
+    console.log("=== REDIRECT ROUTE ERROR END ===");
     const userAgent = req.get("User-Agent") || "";
     const isMobileError =
       userAgent.includes("Expo") || userAgent.includes("TeleGate");
@@ -351,6 +355,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
     return;
   }
+  console.log("=== REDIRECT ROUTE SUCCESS END ===");
 });
 
 router.post("/redirect", async (req: Request, res: Response) => {
