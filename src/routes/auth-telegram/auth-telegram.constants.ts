@@ -108,10 +108,35 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               if (match) {
                 const encodedData = match[1];
                 addDebugLog("Encoded data: " + JSON.stringify(encodedData));
+                addDebugLog("Encoded data length: " + encodedData.length);
+                addDebugLog("Encoded data type: " + typeof encodedData);
                 
                 let decodedData;
+                
+                // Custom Base64 decoder fallback
+                function customAtob(str) {
+                  try {
+                    return atob(str);
+                  } catch (e) {
+                    addDebugLog("Native atob failed, using custom decoder");
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+                    let output = '';
+                    str = String(str).replace(/=+$/, '');
+                    if (str.length % 4 === 1) {
+                      throw new Error('Invalid base64 string');
+                    }
+                    for (let bc = 0, bs = 0, buffer, i = 0; buffer = str.charAt(i++);) {
+                      if (buffer = chars.indexOf(buffer)) {
+                        bs = bc % 4 ? bs * 64 + buffer : buffer;
+                        if (bc++ % 4) output += String.fromCharCode(255 & bs >> (-2 * bc & 6));
+                      }
+                    }
+                    return output;
+                  }
+                }
+                
                 try {
-                  decodedData = atob(encodedData);
+                  decodedData = customAtob(encodedData);
                   addDebugLog("Base64 decoded: " + decodedData);
                 } catch (e) {
                   addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
@@ -124,6 +149,11 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     addDebugLog("Using raw data: " + decodedData);
                   }
                 }
+                
+                addDebugLog("Decoded data: " + JSON.stringify(decodedData));
+                addDebugLog("Decoded data type: " + typeof decodedData);
+                addDebugLog("Is false check: " + (decodedData === 'false'));
+                addDebugLog("Is boolean false check: " + (decodedData === false));
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");

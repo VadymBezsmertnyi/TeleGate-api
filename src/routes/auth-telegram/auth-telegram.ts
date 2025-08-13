@@ -106,8 +106,36 @@ router.get("/redirect", async (req: Request, res: Response) => {
         const encodedData = fragmentMatch[1];
         let decodedData;
 
+        // Custom Base64 decoder fallback
+        function customAtob(str: string): string {
+          try {
+            return atob(str);
+          } catch (e) {
+            console.log("Native atob failed, using custom decoder");
+            const chars =
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+            let output = "";
+            str = String(str).replace(/=+$/, "");
+            if (str.length % 4 === 1) {
+              throw new Error("Invalid base64 string");
+            }
+            for (
+              let bc = 0, bs = 0, buffer, i = 0;
+              (buffer = str.charAt(i++));
+
+            ) {
+              if ((buffer = chars.indexOf(buffer))) {
+                bs = bc % 4 ? bs * 64 + buffer : buffer;
+                if (bc++ % 4)
+                  output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6)));
+              }
+            }
+            return output;
+          }
+        }
+
         try {
-          decodedData = atob(encodedData);
+          decodedData = customAtob(encodedData);
           console.log("Base64 decoded:", decodedData);
         } catch (e) {
           console.log(
