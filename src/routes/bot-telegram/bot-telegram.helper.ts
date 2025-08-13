@@ -141,7 +141,9 @@ export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
     if (chat.photo) {
       try {
         const file = await bot.telegram.getFile(chat.photo.big_file_id);
-        photoUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        if (botToken)
+          photoUrl = `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
       } catch (error) {
         console.warn("Помилка при отриманні фото групи:", error);
       }
@@ -160,6 +162,11 @@ export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
         existingGroup.description = groupData.description;
       if (groupData.photoUrl) existingGroup.photoUrl = groupData.photoUrl;
       await existingGroup.save();
+      console.warn(
+        `Оновлено групу: ${groupData.title}, фото: ${
+          groupData.photoUrl ? "так" : "ні"
+        }, опис: ${groupData.description ? "так" : "ні"}`
+      );
       return existingGroup;
     }
 

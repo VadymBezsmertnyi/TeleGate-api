@@ -114,6 +114,18 @@ const startBotTelegram = async () => {
         await existingGroup.save();
       }
 
+      if (newStatus === "member" || newStatus === "administrator") {
+        try {
+          const { updateGroupInfoFromTelegram } = await import(
+            "./bot-telegram.helper"
+          );
+          await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
+          console.warn("Оновлено інформацію про групу з Telegram API");
+        } catch (error) {
+          console.warn("Помилка при оновленні інформації про групу:", error);
+        }
+      }
+
       if (newStatus !== "left" && newStatus !== "kicked") {
         try {
           const admins = await ctx.telegram.getChatAdministrators(chat.id);
@@ -299,6 +311,21 @@ const startBotTelegram = async () => {
             if (existingGroup) {
               existingGroup.botStatus = "member";
               await existingGroup.save();
+            }
+
+            try {
+              const { updateGroupInfoFromTelegram } = await import(
+                "./bot-telegram.helper"
+              );
+              await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
+              console.warn(
+                "Оновлено інформацію про групу з Telegram API (new_chat_members)"
+              );
+            } catch (error) {
+              console.warn(
+                "Помилка при оновленні інформації про групу:",
+                error
+              );
             }
           }
         }
