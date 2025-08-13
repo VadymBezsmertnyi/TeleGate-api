@@ -97,10 +97,10 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
         
-        setTimeout(() => {
-          addDebugLog("Checking fragment after delay...");
+        function processFragment() {
+          addDebugLog("Checking fragment...");
           const fragment = window.location.hash;
-          addDebugLog("Fragment after delay: " + fragment);
+          addDebugLog("Fragment: " + fragment);
           
           if (fragment.includes('tgAuthResult=')) {
             try {
@@ -150,10 +150,32 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               window.location.href = 'telegate://auth-error?error=parse_error';
             }
           } else {
-            addDebugLog("ERROR: No tgAuthResult in fragment");
-            window.location.href = 'telegate://auth-error?error=missing_fragment';
+            addDebugLog("No tgAuthResult in fragment, checking for direct params...");
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
+            
+            if (hasParams) {
+              addDebugLog("Found direct params, processing...");
+              const newUrl = window.location.pathname + '?' + window.location.search.substring(1);
+              addDebugLog("Redirecting to: " + newUrl);
+              setTimeout(() => {
+                window.location.href = newUrl;
+              }, 1000);
+            } else {
+              addDebugLog("No params found, waiting for fragment...");
+              setTimeout(processFragment, 100);
+            }
           }
-        }, 500);
+        }
+        
+        // Initial check with delay
+        setTimeout(processFragment, 100);
+        
+        // Also listen for hash changes
+        window.addEventListener('hashchange', function() {
+          addDebugLog("Hash changed, reprocessing...");
+          processFragment();
+        });
       </script>
     </body>
   </html>

@@ -84,8 +84,110 @@ router.get("/redirect", async (req: Request, res: Response) => {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
     console.log("Redirect params:", JSON.stringify(req.query));
+    console.log("Request headers:", JSON.stringify(req.headers));
+    console.log("Request URL:", req.url);
+    console.log("Request method:", req.method);
+
+    // Check if we have fragment data in URL
+    const url = req.url || "";
+    const fragmentMatch =
+      url.match(/#tgAuthResult=([^&]+)/) || url.match(/#([^&]+)/);
+
+    if (fragmentMatch) {
+      console.log("Found fragment data:", fragmentMatch[1]);
+      try {
+        const encodedData = fragmentMatch[1];
+        let decodedData;
+
+        try {
+          decodedData = atob(encodedData);
+        } catch (e) {
+          decodedData = decodeURIComponent(encodedData);
+        }
+
+        if (decodedData === "false") {
+          console.log("Auth failed - received false");
+          res.redirect(`telegate://auth-error?error=auth_denied`);
+          return;
+        }
+
+        const authData = JSON.parse(decodedData);
+        console.log("Parsed fragment auth data:", JSON.stringify(authData));
+
+        // Use fragment data instead of query params
+        const telegramId = parseInt(authData.id);
+        const token = `token_${telegramId}_${Date.now()}`;
+
+        let user = await UserModel.findOne({ telegramId }).lean();
+
+        if (user) {
+          await UserModel.findByIdAndUpdate(user._id, {
+            username: authData.username || user.username,
+            firstName: authData.first_name || user.firstName,
+            lastName: authData.last_name || user.lastName,
+            photoUrl: authData.photo_url || user.photoUrl,
+            lastActivityAt: new Date(),
+            isActive: true,
+            updatedAt: new Date(),
+          });
+        } else {
+          const _id = new mongoose.Types.ObjectId();
+          await UserModel.create({
+            _id,
+            telegramId,
+            username: authData.username || null,
+            firstName: authData.first_name || null,
+            lastName: authData.last_name || null,
+            photoUrl: authData.photo_url || null,
+            lastActivityAt: new Date(),
+            isActive: true,
+          });
+        }
+
+        const userAgent = req.get("User-Agent") || "";
+        const isMobile =
+          userAgent.includes("Expo") || userAgent.includes("TeleGate");
+
+        if (isMobile) {
+          const deepLink = `telegate://auth-success?token=${token}&userId=${telegramId}&username=${
+            authData.username || ""
+          }&firstName=${authData.first_name || ""}&lastName=${
+            authData.last_name || ""
+          }&photoUrl=${authData.photo_url || ""}`;
+          res.redirect(deepLink);
+        } else {
+          res.send(
+            TELEGRAM_SUCCESS_PAGE_HTML.replace(
+              "<h3>User Data:</h3>",
+              `<h3>User Data:</h3>
+           <p><strong>ID:</strong> ${telegramId}</p>
+           <p><strong>Username:</strong> ${authData.username || "N/A"}</p>
+           <p><strong>Name:</strong> ${authData.first_name || ""} ${
+                authData.last_name || ""
+              }</p>
+           <p><strong>Token:</strong> ${token}</p>`
+            ).replace(
+              "<p><strong>Deep Link (for mobile app):</strong></p>",
+              `<p><strong>Deep Link (for mobile app):</strong></p>
+           <code style="word-break: break-all;">telegate://auth-success?token=${token}&userId=${telegramId}&username=${
+                authData.username || ""
+              }&firstName=${authData.first_name || ""}&lastName=${
+                authData.last_name || ""
+              }&photoUrl=${authData.photo_url || ""}</code>`
+            )
+          );
+        }
+        return;
+      } catch (error) {
+        console.error("Error processing fragment data:", error);
+      }
+    }
 
     if (!id || !auth_date || !hash) {
+      console.log("Missing required params, sending fragment processor");
+      console.log("URL:", req.url);
+      console.log("Query params:", req.query);
+      console.log("Body:", req.body);
       res.set({
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
