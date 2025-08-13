@@ -89,37 +89,43 @@ const startBotTelegram = async () => {
         addedBy: member._id.toString(),
       });
 
-      const admins = await ctx.telegram.getChatAdministrators(chat.id);
-      for (const admin of admins) {
-        const currentAdmin = admin as ChatMember & {
-          user: User & {
-            can_join_groups?: boolean;
-            can_read_all_group_messages?: boolean;
-            supports_inline_queries?: boolean;
-          };
-        };
-        const adminMemberData: MemberData = {
-          tgUserId: admin.user.id.toString(),
-          isBot: admin.user.is_bot,
-          firstName: admin.user.first_name,
-          lastName: admin.user.last_name,
-          username: admin.user.username,
-          languageCode: admin.user.language_code,
-          canJoinGroups: currentAdmin.user.can_join_groups,
-          canReadAllGroupMessages:
-            currentAdmin.user.can_read_all_group_messages,
-          supportsInlineQueries: currentAdmin.user.supports_inline_queries,
-        };
+      if (newStatus !== "left" && newStatus !== "kicked") {
+        try {
+          const admins = await ctx.telegram.getChatAdministrators(chat.id);
+          for (const admin of admins) {
+            const currentAdmin = admin as ChatMember & {
+              user: User & {
+                can_join_groups?: boolean;
+                can_read_all_group_messages?: boolean;
+                supports_inline_queries?: boolean;
+              };
+            };
+            const adminMemberData: MemberData = {
+              tgUserId: admin.user.id.toString(),
+              isBot: admin.user.is_bot,
+              firstName: admin.user.first_name,
+              lastName: admin.user.last_name,
+              username: admin.user.username,
+              languageCode: admin.user.language_code,
+              canJoinGroups: currentAdmin.user.can_join_groups,
+              canReadAllGroupMessages:
+                currentAdmin.user.can_read_all_group_messages,
+              supportsInlineQueries: currentAdmin.user.supports_inline_queries,
+            };
 
-        const adminMember = await createOrUpdateMember(adminMemberData);
-        const adminRole = determineRole(admin.status);
-        await createGroupMemberRelation({
-          groupId: group._id.toString(),
-          memberId: adminMember._id.toString(),
-          status: admin.status,
-          role: adminRole,
-          addedBy: member._id.toString(),
-        });
+            const adminMember = await createOrUpdateMember(adminMemberData);
+            const adminRole = determineRole(admin.status);
+            await createGroupMemberRelation({
+              groupId: group._id.toString(),
+              memberId: adminMember._id.toString(),
+              status: admin.status,
+              role: adminRole,
+              addedBy: member._id.toString(),
+            });
+          }
+        } catch (adminError) {
+          console.warn("Помилка при отриманні адміністраторів:", adminError);
+        }
       }
     } catch (error) {
       console.warn("Помилка при створенні групи:", error);
@@ -262,6 +268,65 @@ const startBotTelegram = async () => {
               addedBy: member._id.toString(),
             });
           }
+        }
+      }
+
+      if (messageWithNewMembers.left_chat_member) {
+        const leftMember = messageWithNewMembers.left_chat_member;
+        if (leftMember.is_bot && leftMember.id === ctx.botInfo?.id) {
+          console.warn("Бот видалено з групи");
+
+          const leftMemberData: MemberData = {
+            tgUserId: leftMember.id.toString(),
+            isBot: leftMember.is_bot,
+            firstName: leftMember.first_name,
+            lastName: leftMember.last_name,
+            username: leftMember.username,
+            languageCode: leftMember.language_code,
+            canJoinGroups: leftMember.can_join_groups,
+            canReadAllGroupMessages: leftMember.can_read_all_group_messages,
+            supportsInlineQueries: leftMember.supports_inline_queries,
+          };
+
+          const leftBotMember = await createOrUpdateMember(leftMemberData);
+          await createGroupMemberRelation({
+            groupId: group._id.toString(),
+            memberId: leftBotMember._id.toString(),
+            status: "left",
+            role: "member",
+            addedBy: member._id.toString(),
+          });
+        }
+      }
+
+      if (messageWithNewMembers.left_chat_participant) {
+        const leftParticipant = messageWithNewMembers.left_chat_participant;
+        if (leftParticipant.is_bot && leftParticipant.id === ctx.botInfo?.id) {
+          console.warn("Бот видалено з групи (left_chat_participant)");
+
+          const leftParticipantData: MemberData = {
+            tgUserId: leftParticipant.id.toString(),
+            isBot: leftParticipant.is_bot,
+            firstName: leftParticipant.first_name,
+            lastName: leftParticipant.last_name,
+            username: leftParticipant.username,
+            languageCode: leftParticipant.language_code,
+            canJoinGroups: leftParticipant.can_join_groups,
+            canReadAllGroupMessages:
+              leftParticipant.can_read_all_group_messages,
+            supportsInlineQueries: leftParticipant.supports_inline_queries,
+          };
+
+          const leftBotParticipant = await createOrUpdateMember(
+            leftParticipantData
+          );
+          await createGroupMemberRelation({
+            groupId: group._id.toString(),
+            memberId: leftBotParticipant._id.toString(),
+            status: "left",
+            role: "member",
+            addedBy: member._id.toString(),
+          });
         }
       }
     } catch (error) {
