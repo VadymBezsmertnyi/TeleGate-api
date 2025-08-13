@@ -9,19 +9,25 @@ export const UserSchema = z.object({
   language_code: z.string().optional(),
 });
 
+export const AcceptedGiftTypesSchema = z.object({
+  unlimited_gifts: z.boolean().optional(),
+  limited_gifts: z.boolean().optional(),
+  unique_gifts: z.boolean().optional(),
+  premium_subscription: z.boolean().optional(),
+});
+
+export const ForumTopicCreatedSchema = z.object({
+  name: z.string(),
+  icon_color: z.number(),
+});
+
 export const ChatSchema = z.object({
   id: z.number(),
   title: z.string().optional(),
   type: z.enum(["private", "group", "supergroup", "channel"]),
+  is_forum: z.boolean().optional(),
   all_members_are_administrators: z.boolean().optional(),
-  accepted_gift_types: z
-    .object({
-      unlimited_gifts: z.boolean().optional(),
-      limited_gifts: z.boolean().optional(),
-      unique_gifts: z.boolean().optional(),
-      premium_subscription: z.boolean().optional(),
-    })
-    .optional(),
+  accepted_gift_types: AcceptedGiftTypesSchema.optional(),
 });
 
 export const ChatMemberSchema = z.object({
@@ -42,6 +48,9 @@ export const ReplyMessageSchema = z.object({
   chat: ChatSchema,
   date: z.number(),
   text: z.string().optional(),
+  message_thread_id: z.number().optional(),
+  forum_topic_created: ForumTopicCreatedSchema.optional(),
+  is_topic_message: z.boolean().optional(),
 });
 
 export const MessageSchema = z.object({
@@ -50,6 +59,9 @@ export const MessageSchema = z.object({
   chat: ChatSchema,
   date: z.number(),
   text: z.string().optional(),
+  message_thread_id: z.number().optional(),
+  forum_topic_created: ForumTopicCreatedSchema.optional(),
+  is_topic_message: z.boolean().optional(),
   reply_to_message: ReplyMessageSchema.optional(),
   left_chat_participant: UserSchema.optional(),
   left_chat_member: UserSchema.optional(),
@@ -110,62 +122,3 @@ export const TelegramBotContextSchema = z.object({
   botInfo: BotInfoSchema,
   state: z.record(z.any(), z.any()).optional(),
 });
-
-export const isMessageUpdate = (
-  update: z.infer<typeof UpdateSchema>
-): update is z.infer<typeof MessageUpdateSchema> => {
-  return "message" in update;
-};
-
-export const isMyChatMemberUpdate = (
-  update: z.infer<typeof UpdateSchema>
-): update is z.infer<typeof MyChatMemberUpdateSchema> => {
-  return "my_chat_member" in update;
-};
-
-export const isBotAddedMessage = (
-  message: z.infer<typeof MessageSchema>
-): boolean => {
-  return !!(
-    message.new_chat_participant ||
-    message.new_chat_member ||
-    message.new_chat_members
-  );
-};
-
-export const isBotRemovedMessage = (
-  message: z.infer<typeof MessageSchema>
-): boolean => {
-  return !!(message.left_chat_participant || message.left_chat_member);
-};
-
-export const isReplyToBot = (
-  message: z.infer<typeof MessageSchema>
-): boolean => {
-  return !!message.reply_to_message?.from?.is_bot;
-};
-
-export const isBotStatusChange = (
-  myChatMember: z.infer<typeof MyChatMemberSchema>
-): boolean => {
-  return (
-    myChatMember.old_chat_member.user.is_bot &&
-    myChatMember.new_chat_member.user.is_bot
-  );
-};
-
-export const validateTelegramContext = (data: unknown) => {
-  return TelegramBotContextSchema.parse(data);
-};
-
-export const validateUpdate = (data: unknown) => {
-  return UpdateSchema.parse(data);
-};
-
-export const validateMessage = (data: unknown) => {
-  return MessageSchema.parse(data);
-};
-
-export const validateMyChatMember = (data: unknown) => {
-  return MyChatMemberSchema.parse(data);
-};
