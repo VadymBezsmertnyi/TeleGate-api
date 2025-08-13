@@ -95,18 +95,10 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
           }
         }
         
-        // Лічильник спроб з localStorage
-        let retryCount = parseInt(localStorage.getItem('telegram_auth_retry_count') || '0');
-        const maxRetries = 2;
-        
         addDebugLog("=== FRAGMENT PROCESSOR STARTED ===");
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
-        addDebugLog("Retry count: " + retryCount);
-        
-        // Test basic JavaScript functionality
-        addDebugLog("JavaScript is working");
         
         function processFragment() {
           addDebugLog("=== PROCESSING FRAGMENT ===");
@@ -184,8 +176,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");
-                  addDebugLog("This might be a timing issue");
-                  addDebugLog("Redirecting to error page");
                   window.location.href = 'telegate://auth-error?error=auth_denied&reason=timing_issue';
                   return;
                 }
@@ -193,8 +183,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 try {
                   const authData = JSON.parse(decodedData);
                   addDebugLog("Parsed auth data successfully");
-                  addDebugLog("Clearing retry counter on success");
-                  localStorage.removeItem('telegram_auth_retry_count'); // Очищаємо лічильник при успіху
                   
                   const params = new URLSearchParams();
                   if (authData.id) params.append('id', authData.id.toString());
