@@ -87,25 +87,15 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
       <p>Please wait while we process your Telegram authentication.</p>
       <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px;"></div>
       <script>
-        console.log("Script started");
         const debugDiv = document.getElementById('debug');
         function addDebugLog(message) {
-          console.log("Debug:", message);
-          if (debugDiv) {
-            debugDiv.innerHTML += message + '<br>';
-          }
+          debugDiv.innerHTML += message + '<br>';
         }
         
         addDebugLog("Fragment processor loaded at " + new Date().toISOString());
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
-        addDebugLog("JavaScript is working!");
-        
-        // Простий тест
-        setTimeout(() => {
-          addDebugLog("Timeout test - JavaScript is still working");
-        }, 1000);
         
         function processFragment() {
           addDebugLog("Checking fragment...");
@@ -118,16 +108,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               if (match) {
                 const encodedData = match[1];
                 addDebugLog("Encoded data: " + JSON.stringify(encodedData));
-                addDebugLog("Encoded data length: " + encodedData.length);
-                addDebugLog("Encoded data type: " + typeof encodedData);
-                
-                // Додаткова діагностика - перевіримо всі можливі ключі
-                addDebugLog("Full fragment: " + fragment);
-                addDebugLog("All fragment params:");
-                const fragmentParams = new URLSearchParams(fragment.substring(1));
-                for (const [key, value] of fragmentParams.entries()) {
-                  addDebugLog("  " + key + ": " + value);
-                }
                 
                 let decodedData;
                 
@@ -172,15 +152,11 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 }
                 
                 try {
-                  addDebugLog("=== STARTING DECODE PROCESS ===");
                   decodedData = customAtob(encodedData);
-                  addDebugLog("=== DECODE COMPLETED ===");
-                  addDebugLog("Final decoded data: " + JSON.stringify(decodedData));
+                  addDebugLog("Base64 decoded: " + decodedData);
                 } catch (e) {
-                  addDebugLog("=== DECODE FAILED ===");
                   addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
                   try {
-                    addDebugLog("Trying URL decode...");
                     decodedData = decodeURIComponent(encodedData);
                     addDebugLog("URL decoded: " + decodedData);
                   } catch (e2) {
@@ -190,17 +166,10 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   }
                 }
                 
-                addDebugLog("=== DECODED DATA ANALYSIS ===");
                 addDebugLog("Decoded data: " + JSON.stringify(decodedData));
                 addDebugLog("Decoded data type: " + typeof decodedData);
-                addDebugLog("Decoded data length: " + decodedData.length);
-                addDebugLog("Decoded data char codes: " + Array.from(decodedData).map(c => c.charCodeAt(0)).join(','));
                 addDebugLog("Is false check: " + (decodedData === 'false'));
                 addDebugLog("Is boolean false check: " + (decodedData === false));
-                addDebugLog("Strict equality with 'false': " + (decodedData === 'false'));
-                addDebugLog("Strict equality with false: " + (decodedData === false));
-                addDebugLog("Includes 'false': " + decodedData.includes('false'));
-                addDebugLog("=== END ANALYSIS ===");
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");
@@ -241,40 +210,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               window.location.href = 'telegate://auth-error?error=parse_error';
             }
           } else {
-            addDebugLog("No tgAuthResult in fragment, checking for other formats...");
-            
-            // Перевіримо інші можливі формати
-            if (fragment.includes('auth=')) {
-              addDebugLog("Found 'auth=' in fragment");
-              const authMatch = fragment.match(/auth=([^&]+)/);
-              if (authMatch) {
-                addDebugLog("Auth data: " + authMatch[1]);
-                try {
-                  const authData = JSON.parse(decodeURIComponent(authMatch[1]));
-                  addDebugLog("Parsed auth data: " + JSON.stringify(authData));
-                  // Обробити auth дані
-                  const params = new URLSearchParams();
-                  if (authData.id) params.append('id', authData.id.toString());
-                  if (authData.username) params.append('username', authData.username);
-                  if (authData.first_name) params.append('first_name', authData.first_name);
-                  if (authData.last_name) params.append('last_name', authData.last_name);
-                  if (authData.photo_url) params.append('photo_url', authData.photo_url);
-                  if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
-                  if (authData.hash) params.append('hash', authData.hash);
-                  
-                  const newUrl = window.location.pathname + '?' + params.toString();
-                  addDebugLog("Redirecting to: " + newUrl);
-                  setTimeout(() => {
-                    window.location.href = newUrl;
-                  }, 1000);
-                  return;
-                } catch (e) {
-                  addDebugLog("Error parsing auth data: " + e.message);
-                }
-              }
-            }
-            
-            // Перевіримо прямі параметри
+            addDebugLog("No tgAuthResult in fragment, checking for direct params...");
             const urlParams = new URLSearchParams(window.location.search);
             const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
             
@@ -300,17 +236,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
           addDebugLog("Hash changed, reprocessing...");
           processFragment();
         });
-        
-        // Fallback якщо JavaScript не працює
-        addDebugLog("If you see this, JavaScript is working");
-        addDebugLog("If you don't see debug info, JavaScript is blocked");
       </script>
-      <noscript>
-        <div style="background: #ffebee; padding: 20px; margin: 20px 0; border: 1px solid #f44336;">
-          <h3>JavaScript is disabled</h3>
-          <p>This authentication requires JavaScript to work. Please enable JavaScript in your browser.</p>
-        </div>
-      </noscript>
     </body>
   </html>
 `;
