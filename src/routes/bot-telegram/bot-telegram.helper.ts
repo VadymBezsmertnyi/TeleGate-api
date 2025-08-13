@@ -7,6 +7,8 @@ import {
   GroupMemberRelation,
 } from "./bot-telegram.types";
 
+import UserModel from "../users/users.model";
+
 export const createOrUpdateMember = async (memberData: MemberData) => {
   const existingMember = await MemberModel.findOne({
     tgUserId: memberData.tgUserId,
@@ -26,7 +28,27 @@ export const createOrUpdateMember = async (memberData: MemberData) => {
     user: memberData.userId,
   });
 
-  return await newMember.save();
+  const savedMember = await newMember.save();
+
+  if (!memberData.isBot) {
+    try {
+      const user = await UserModel.findOne({
+        telegramId: parseInt(memberData.tgUserId),
+      });
+      if (user) {
+        savedMember.user = user._id;
+        await savedMember.save();
+
+        await UserModel.findByIdAndUpdate(user._id, {
+          $addToSet: { members: savedMember._id },
+        });
+      }
+    } catch (error) {
+      console.warn("Помилка при зв'язуванні члена з користувачем:", error);
+    }
+  }
+
+  return savedMember;
 };
 
 export const createOrUpdateGroup = async (groupData: GroupData) => {
@@ -75,7 +97,20 @@ export const createGroupMemberRelation = async (
     addedBy: relationData.addedBy,
   });
 
-  return await newRelation.save();
+  const savedRelation = await newRelation.save();
+
+  try {
+    const member = await MemberModel.findById(relationData.memberId);
+    if (member && member.user) {
+      await UserModel.findByIdAndUpdate(member.user, {
+        $addToSet: { groups: relationData.groupId },
+      });
+    }
+  } catch (error) {
+    console.warn("Помилка при оновленні зв'язків користувача з групою:", error);
+  }
+
+  return savedRelation;
 };
 
 export const determineRole = (
