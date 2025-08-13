@@ -138,6 +138,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
         try {
           decodedData = customAtob(encodedData);
           console.log("Base64 decoded:", decodedData);
+          console.log("Decoded data type:", typeof decodedData);
         } catch (e) {
           console.log(
             "Base64 decode failed:",

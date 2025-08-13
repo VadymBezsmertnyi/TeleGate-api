@@ -119,9 +119,17 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 // Custom Base64 decoder with detailed logging
                 function customAtob(str) {
                   addDebugLog("customAtob called with: " + str);
+                  
+                  // Перевіряємо чи це "ZmFsc2U" (закодований "false")
+                  if (str === "ZmFsc2U") {
+                    addDebugLog("Detected 'false' in Base64, returning 'false'");
+                    return "false";
+                  }
+                  
                   try {
                     const result = atob(str);
                     addDebugLog("Native atob succeeded: " + result);
+                    addDebugLog("Native atob result type: " + typeof result);
                     return result;
                   } catch (e) {
                     addDebugLog("Native atob failed: " + e.message);
