@@ -95,10 +95,15 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
           }
         }
         
+        // Лічильник спроб
+        let retryCount = 0;
+        const maxRetries = 2;
+        
         addDebugLog("=== FRAGMENT PROCESSOR STARTED ===");
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
+        addDebugLog("Retry count: " + retryCount);
         
         // Test basic JavaScript functionality
         addDebugLog("JavaScript is working");
@@ -178,16 +183,29 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 }
                 
                 if (decodedData === 'false' || decodedData === false) {
+                  retryCount++;
                   addDebugLog("Auth failed - received false");
-                  addDebugLog("This might be a timing issue, retrying authorization...");
-                  addDebugLog("Redirecting to Telegram OAuth again");
+                  addDebugLog("Retry count: " + retryCount + "/" + maxRetries);
                   
-                  // Перенаправляємо на повторну авторизацію замість помилки
-                  // Використовуємо той самий URL що і в поточному запиті
-                  const currentUrl = window.location.href;
-                  const baseUrl = currentUrl.split('#')[0]; // Видаляємо фрагмент
-                  const retryUrl = baseUrl.replace('/redirect', '/login');
-                  window.location.href = retryUrl;
+                  if (retryCount >= maxRetries) {
+                    addDebugLog("Max retries reached, showing error");
+                    window.location.href = 'telegate://auth-error?error=auth_denied&reason=max_retries';
+                    return;
+                  }
+                  
+                  addDebugLog("This might be a timing issue, retrying authorization...");
+                  addDebugLog("Waiting 2 seconds before retry...");
+                  
+                  // Затримка перед retry
+                  setTimeout(() => {
+                    addDebugLog("Redirecting to Telegram OAuth again");
+                    // Перенаправляємо на повторну авторизацію замість помилки
+                    // Використовуємо той самий URL що і в поточному запиті
+                    const currentUrl = window.location.href;
+                    const baseUrl = currentUrl.split('#')[0]; // Видаляємо фрагмент
+                    const retryUrl = baseUrl.replace('/redirect', '/login');
+                    window.location.href = retryUrl;
+                  }, 2000);
                   return;
                 }
                 
