@@ -5,6 +5,11 @@ import mongoose from "mongoose";
 import { userPublicSchema } from "./users.schemas";
 import UserModel from "./users.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
+import {
+  linkUserWithMembersAndGroups,
+  updateUserMembersAndGroups,
+  getUserMembersAndGroups,
+} from "./users.helper";
 
 dotenv.config();
 const router = Router();
@@ -51,6 +56,16 @@ router.get("/me", async (req: Request, res: Response) => {
       });
 
       user = newUser.toObject();
+
+      const linkResult = await linkUserWithMembersAndGroups(
+        telegramUser.id,
+        _id.toString()
+      );
+      if (linkResult) {
+        console.log(
+          `Зв'язано нового користувача з ${linkResult.groupRelations} групами`
+        );
+      }
     } else {
       await UserModel.findByIdAndUpdate(user._id, {
         username: telegramUser.username || user.username,
@@ -61,11 +76,12 @@ router.get("/me", async (req: Request, res: Response) => {
       });
 
       user = await UserModel.findById(user._id).lean();
-    }
+      if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (!user) {
-      return res.status(500).json({ error: "Failed to create or update user" });
+      await updateUserMembersAndGroups(telegramUser.id, user._id.toString());
     }
+    if (!user)
+      return res.status(500).json({ error: "Failed to create or update user" });
 
     const userData = {
       id: user.telegramId,
@@ -196,6 +212,51 @@ router.put("/deactivate/:id", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deactivating user:", error);
     res.status(500).send({ message: "Internal server error", error });
+  }
+});
+
+router.get("/me/full", async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer "))
+      return res
+        .status(401)
+        .json({ error: "Missing or invalid authorization header" });
+
+    const token = authHeader.substring(7);
+    if (!token) return res.status(401).json({ error: "Missing token" });
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken)
+      return res.status(500).json({ error: "Bot token not configured" });
+
+    const telegramValidation = await validateTelegramToken(token, botToken);
+    if (!telegramValidation.isValid || !telegramValidation.userData)
+      return res.status(401).json({ error: "Invalid or expired token" });
+
+    const telegramUser = telegramValidation.userData;
+
+    const user = await UserModel.findOne({
+      telegramId: telegramUser.id,
+      isActive: true,
+    }).lean();
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const fullUserData = await getUserMembersAndGroups(user._id.toString());
+    if (!fullUserData) {
+      return res.status(500).json({ error: "Failed to get user data" });
+    }
+
+    res.json({
+      result: true,
+      data: fullUserData,
+    });
+    return;
+  } catch (error) {
+    console.error("Error fetching full user data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+    return;
   }
 });
 

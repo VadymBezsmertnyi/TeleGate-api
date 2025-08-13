@@ -11,6 +11,8 @@ const userSM = new Schema({
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  members: [{ type: Schema.Types.ObjectId, ref: "Member" }],
+  groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
 });
 
 const UserModel = model("users", userSM);
