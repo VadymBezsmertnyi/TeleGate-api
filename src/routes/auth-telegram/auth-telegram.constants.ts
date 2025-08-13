@@ -77,46 +77,51 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-      <meta http-equiv="Pragma" content="no-cache">
-      <meta http-equiv="Expires" content="0">
       <title>Processing Authentication...</title>
     </head>
     <body style="font-family: Arial; padding: 40px; text-align: center;">
       <h1>🔄 Processing Authentication...</h1>
       <p>Please wait while we process your Telegram authentication.</p>
-      <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px;"></div>
+      <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
       <script>
+        console.log("Script started");
         const debugDiv = document.getElementById('debug');
+        
         function addDebugLog(message) {
-          debugDiv.innerHTML += message + '<br>';
+          console.log("Debug:", message);
+          if (debugDiv) {
+            debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+          }
         }
         
-        addDebugLog("Fragment processor loaded at " + new Date().toISOString());
+        addDebugLog("=== FRAGMENT PROCESSOR STARTED ===");
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
         
+        // Test basic JavaScript functionality
+        addDebugLog("JavaScript is working");
+        
         function processFragment() {
-          addDebugLog("Checking fragment...");
-          const fragment = window.location.hash;
-          addDebugLog("Fragment: " + fragment);
+          addDebugLog("=== PROCESSING FRAGMENT ===");
+          const fragment = window.location.hash.substring(1);
+          addDebugLog("Fragment content: " + fragment);
           
           if (fragment.includes('tgAuthResult=')) {
+            addDebugLog("Found tgAuthResult in fragment");
             try {
               const match = fragment.match(/tgAuthResult=([^&]+)/);
               if (match) {
                 const encodedData = match[1];
-                addDebugLog("Encoded data: " + JSON.stringify(encodedData));
+                addDebugLog("Encoded data: " + encodedData);
                 
-                let decodedData;
-                
-                // Custom Base64 decoder fallback
+                // Custom Base64 decoder with detailed logging
                 function customAtob(str) {
-                  addDebugLog("customAtob called with: " + JSON.stringify(str));
+                  addDebugLog("customAtob called with: " + str);
                   try {
                     const result = atob(str);
-                    addDebugLog("Native atob succeeded: " + JSON.stringify(result));
+                    addDebugLog("Native atob succeeded: " + result);
                     return result;
                   } catch (e) {
                     addDebugLog("Native atob failed: " + e.message);
@@ -125,7 +130,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
                     let output = '';
                     str = String(str).replace(/=+$/, '');
-                    addDebugLog("Processed string: " + JSON.stringify(str));
+                    addDebugLog("Processed string: " + str);
                     addDebugLog("String length: " + str.length);
                     
                     if (str.length % 4 === 1) {
@@ -146,96 +151,82 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                         }
                       }
                     }
-                    addDebugLog("Custom decoder result: " + JSON.stringify(output));
+                    addDebugLog("Custom decoder result: " + output);
                     return output;
                   }
                 }
                 
+                let decodedData;
                 try {
                   decodedData = customAtob(encodedData);
-                  addDebugLog("Base64 decoded: " + decodedData);
+                  addDebugLog("Final decoded data: " + decodedData);
                 } catch (e) {
-                  addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
-                  try {
-                    decodedData = decodeURIComponent(encodedData);
-                    addDebugLog("URL decoded: " + decodedData);
-                  } catch (e2) {
-                    addDebugLog("URL decode also failed: " + (e2 instanceof Error ? e2.message : String(e2)));
-                    decodedData = encodedData;
-                    addDebugLog("Using raw data: " + decodedData);
-                  }
+                  addDebugLog("Decode failed: " + e.message);
+                  decodedData = 'false';
                 }
                 
-                addDebugLog("Decoded data: " + JSON.stringify(decodedData));
-                addDebugLog("Decoded data type: " + typeof decodedData);
-                addDebugLog("Is false check: " + (decodedData === 'false'));
-                addDebugLog("Is boolean false check: " + (decodedData === false));
-                
-                if (decodedData === 'false' || decodedData === false) {
-                  addDebugLog("Auth failed - received false from Telegram");
-                  addDebugLog("Possible reasons:");
-                  addDebugLog("1. User cancelled authorization");
-                  addDebugLog("2. Bot ID is incorrect (current: " + window.location.search.match(/bot_id=([^&]+)/)?.[1] || "unknown") + ")");
-                  addDebugLog("3. Origin domain not allowed");
-                  addDebugLog("4. Bot not properly configured");
-                  addDebugLog("5. Check BotFather settings for @TeleGateAuthBot");
-                  addDebugLog("6. Verify domain: telegate-api-4b26ec7aa804.herokuapp.com");
-                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
+                if (decodedData === 'false') {
+                  addDebugLog("Auth failed - received false");
+                  window.location.href = 'telegate://auth-error?error=auth_denied';
                   return;
                 }
                 
-                const authData = JSON.parse(decodedData);
-                addDebugLog("Parsed auth data: " + JSON.stringify(authData));
-                
-                const params = new URLSearchParams();
-                if (authData.id) params.append('id', authData.id.toString());
-                if (authData.username) params.append('username', authData.username);
-                if (authData.first_name) params.append('first_name', authData.first_name);
-                if (authData.last_name) params.append('last_name', authData.last_name);
-                if (authData.photo_url) params.append('photo_url', authData.photo_url);
-                if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
-                if (authData.hash) params.append('hash', authData.hash);
-                
-                const newUrl = window.location.pathname + '?' + params.toString();
-                addDebugLog("Redirecting to: " + newUrl);
-                setTimeout(() => {
+                try {
+                  const authData = JSON.parse(decodedData);
+                  addDebugLog("Parsed auth data successfully");
+                  
+                  const params = new URLSearchParams();
+                  if (authData.id) params.append('id', authData.id.toString());
+                  if (authData.username) params.append('username', authData.username);
+                  if (authData.first_name) params.append('first_name', authData.first_name);
+                  if (authData.last_name) params.append('last_name', authData.last_name);
+                  if (authData.photo_url) params.append('photo_url', authData.photo_url);
+                  if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
+                  if (authData.hash) params.append('hash', authData.hash);
+                  
+                  const newUrl = window.location.pathname + '?' + params.toString();
+                  addDebugLog("Redirecting to: " + newUrl);
                   window.location.href = newUrl;
-                }, 1000);
+                } catch (e) {
+                  addDebugLog("Error parsing auth data: " + e.message);
+                  window.location.href = 'telegate://auth-error?error=invalid_data';
+                }
               } else {
-                addDebugLog("ERROR: No tgAuthResult found in fragment");
-                window.location.href = 'telegate://auth-error?error=no_auth_result';
+                addDebugLog("No tgAuthResult match found");
+                setTimeout(processFragment, 500);
               }
-            } catch (error) {
-              addDebugLog("ERROR processing auth data: " + error.message);
-              window.location.href = 'telegate://auth-error?error=parse_error';
+            } catch (e) {
+              addDebugLog("Error processing fragment: " + e.message);
+              setTimeout(processFragment, 500);
             }
           } else {
-            addDebugLog("No tgAuthResult in fragment, checking for direct params...");
+            addDebugLog("No tgAuthResult in fragment");
+            addDebugLog("Checking for direct params...");
             const urlParams = new URLSearchParams(window.location.search);
             const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
             
             if (hasParams) {
-              addDebugLog("Found direct params, processing...");
+              addDebugLog("Found direct params");
               const newUrl = window.location.pathname + '?' + window.location.search.substring(1);
               addDebugLog("Redirecting to: " + newUrl);
-              setTimeout(() => {
-                window.location.href = newUrl;
-              }, 1000);
+              window.location.href = newUrl;
             } else {
-              addDebugLog("No params found, waiting for fragment...");
-              setTimeout(processFragment, 100);
+              addDebugLog("No params found, waiting...");
+              setTimeout(processFragment, 500);
             }
           }
         }
         
-        // Initial check with delay
+        // Start processing
         setTimeout(processFragment, 100);
         
-        // Also listen for hash changes
+        // Listen for hash changes
         window.addEventListener('hashchange', function() {
-          addDebugLog("Hash changed, reprocessing...");
+          addDebugLog("Hash changed");
           processFragment();
         });
+        
+        addDebugLog("=== SETUP COMPLETE ===");
       </script>
     </body>
   </html>
