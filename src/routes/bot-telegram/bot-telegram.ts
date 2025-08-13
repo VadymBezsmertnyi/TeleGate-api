@@ -89,6 +89,14 @@ const startBotTelegram = async () => {
         addedBy: member._id.toString(),
       });
 
+      const existingGroup = await GroupModel.findOne({
+        tgChatId: chat.id.toString(),
+      });
+      if (existingGroup) {
+        existingGroup.botStatus = newStatus;
+        await existingGroup.save();
+      }
+
       if (newStatus !== "left" && newStatus !== "kicked") {
         try {
           const admins = await ctx.telegram.getChatAdministrators(chat.id);
@@ -267,6 +275,14 @@ const startBotTelegram = async () => {
               role: botRole,
               addedBy: member._id.toString(),
             });
+
+            const existingGroup = await GroupModel.findOne({
+              tgChatId: chat.id.toString(),
+            });
+            if (existingGroup) {
+              existingGroup.botStatus = "member";
+              await existingGroup.save();
+            }
           }
         }
       }
@@ -296,6 +312,14 @@ const startBotTelegram = async () => {
             role: "member",
             addedBy: member._id.toString(),
           });
+
+          const existingGroup = await GroupModel.findOne({
+            tgChatId: chat.id.toString(),
+          });
+          if (existingGroup) {
+            existingGroup.botStatus = "left";
+            await existingGroup.save();
+          }
         }
       }
 
@@ -327,6 +351,14 @@ const startBotTelegram = async () => {
             role: "member",
             addedBy: member._id.toString(),
           });
+
+          const existingGroup = await GroupModel.findOne({
+            tgChatId: chat.id.toString(),
+          });
+          if (existingGroup) {
+            existingGroup.botStatus = "left";
+            await existingGroup.save();
+          }
         }
       }
     } catch (error) {
