@@ -111,6 +111,14 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 addDebugLog("Encoded data length: " + encodedData.length);
                 addDebugLog("Encoded data type: " + typeof encodedData);
                 
+                // Додаткова діагностика - перевіримо всі можливі ключі
+                addDebugLog("Full fragment: " + fragment);
+                addDebugLog("All fragment params:");
+                const fragmentParams = new URLSearchParams(fragment.substring(1));
+                for (const [key, value] of fragmentParams.entries()) {
+                  addDebugLog("  " + key + ": " + value);
+                }
+                
                 let decodedData;
                 
                 // Custom Base64 decoder fallback
@@ -154,6 +162,8 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 addDebugLog("Decoded data type: " + typeof decodedData);
                 addDebugLog("Is false check: " + (decodedData === 'false'));
                 addDebugLog("Is boolean false check: " + (decodedData === false));
+                addDebugLog("Decoded data length: " + decodedData.length);
+                addDebugLog("Decoded data char codes: " + Array.from(decodedData).map(c => c.charCodeAt(0)).join(','));
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");
@@ -192,7 +202,40 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               window.location.href = 'telegate://auth-error?error=parse_error';
             }
           } else {
-            addDebugLog("No tgAuthResult in fragment, checking for direct params...");
+            addDebugLog("No tgAuthResult in fragment, checking for other formats...");
+            
+            // Перевіримо інші можливі формати
+            if (fragment.includes('auth=')) {
+              addDebugLog("Found 'auth=' in fragment");
+              const authMatch = fragment.match(/auth=([^&]+)/);
+              if (authMatch) {
+                addDebugLog("Auth data: " + authMatch[1]);
+                try {
+                  const authData = JSON.parse(decodeURIComponent(authMatch[1]));
+                  addDebugLog("Parsed auth data: " + JSON.stringify(authData));
+                  // Обробити auth дані
+                  const params = new URLSearchParams();
+                  if (authData.id) params.append('id', authData.id.toString());
+                  if (authData.username) params.append('username', authData.username);
+                  if (authData.first_name) params.append('first_name', authData.first_name);
+                  if (authData.last_name) params.append('last_name', authData.last_name);
+                  if (authData.photo_url) params.append('photo_url', authData.photo_url);
+                  if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
+                  if (authData.hash) params.append('hash', authData.hash);
+                  
+                  const newUrl = window.location.pathname + '?' + params.toString();
+                  addDebugLog("Redirecting to: " + newUrl);
+                  setTimeout(() => {
+                    window.location.href = newUrl;
+                  }, 1000);
+                  return;
+                } catch (e) {
+                  addDebugLog("Error parsing auth data: " + e.message);
+                }
+              }
+            }
+            
+            // Перевіримо прямі параметри
             const urlParams = new URLSearchParams(window.location.search);
             const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
             
