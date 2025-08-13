@@ -49,12 +49,6 @@ router.get("/login", async (req: Request, res: Response) => {
       "host"
     )}/api/auth-telegram/redirect`;
 
-    console.log("=== LOGIN ROUTE DEBUG ===");
-    console.log("Bot ID:", botId);
-    console.log("Origin Domain:", originDomain);
-    console.log("Redirect URL:", redirectUrl);
-    console.log("=== END LOGIN DEBUG ===");
-
     if (!botId) return res.status(500).json({ error: "Bot ID not configured" });
 
     const validOriginDomain = originDomain || req.get("host") || "localhost";
@@ -63,6 +57,13 @@ router.get("/login", async (req: Request, res: Response) => {
     )}&embed=1&request_access=write&return_to=${encodeURIComponent(
       redirectUrl
     )}`;
+
+    console.log("=== LOGIN ROUTE DEBUG ===");
+    console.log("Bot ID:", botId);
+    console.log("Origin Domain:", originDomain);
+    console.log("Redirect URL:", redirectUrl);
+    console.log("Telegram OAuth URL:", telegramOAuthUrl);
+    console.log("=== END LOGIN DEBUG ===");
     res.redirect(telegramOAuthUrl);
     return;
   } catch (error) {
