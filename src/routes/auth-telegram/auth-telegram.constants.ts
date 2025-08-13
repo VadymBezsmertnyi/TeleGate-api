@@ -95,8 +95,8 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
           }
         }
         
-        // Лічильник спроб
-        let retryCount = 0;
+        // Лічильник спроб з localStorage
+        let retryCount = parseInt(localStorage.getItem('telegram_auth_retry_count') || '0');
         const maxRetries = 2;
         
         addDebugLog("=== FRAGMENT PROCESSOR STARTED ===");
@@ -183,35 +183,18 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 }
                 
                 if (decodedData === 'false' || decodedData === false) {
-                  retryCount++;
-                  addDebugLog("Auth failed - received false");
-                  addDebugLog("Retry count: " + retryCount + "/" + maxRetries);
-                  
-                  if (retryCount >= maxRetries) {
-                    addDebugLog("Max retries reached, showing error");
-                    window.location.href = 'telegate://auth-error?error=auth_denied&reason=max_retries';
-                    return;
-                  }
-                  
-                  addDebugLog("This might be a timing issue, retrying authorization...");
-                  addDebugLog("Waiting 2 seconds before retry...");
-                  
-                  // Затримка перед retry
-                  setTimeout(() => {
-                    addDebugLog("Redirecting to Telegram OAuth again");
-                    // Перенаправляємо на повторну авторизацію замість помилки
-                    // Використовуємо той самий URL що і в поточному запиті
-                    const currentUrl = window.location.href;
-                    const baseUrl = currentUrl.split('#')[0]; // Видаляємо фрагмент
-                    const retryUrl = baseUrl.replace('/redirect', '/login');
-                    window.location.href = retryUrl;
-                  }, 2000);
+                  addDebugLog("Auth failed - received false from Telegram");
+                  addDebugLog("This might be a timing issue");
+                  addDebugLog("Redirecting to error page");
+                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=timing_issue';
                   return;
                 }
                 
                 try {
                   const authData = JSON.parse(decodedData);
                   addDebugLog("Parsed auth data successfully");
+                  addDebugLog("Clearing retry counter on success");
+                  localStorage.removeItem('telegram_auth_retry_count'); // Очищаємо лічильник при успіху
                   
                   const params = new URLSearchParams();
                   if (authData.id) params.append('id', authData.id.toString());
