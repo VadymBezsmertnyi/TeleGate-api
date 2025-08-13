@@ -107,7 +107,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
               const match = fragment.match(/tgAuthResult=([^&]+)/);
               if (match) {
                 const encodedData = match[1];
-                addDebugLog("Encoded data: " + encodedData);
+                addDebugLog("Encoded data: " + JSON.stringify(encodedData));
                 
                 let decodedData;
                 try {
@@ -129,9 +129,10 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   addDebugLog("Auth failed - received false from Telegram");
                   addDebugLog("Possible reasons:");
                   addDebugLog("1. User cancelled authorization");
-                  addDebugLog("2. Bot ID is incorrect");
+                  addDebugLog("2. Bot ID is incorrect (current: " + window.location.search.match(/bot_id=([^&]+)/)?.[1] || "unknown") + ")");
                   addDebugLog("3. Origin domain not allowed");
                   addDebugLog("4. Bot not properly configured");
+                  addDebugLog("5. Domain not set in BotFather");
                   window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
                   return;
                 }
