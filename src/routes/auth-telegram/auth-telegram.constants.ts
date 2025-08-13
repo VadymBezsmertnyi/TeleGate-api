@@ -85,31 +85,19 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
     <body style="font-family: Arial; padding: 40px; text-align: center;">
       <h1>🔄 Processing Authentication...</h1>
       <p>Please wait while we process your Telegram authentication.</p>
-      <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px;"></div>
       <script>
-        const debugDiv = document.getElementById('debug');
         function addDebugLog(message) {
-          debugDiv.innerHTML += message + '<br>';
+          // Debug logging disabled in production
         }
         
-        addDebugLog("Fragment processor loaded at " + new Date().toISOString());
-        addDebugLog("Full URL: " + window.location.href);
-        addDebugLog("Fragment: " + window.location.hash);
-        addDebugLog("UserAgent: " + navigator.userAgent);
-        
         function processFragment() {
-          addDebugLog("Checking fragment...");
           const fragment = window.location.hash;
-          addDebugLog("Fragment: " + fragment);
           
           if (fragment.includes('tgAuthResult=')) {
             try {
               const match = fragment.match(/tgAuthResult=([^&]+)/);
               if (match) {
                 const encodedData = match[1];
-                addDebugLog("Encoded data: " + JSON.stringify(encodedData));
-                addDebugLog("Encoded data length: " + encodedData.length);
-                addDebugLog("Encoded data type: " + typeof encodedData);
                 
                 let decodedData;
                 
@@ -118,7 +106,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   try {
                     return atob(str);
                   } catch (e) {
-                    addDebugLog("Native atob failed, using custom decoder");
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
                     let output = '';
                     str = String(str).replace(/=+$/, '');
@@ -137,38 +124,20 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 
                 try {
                   decodedData = customAtob(encodedData);
-                  addDebugLog("Base64 decoded: " + decodedData);
                 } catch (e) {
-                  addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
                   try {
                     decodedData = decodeURIComponent(encodedData);
-                    addDebugLog("URL decoded: " + decodedData);
                   } catch (e2) {
-                    addDebugLog("URL decode also failed: " + (e2 instanceof Error ? e2.message : String(e2)));
                     decodedData = encodedData;
-                    addDebugLog("Using raw data: " + decodedData);
                   }
                 }
                 
-                addDebugLog("Decoded data: " + JSON.stringify(decodedData));
-                addDebugLog("Decoded data type: " + typeof decodedData);
-                addDebugLog("Is false check: " + (decodedData === 'false'));
-                addDebugLog("Is boolean false check: " + (decodedData === false));
-                
                 if (decodedData === 'false' || decodedData === false) {
-                  addDebugLog("Auth failed - received false from Telegram");
-                  addDebugLog("Possible reasons:");
-                  addDebugLog("1. User cancelled authorization");
-                  addDebugLog("2. Bot ID is incorrect (current: " + window.location.search.match(/bot_id=([^&]+)/)?.[1] || "unknown") + ")");
-                  addDebugLog("3. Origin domain not allowed");
-                  addDebugLog("4. Bot not properly configured");
-                  addDebugLog("5. Domain not set in BotFather");
                   window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
                   return;
                 }
                 
                 const authData = JSON.parse(decodedData);
-                addDebugLog("Parsed auth data: " + JSON.stringify(authData));
                 
                 const params = new URLSearchParams();
                 if (authData.id) params.append('id', authData.id.toString());
@@ -180,32 +149,25 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 if (authData.hash) params.append('hash', authData.hash);
                 
                 const newUrl = window.location.pathname + '?' + params.toString();
-                addDebugLog("Redirecting to: " + newUrl);
                 setTimeout(() => {
                   window.location.href = newUrl;
                 }, 1000);
               } else {
-                addDebugLog("ERROR: No tgAuthResult found in fragment");
                 window.location.href = 'telegate://auth-error?error=no_auth_result';
               }
             } catch (error) {
-              addDebugLog("ERROR processing auth data: " + error.message);
               window.location.href = 'telegate://auth-error?error=parse_error';
             }
           } else {
-            addDebugLog("No tgAuthResult in fragment, checking for direct params...");
             const urlParams = new URLSearchParams(window.location.search);
             const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
             
             if (hasParams) {
-              addDebugLog("Found direct params, processing...");
               const newUrl = window.location.pathname + '?' + window.location.search.substring(1);
-              addDebugLog("Redirecting to: " + newUrl);
               setTimeout(() => {
                 window.location.href = newUrl;
               }, 1000);
             } else {
-              addDebugLog("No params found, waiting for fragment...");
               setTimeout(processFragment, 100);
             }
           }
@@ -216,7 +178,6 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
         
         // Also listen for hash changes
         window.addEventListener('hashchange', function() {
-          addDebugLog("Hash changed, reprocessing...");
           processFragment();
         });
       </script>

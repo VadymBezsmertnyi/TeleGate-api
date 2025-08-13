@@ -49,11 +49,6 @@ router.get("/login", async (req: Request, res: Response) => {
       "host"
     )}/api/auth-telegram/redirect`;
 
-    console.log("Login request - Bot ID:", botId);
-    console.log("Login request - Origin Domain:", originDomain);
-    console.log("Login request - Redirect URL:", redirectUrl);
-    console.log("Login request - Host:", req.get("host"));
-
     if (!botId) return res.status(500).json({ error: "Bot ID not configured" });
 
     const validOriginDomain = originDomain || req.get("host") || "localhost";
@@ -62,8 +57,6 @@ router.get("/login", async (req: Request, res: Response) => {
     )}&embed=1&request_access=write&return_to=${encodeURIComponent(
       redirectUrl
     )}`;
-
-    console.log("Telegram OAuth URL:", telegramOAuthUrl);
     res.redirect(telegramOAuthUrl);
     return;
   } catch (error) {
@@ -90,10 +83,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
-    console.log("Redirect params:", JSON.stringify(req.query));
-    console.log("Request headers:", JSON.stringify(req.headers));
-    console.log("Request URL:", req.url);
-    console.log("Request method:", req.method);
 
     // Check if we have fragment data in URL
     const url = req.url || "";
@@ -101,7 +90,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
       url.match(/#tgAuthResult=([^&]+)/) || url.match(/#([^&]+)/);
 
     if (fragmentMatch) {
-      console.log("Found fragment data:", fragmentMatch[1]);
       try {
         const encodedData = fragmentMatch[1];
         let decodedData;
@@ -111,7 +99,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
           try {
             return atob(str);
           } catch (e) {
-            console.log("Native atob failed, using custom decoder");
             const chars =
               "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
             let output = "";
@@ -136,32 +123,15 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
         try {
           decodedData = customAtob(encodedData);
-          console.log("Base64 decoded:", decodedData);
         } catch (e) {
-          console.log(
-            "Base64 decode failed:",
-            e instanceof Error ? e.message : String(e)
-          );
           try {
             decodedData = decodeURIComponent(encodedData);
-            console.log("URL decoded:", decodedData);
           } catch (e2) {
-            console.log(
-              "URL decode also failed:",
-              e2 instanceof Error ? e2.message : String(e2)
-            );
             decodedData = encodedData;
-            console.log("Using raw data:", decodedData);
           }
         }
 
         if (decodedData === "false") {
-          console.log("Auth failed - received false from Telegram");
-          console.log("Possible reasons:");
-          console.log("1. User cancelled authorization");
-          console.log("2. Bot ID is incorrect");
-          console.log("3. Origin domain not allowed");
-          console.log("4. Bot not properly configured");
           res.redirect(
             `telegate://auth-error?error=auth_denied&reason=user_cancelled`
           );
@@ -169,7 +139,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
         }
 
         const authData = JSON.parse(decodedData);
-        console.log("Parsed fragment auth data:", JSON.stringify(authData));
 
         // Use fragment data instead of query params
         const telegramId = parseInt(authData.id);
@@ -241,10 +210,6 @@ router.get("/redirect", async (req: Request, res: Response) => {
     }
 
     if (!id || !auth_date || !hash) {
-      console.log("Missing required params, sending fragment processor");
-      console.log("URL:", req.url);
-      console.log("Query params:", req.query);
-      console.log("Body:", req.body);
       res.set({
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
