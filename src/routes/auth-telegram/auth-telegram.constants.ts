@@ -114,13 +114,25 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   decodedData = atob(encodedData);
                   addDebugLog("Base64 decoded: " + decodedData);
                 } catch (e) {
-                  decodedData = decodeURIComponent(encodedData);
-                  addDebugLog("URL decoded: " + decodedData);
+                  addDebugLog("Base64 decode failed: " + (e instanceof Error ? e.message : String(e)));
+                  try {
+                    decodedData = decodeURIComponent(encodedData);
+                    addDebugLog("URL decoded: " + decodedData);
+                  } catch (e2) {
+                    addDebugLog("URL decode also failed: " + (e2 instanceof Error ? e2.message : String(e2)));
+                    decodedData = encodedData;
+                    addDebugLog("Using raw data: " + decodedData);
+                  }
                 }
                 
                 if (decodedData === 'false' || decodedData === false) {
-                  addDebugLog("Auth failed - received false");
-                  window.location.href = 'telegate://auth-error?error=auth_denied';
+                  addDebugLog("Auth failed - received false from Telegram");
+                  addDebugLog("Possible reasons:");
+                  addDebugLog("1. User cancelled authorization");
+                  addDebugLog("2. Bot ID is incorrect");
+                  addDebugLog("3. Origin domain not allowed");
+                  addDebugLog("4. Bot not properly configured");
+                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
                   return;
                 }
                 

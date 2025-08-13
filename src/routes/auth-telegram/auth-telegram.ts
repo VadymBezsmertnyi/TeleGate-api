@@ -48,6 +48,12 @@ router.get("/login", async (req: Request, res: Response) => {
     const redirectUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/auth-telegram/redirect`;
+
+    console.log("Login request - Bot ID:", botId);
+    console.log("Login request - Origin Domain:", originDomain);
+    console.log("Login request - Redirect URL:", redirectUrl);
+    console.log("Login request - Host:", req.get("host"));
+
     if (!botId) return res.status(500).json({ error: "Bot ID not configured" });
 
     const validOriginDomain = originDomain || req.get("host") || "localhost";
@@ -57,6 +63,7 @@ router.get("/login", async (req: Request, res: Response) => {
       redirectUrl
     )}`;
 
+    console.log("Telegram OAuth URL:", telegramOAuthUrl);
     res.redirect(telegramOAuthUrl);
     return;
   } catch (error) {
@@ -101,13 +108,35 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
         try {
           decodedData = atob(encodedData);
+          console.log("Base64 decoded:", decodedData);
         } catch (e) {
-          decodedData = decodeURIComponent(encodedData);
+          console.log(
+            "Base64 decode failed:",
+            e instanceof Error ? e.message : String(e)
+          );
+          try {
+            decodedData = decodeURIComponent(encodedData);
+            console.log("URL decoded:", decodedData);
+          } catch (e2) {
+            console.log(
+              "URL decode also failed:",
+              e2 instanceof Error ? e2.message : String(e2)
+            );
+            decodedData = encodedData;
+            console.log("Using raw data:", decodedData);
+          }
         }
 
         if (decodedData === "false") {
-          console.log("Auth failed - received false");
-          res.redirect(`telegate://auth-error?error=auth_denied`);
+          console.log("Auth failed - received false from Telegram");
+          console.log("Possible reasons:");
+          console.log("1. User cancelled authorization");
+          console.log("2. Bot ID is incorrect");
+          console.log("3. Origin domain not allowed");
+          console.log("4. Bot not properly configured");
+          res.redirect(
+            `telegate://auth-error?error=auth_denied&reason=user_cancelled`
+          );
           return;
         }
 
