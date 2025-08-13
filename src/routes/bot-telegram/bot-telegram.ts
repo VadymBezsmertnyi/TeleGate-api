@@ -26,7 +26,6 @@ const startBotTelegram = async () => {
   const bot = new Telegraf(token);
 
   bot.on("my_chat_member", async (ctx) => {
-    console.warn("📝 Зміна статусу бота в чаті:", JSON.stringify(ctx));
     const chat = ctx.update.my_chat_member.chat;
     const newStatus = ctx.update.my_chat_member.new_chat_member.status;
     const from = ctx.update.my_chat_member.from;
@@ -36,11 +35,9 @@ const startBotTelegram = async () => {
       chat.type !== "supergroup" &&
       chat.type !== "channel"
     ) {
-      console.warn("👤 Приватний чат:", chat.username || chat.first_name);
       return;
     }
 
-    console.warn("📝 Група:", chat.title);
     chat.title = chat.title || "Без назви";
 
     try {
@@ -120,7 +117,6 @@ const startBotTelegram = async () => {
             "./bot-telegram.helper"
           );
           await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
-          console.warn("Оновлено інформацію про групу з Telegram API");
         } catch (error) {
           console.warn("Помилка при оновленні інформації про групу:", error);
         }
@@ -171,9 +167,7 @@ const startBotTelegram = async () => {
     if (newStatus === "administrator" || newStatus === "member") {
       try {
         const chatWithForum = chat as any;
-        if (chatWithForum.is_forum) {
-          console.warn("Форум-група, пропускаємо привітання");
-        } else {
+        if (!chatWithForum.is_forum) {
           await ctx.reply("Привіт! Я підключився до групи 🚀");
         }
       } catch (error) {
@@ -183,7 +177,6 @@ const startBotTelegram = async () => {
   });
 
   bot.on("chat_member", async (ctx) => {
-    console.warn("🔄 Зміна статусу в чаті:", JSON.stringify(ctx));
     const chat = ctx.update.chat_member.chat;
     const newChatMember = ctx.update.chat_member.new_chat_member;
     const from = ctx.update.chat_member.from;
@@ -237,7 +230,6 @@ const startBotTelegram = async () => {
   });
 
   bot.on("message", async (ctx) => {
-    console.log("Новий допис:", JSON.stringify(ctx));
     const chat = ctx.message.chat;
     const from = ctx.message.from;
     if (!from || chat.type === "private") return;
@@ -280,8 +272,6 @@ const startBotTelegram = async () => {
       ) {
         for (const newMember of messageWithNewMembers.new_chat_members) {
           if (newMember.is_bot && newMember.id === ctx.botInfo?.id) {
-            console.warn("Бот додано до групи через new_chat_members");
-
             const botMemberData: MemberData = {
               tgUserId: newMember.id.toString(),
               isBot: newMember.is_bot,
@@ -318,9 +308,6 @@ const startBotTelegram = async () => {
                 "./bot-telegram.helper"
               );
               await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
-              console.warn(
-                "Оновлено інформацію про групу з Telegram API (new_chat_members)"
-              );
             } catch (error) {
               console.warn(
                 "Помилка при оновленні інформації про групу:",
@@ -334,8 +321,6 @@ const startBotTelegram = async () => {
       if (messageWithNewMembers.left_chat_member) {
         const leftMember = messageWithNewMembers.left_chat_member;
         if (leftMember.is_bot && leftMember.id === ctx.botInfo?.id) {
-          console.warn("Бот видалено з групи");
-
           const leftMemberData: MemberData = {
             tgUserId: leftMember.id.toString(),
             isBot: leftMember.is_bot,
@@ -370,8 +355,6 @@ const startBotTelegram = async () => {
       if (messageWithNewMembers.left_chat_participant) {
         const leftParticipant = messageWithNewMembers.left_chat_participant;
         if (leftParticipant.is_bot && leftParticipant.id === ctx.botInfo?.id) {
-          console.warn("Бот видалено з групи (left_chat_participant)");
-
           const leftParticipantData: MemberData = {
             tgUserId: leftParticipant.id.toString(),
             isBot: leftParticipant.is_bot,
@@ -407,20 +390,17 @@ const startBotTelegram = async () => {
       }
 
       if (messageWithNewMembers.new_chat_photo) {
-        console.warn("Оновлено фото групи");
         try {
           const { updateGroupInfoFromTelegram } = await import(
             "./bot-telegram.helper"
           );
           await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
-          console.warn("Оновлено фото групи в базі даних");
         } catch (error) {
           console.warn("Помилка при оновленні фото групи:", error);
         }
       }
 
       if (messageWithNewMembers.delete_chat_photo) {
-        console.warn("Видалено фото групи");
         try {
           const existingGroup = await GroupModel.findOne({
             tgChatId: chat.id.toString(),
@@ -428,7 +408,6 @@ const startBotTelegram = async () => {
           if (existingGroup) {
             existingGroup.photoUrl = undefined;
             await existingGroup.save();
-            console.warn("Видалено фото групи з бази даних");
           }
         } catch (error) {
           console.warn("Помилка при видаленні фото групи:", error);
@@ -436,10 +415,6 @@ const startBotTelegram = async () => {
       }
 
       if (messageWithNewMembers.new_chat_title) {
-        console.warn(
-          "Оновлено назву групи:",
-          messageWithNewMembers.new_chat_title
-        );
         try {
           const existingGroup = await GroupModel.findOne({
             tgChatId: chat.id.toString(),
@@ -447,7 +422,6 @@ const startBotTelegram = async () => {
           if (existingGroup) {
             existingGroup.title = messageWithNewMembers.new_chat_title;
             await existingGroup.save();
-            console.warn("Оновлено назву групи в базі даних");
           }
         } catch (error) {
           console.warn("Помилка при оновленні назви групи:", error);

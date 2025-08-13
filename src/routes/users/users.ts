@@ -57,15 +57,10 @@ router.get("/me", async (req: Request, res: Response) => {
 
       user = newUser.toObject();
 
-      const linkResult = await linkUserWithMembersAndGroups(
+      await linkUserWithMembersAndGroups(
         telegramUser.id,
         _id.toString()
       );
-      if (linkResult) {
-        console.log(
-          `Зв'язано нового користувача з ${linkResult.groupRelations} групами`
-        );
-      }
     } else {
       await UserModel.findByIdAndUpdate(user._id, {
         username: telegramUser.username || user.username,

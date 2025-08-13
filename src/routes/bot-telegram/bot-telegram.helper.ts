@@ -162,11 +162,7 @@ export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
         existingGroup.description = groupData.description;
       if (groupData.photoUrl) existingGroup.photoUrl = groupData.photoUrl;
       await existingGroup.save();
-      console.warn(
-        `Оновлено групу: ${groupData.title}, фото: ${
-          groupData.photoUrl ? "так" : "ні"
-        }, опис: ${groupData.description ? "так" : "ні"}`
-      );
+      
       return existingGroup;
     }
 
