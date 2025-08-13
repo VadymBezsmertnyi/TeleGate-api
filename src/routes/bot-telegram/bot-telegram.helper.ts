@@ -11,10 +11,7 @@ export const createOrUpdateMember = async (memberData: MemberData) => {
   const existingMember = await MemberModel.findOne({
     tgUserId: memberData.tgUserId,
   });
-
-  if (existingMember) {
-    return existingMember;
-  }
+  if (existingMember) return existingMember;
 
   const newMember = new MemberModel({
     tgUserId: memberData.tgUserId,
@@ -36,10 +33,9 @@ export const createOrUpdateGroup = async (groupData: GroupData) => {
   const existingGroup = await GroupModel.findOne({
     tgChatId: groupData.tgChatId,
   });
-
   if (existingGroup) {
     existingGroup.botStatus = groupData.botStatus;
-    existingGroup.addedBy = groupData.addedBy;
+    existingGroup.addedBy = groupData.addedBy as any;
     return await existingGroup.save();
   }
 
@@ -64,11 +60,10 @@ export const createGroupMemberRelation = async (
     groupId: relationData.groupId,
     memberId: relationData.memberId,
   });
-
   if (existingRelation) {
     existingRelation.status = relationData.status;
     existingRelation.role = relationData.role;
-    existingRelation.addedBy = relationData.addedBy;
+    existingRelation.addedBy = relationData.addedBy as any;
     return await existingRelation.save();
   }
 

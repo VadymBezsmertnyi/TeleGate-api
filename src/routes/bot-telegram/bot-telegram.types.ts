@@ -53,3 +53,65 @@ export interface TelegramBotContextData {
   botInfo: BotInfo;
   state?: Record<string, any>;
 }
+
+export interface GroupMember {
+  tgUserId: string;
+  status:
+    | "creator"
+    | "administrator"
+    | "member"
+    | "restricted"
+    | "left"
+    | "kicked";
+  role: "admin" | "moderator" | "member";
+  addedBy?: string;
+}
+
+export interface GroupData {
+  tgChatId: string;
+  type: "private" | "group" | "supergroup" | "channel";
+  title?: string;
+  isForum?: boolean;
+  allMembersAreAdministrators?: boolean;
+  acceptedGiftTypes?: {
+    unlimited_gifts?: boolean;
+    limited_gifts?: boolean;
+    unique_gifts?: boolean;
+    premium_subscription?: boolean;
+  };
+  botStatus:
+    | "creator"
+    | "administrator"
+    | "member"
+    | "restricted"
+    | "left"
+    | "kicked";
+  addedBy: string;
+}
+
+export interface MemberData {
+  tgUserId: string;
+  isBot: boolean;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  languageCode?: string;
+  canJoinGroups?: boolean;
+  canReadAllGroupMessages?: boolean;
+  supportsInlineQueries?: boolean;
+  userId?: string;
+}
+
+export interface GroupMemberRelation {
+  groupId: string;
+  memberId: string;
+  status:
+    | "creator"
+    | "administrator"
+    | "member"
+    | "restricted"
+    | "left"
+    | "kicked";
+  role: "admin" | "moderator" | "member";
+  addedBy?: string;
+}
