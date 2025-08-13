@@ -1,5 +1,13 @@
 import { Schema, model } from "mongoose";
 
+const forumTopicCreatedSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    iconColor: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const messageSM = new Schema(
   {
     tgMessageId: { type: String, required: true },
@@ -7,6 +15,9 @@ const messageSM = new Schema(
     chat: { type: Schema.Types.ObjectId, ref: "Group", required: true },
     date: { type: Number, required: true },
     text: { type: String },
+    messageThreadId: { type: Number },
+    forumTopicCreated: forumTopicCreatedSchema,
+    isTopicMessage: { type: Boolean, default: false },
     leftChatMember: { type: Schema.Types.ObjectId, ref: "Member" },
     newChatMember: { type: Schema.Types.ObjectId, ref: "Member" },
     newChatMembers: [{ type: Schema.Types.ObjectId, ref: "Member" }],
@@ -52,9 +63,6 @@ const messageSM = new Schema(
     versionKey: false,
   }
 );
-
-messageSM.index({ tgMessageId: 1, chat: 1 }, { unique: true });
-messageSM.index({ chat: 1, date: -1 });
 
 const MessageModel = model("Message", messageSM);
 

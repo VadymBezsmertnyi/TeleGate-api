@@ -1,5 +1,15 @@
 import { Schema, model } from "mongoose";
 
+const acceptedGiftTypesSchema = new Schema(
+  {
+    unlimited_gifts: { type: Boolean },
+    limited_gifts: { type: Boolean },
+    unique_gifts: { type: Boolean },
+    premium_subscription: { type: Boolean },
+  },
+  { _id: false }
+);
+
 const groupSM = new Schema(
   {
     tgChatId: { type: String, required: true, unique: true },
@@ -9,13 +19,9 @@ const groupSM = new Schema(
       enum: ["private", "group", "supergroup", "channel"],
     },
     title: { type: String },
+    isForum: { type: Boolean, default: false },
     allMembersAreAdministrators: { type: Boolean },
-    acceptedGiftTypes: {
-      unlimited_gifts: { type: Boolean },
-      limited_gifts: { type: Boolean },
-      unique_gifts: { type: Boolean },
-      premium_subscription: { type: Boolean },
-    },
+    acceptedGiftTypes: acceptedGiftTypesSchema,
     botStatus: {
       type: String,
       enum: [
@@ -30,14 +36,13 @@ const groupSM = new Schema(
     addedBy: { type: Schema.Types.ObjectId, ref: "Member" },
     users: [{ type: Schema.Types.ObjectId, ref: "users" }],
     members: [{ type: Schema.Types.ObjectId, ref: "Member" }],
+    forumTopics: [{ type: Schema.Types.ObjectId, ref: "ForumTopic" }],
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
-
-groupSM.index({ tgChatId: 1 }, { unique: true });
 
 const GroupModel = model("Group", groupSM);
 
