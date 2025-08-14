@@ -98,83 +98,50 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
       <p>Please wait while we process your Telegram authentication.</p>
       <div id="debug" style="background: #f0f0f0; padding: 10px; margin: 20px 0; text-align: left; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
       <script>
-        console.log("Script started");
         const debugDiv = document.getElementById('debug');
         
         function addDebugLog(message) {
-          console.log("Debug:", message);
           if (debugDiv) {
             debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
             debugDiv.scrollTop = debugDiv.scrollHeight;
           }
         }
         
-        addDebugLog("=== FRAGMENT PROCESSOR STARTED ===");
-        addDebugLog("Full URL: " + window.location.href);
-        addDebugLog("Fragment: " + window.location.hash);
-        addDebugLog("UserAgent: " + navigator.userAgent);
-        addDebugLog("Protocol: " + window.location.protocol);
-        addDebugLog("Host: " + window.location.host);
-        addDebugLog("Pathname: " + window.location.pathname);
-        addDebugLog("Search: " + window.location.search);
-        
         function processFragment() {
-          addDebugLog("=== PROCESSING FRAGMENT ===");
           const fragment = window.location.hash.substring(1);
-          addDebugLog("Fragment content: " + fragment);
           
           if (fragment.includes('tgAuthResult=')) {
-            addDebugLog("Found tgAuthResult in fragment");
             try {
               const match = fragment.match(/tgAuthResult=([^&]+)/);
               if (match) {
                 const encodedData = match[1];
-                addDebugLog("Encoded data: " + encodedData);
                 
-                // Custom Base64 decoder with detailed logging
                 function customAtob(str) {
-                  addDebugLog("customAtob called with: " + str);
-                  
-                  // Перевіряємо чи це "ZmFsc2U" (закодований "false")
                   if (str === "ZmFsc2U") {
-                    addDebugLog("Detected 'false' in Base64, returning 'false'");
                     return "false";
                   }
                   
                   try {
-                    const result = atob(str);
-                    addDebugLog("Native atob succeeded: " + result);
-                    addDebugLog("Native atob result type: " + typeof result);
-                    return result;
+                    return atob(str);
                   } catch (e) {
-                    addDebugLog("Native atob failed: " + e.message);
-                    addDebugLog("Using custom decoder...");
-                    
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
                     let output = '';
                     str = String(str).replace(/=+$/, '');
-                    addDebugLog("Processed string: " + str);
-                    addDebugLog("String length: " + str.length);
                     
                     if (str.length % 4 === 1) {
-                      addDebugLog("Invalid base64 string length");
                       throw new Error('Invalid base64 string');
                     }
                     
                     for (let bc = 0, bs = 0, buffer, i = 0; buffer = str.charAt(i++);) {
                       const charIndex = chars.indexOf(buffer);
-                      addDebugLog("Char: " + buffer + ", Index: " + charIndex);
                       if (charIndex !== -1) {
                         bs = bc % 4 ? bs * 64 + charIndex : charIndex;
                         if (bc++ % 4) {
                           const charCode = 255 & (bs >> ((-2 * bc) & 6));
-                          const char = String.fromCharCode(charCode);
-                          output += char;
-                          addDebugLog("Added char: " + char + " (code: " + charCode + ")");
+                          output += String.fromCharCode(charCode);
                         }
                       }
                     }
-                    addDebugLog("Custom decoder result: " + output);
                     return output;
                   }
                 }
@@ -182,22 +149,11 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 let decodedData;
                 try {
                   decodedData = customAtob(encodedData);
-                  addDebugLog("Final decoded data: " + decodedData);
-                  addDebugLog("Final decoded data type: " + typeof decodedData);
-                  addDebugLog("Final decoded data length: " + decodedData.length);
-                  addDebugLog("Is equal to 'false': " + (decodedData === 'false'));
-                  addDebugLog("Is equal to false: " + (decodedData === false));
                 } catch (e) {
-                  addDebugLog("Decode failed: " + e.message);
                   decodedData = 'false';
                 }
                 
                 if (decodedData === 'false' || decodedData === false) {
-                  addDebugLog("Auth failed - received false from Telegram");
-                  addDebugLog("User denied authorization or error occurred");
-                  addDebugLog("Bot ID: " + (window.location.search.match(/bot_id=([^&]+)/) ? window.location.search.match(/bot_id=([^&]+)/)[1] : 'not found'));
-                  addDebugLog("Origin: " + (window.location.search.match(/origin=([^&]+)/) ? decodeURIComponent(window.location.search.match(/origin=([^&]+)/)[1]) : 'not found'));
-                  addDebugLog("Sending auth error to app...");
                   window.ReactNativeWebView.postMessage(JSON.stringify({
                     type: 'auth_error',
                     error: 'auth_denied',
@@ -207,41 +163,33 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 }
                 
                 try {
-                                          const authData = JSON.parse(decodedData);
-                        addDebugLog("Parsed auth data successfully");
-                        addDebugLog("Auth data: " + JSON.stringify(authData));
-                        
-                        // Відправляємо дані в React Native через postMessage
-                        addDebugLog("Sending auth data to React Native...");
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                          type: 'fragment_data',
-                          encodedData: encodedData
-                        }));
-                } catch (e) {
-                  addDebugLog("Error parsing auth data: " + e.message);
-                  window.location.href = 'telegate://auth-error?error=invalid_data';
-                }
+                                                                                                                                                                                                                                                                                                                                                       const authData = JSON.parse(decodedData);
+                          window.ReactNativeWebView.postMessage(JSON.stringify({
+                            type: 'fragment_data',
+                            encodedData: encodedData
+                          }));
+                                                                     } catch (e) {
+                     addDebugLog("Error parsing auth data: " + e.message);
+                     window.ReactNativeWebView.postMessage(JSON.stringify({
+                       type: 'auth_error',
+                       error: 'invalid_data'
+                     }));
+                   }
               } else {
-                addDebugLog("No tgAuthResult match found");
                 setTimeout(processFragment, 500);
               }
-            } catch (e) {
-              addDebugLog("Error processing fragment: " + e.message);
-              setTimeout(processFragment, 500);
-            }
+                          } catch (e) {
+                addDebugLog("Error processing fragment: " + e.message);
+                setTimeout(processFragment, 500);
+              }
           } else {
-            addDebugLog("No tgAuthResult in fragment");
-            addDebugLog("Checking for direct params...");
             const urlParams = new URLSearchParams(window.location.search);
             const hasParams = urlParams.has('id') || urlParams.has('auth_date') || urlParams.has('hash');
             
             if (hasParams) {
-              addDebugLog("Found direct params");
               const newUrl = window.location.pathname + '?' + window.location.search.substring(1);
-              addDebugLog("Redirecting to: " + newUrl);
               window.location.href = newUrl;
             } else {
-              addDebugLog("No params found, waiting...");
               setTimeout(processFragment, 500);
             }
           }
