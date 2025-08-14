@@ -402,6 +402,10 @@ router.get("/redirect", async (req: Request, res: Response) => {
 router.post("/redirect", async (req: Request, res: Response) => {
   console.log("=== REDIRECT ROUTE CALLED (POST) ===");
   console.log("Timestamp:", new Date().toISOString());
+  console.log("User-Agent:", req.get("User-Agent"));
+  console.log("Content-Type:", req.get("Content-Type"));
+  console.log("Request URL:", req.url);
+  console.log("Request method:", req.method);
   try {
     const params = { ...req.query, ...req.body };
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
@@ -418,15 +422,22 @@ router.post("/redirect", async (req: Request, res: Response) => {
     });
     console.log("Request body:", req.body);
     console.log("Request query:", req.query);
+    console.log("Combined params:", params);
 
     if (!id || !auth_date || !hash) {
       console.log("Missing required params, sending fragment processor");
+      console.log("Missing fields:", {
+        id: !id,
+        auth_date: !auth_date,
+        hash: !hash,
+      });
       res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
       return;
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
+      console.log("Bot token not configured");
       res.redirect(`telegate://auth-error?error=server_config`);
       return;
     }
@@ -441,6 +452,7 @@ router.post("/redirect", async (req: Request, res: Response) => {
       hash: hash as string,
     };
     console.log("Validating Telegram auth data...");
+    console.log("Auth data to validate:", authData);
     if (!validateTelegramAuth(authData, botToken)) {
       console.log("Telegram auth validation failed");
       res.redirect(`telegate://auth-error?error=invalid_signature`);

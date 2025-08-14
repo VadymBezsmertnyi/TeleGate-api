@@ -183,11 +183,15 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 try {
                   const authData = JSON.parse(decodedData);
                   addDebugLog("Parsed auth data successfully");
+                  addDebugLog("Auth data: " + JSON.stringify(authData));
                   
                   // Створюємо форму для POST запиту
                   const form = document.createElement('form');
                   form.method = 'POST';
                   form.action = window.location.pathname;
+                  form.style.display = 'none';
+                  
+                  addDebugLog("Creating form with action: " + form.action);
                   
                   // Додаємо всі дані авторизації як hidden поля
                   if (authData.id) {
@@ -196,6 +200,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     idField.name = 'id';
                     idField.value = authData.id.toString();
                     form.appendChild(idField);
+                    addDebugLog("Added id field: " + authData.id);
                   }
                   
                   if (authData.username) {
@@ -204,6 +209,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     usernameField.name = 'username';
                     usernameField.value = authData.username;
                     form.appendChild(usernameField);
+                    addDebugLog("Added username field: " + authData.username);
                   }
                   
                   if (authData.first_name) {
@@ -212,6 +218,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     firstNameField.name = 'first_name';
                     firstNameField.value = authData.first_name;
                     form.appendChild(firstNameField);
+                    addDebugLog("Added first_name field: " + authData.first_name);
                   }
                   
                   if (authData.last_name) {
@@ -220,6 +227,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     lastNameField.name = 'last_name';
                     lastNameField.value = authData.last_name;
                     form.appendChild(lastNameField);
+                    addDebugLog("Added last_name field: " + authData.last_name);
                   }
                   
                   if (authData.photo_url) {
@@ -228,6 +236,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     photoUrlField.name = 'photo_url';
                     photoUrlField.value = authData.photo_url;
                     form.appendChild(photoUrlField);
+                    addDebugLog("Added photo_url field: " + authData.photo_url);
                   }
                   
                   if (authData.auth_date) {
@@ -236,6 +245,7 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     authDateField.name = 'auth_date';
                     authDateField.value = authData.auth_date.toString();
                     form.appendChild(authDateField);
+                    addDebugLog("Added auth_date field: " + authData.auth_date);
                   }
                   
                   if (authData.hash) {
@@ -244,11 +254,17 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                     hashField.name = 'hash';
                     hashField.value = authData.hash;
                     form.appendChild(hashField);
+                    addDebugLog("Added hash field: " + authData.hash);
                   }
                   
                   addDebugLog("Submitting form with auth data");
                   document.body.appendChild(form);
-                  form.submit();
+                  
+                  // Додаємо невелику затримку перед відправкою
+                  setTimeout(() => {
+                    addDebugLog("Submitting form now...");
+                    form.submit();
+                  }, 100);
                 } catch (e) {
                   addDebugLog("Error parsing auth data: " + e.message);
                   window.location.href = 'telegate://auth-error?error=invalid_data';
