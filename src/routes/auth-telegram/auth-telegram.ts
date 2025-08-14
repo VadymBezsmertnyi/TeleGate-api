@@ -94,6 +94,10 @@ router.get("/close", async (req: Request, res: Response) => {
 router.get("/redirect", async (req: Request, res: Response) => {
   console.log("=== REDIRECT ROUTE CALLED (GET) ===");
   console.log("Timestamp:", new Date().toISOString());
+  console.log("Full URL:", req.url);
+  console.log("Original URL:", req.originalUrl);
+  console.log("Base URL:", req.baseUrl);
+  console.log("Path:", req.path);
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
@@ -113,12 +117,14 @@ router.get("/redirect", async (req: Request, res: Response) => {
     // Check if we have fragment data in URL
     const url = req.url || "";
     console.log("Processing URL:", url);
+    console.log("URL hash:", req.url?.split("#")[1] || "none");
     const fragmentMatch =
       url.match(/#tgAuthResult=([^&]+)/) || url.match(/#([^&]+)/);
 
     if (fragmentMatch) {
       console.log("Found fragment data:", fragmentMatch[1]);
       console.log("Fragment match type:", fragmentMatch[0]);
+      console.log("Fragment match full:", fragmentMatch);
       try {
         const encodedData = fragmentMatch[1];
         let decodedData;
@@ -174,19 +180,24 @@ router.get("/redirect", async (req: Request, res: Response) => {
 
         if (decodedData === "false") {
           console.log("Auth failed - received false from Telegram");
-          console.log("This might be a timing issue, redirecting to retry...");
+          console.log("User denied authorization or error occurred");
+          console.log("Bot ID:", process.env.TELEGRAM_BOT_ID);
+          console.log("Origin Domain:", process.env.TELEGRAM_ORIGIN_DOMAIN);
+          console.log("User Agent:", req.get("User-Agent"));
 
-          // Перенаправляємо на повторну авторизацію замість помилки
-          const retryUrl = `https://oauth.telegram.org/auth?bot_id=${
-            process.env.TELEGRAM_BOT_ID
-          }&origin=${encodeURIComponent(
-            process.env.TELEGRAM_ORIGIN_DOMAIN ||
-              "telegate-api-4b26ec7aa804.herokuapp.com"
-          )}&embed=1&request_access=write&return_to=${encodeURIComponent(
-            `${req.protocol}://${req.get("host")}/api/auth-telegram/redirect`
-          )}`;
+          const userAgent = req.get("User-Agent") || "";
+          const isMobile =
+            userAgent.includes("Expo") || userAgent.includes("TeleGate");
 
-          res.redirect(retryUrl);
+          if (isMobile) {
+            console.log("Redirecting mobile user to auth error");
+            res.redirect(
+              `telegate://auth-error?error=auth_denied&reason=user_cancelled`
+            );
+          } else {
+            console.log("Sending error page to browser user");
+            res.send(TELEGRAM_CLOSE_PAGE_ERROR_HTML);
+          }
           return;
         }
 
@@ -265,6 +276,12 @@ router.get("/redirect", async (req: Request, res: Response) => {
     if (!id || !auth_date || !hash) {
       console.log("Missing required params, checking for OAuth stage...");
       console.log("URL:", req.url);
+      console.log("Original URL:", req.originalUrl);
+      console.log(
+        "Full URL with hash:",
+        req.url +
+          (req.url?.includes("#") ? "" : "#" + (req.url?.split("#")[1] || ""))
+      );
       console.log("Query params:", req.query);
       console.log("Body:", req.body);
 

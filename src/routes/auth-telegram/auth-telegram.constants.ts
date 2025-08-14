@@ -46,6 +46,16 @@ export const TELEGRAM_CLOSE_PAGE_ERROR_HTML = `
       <h1 style="color: #dc3545;">❌ Authentication Failed</h1>
       <p style="font-size: 18px; margin: 20px 0;">Please try again or contact support.</p>
       <div style="margin: 30px 0;">
+        <button onclick="retryAuth()" style="
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          font-size: 16px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-right: 10px;
+        ">Try Again</button>
         <button onclick="closeWindow()" style="
           background: #dc3545;
           color: white;
@@ -57,6 +67,10 @@ export const TELEGRAM_CLOSE_PAGE_ERROR_HTML = `
         ">Close Window</button>
       </div>
       <script>
+        function retryAuth() {
+          window.location.href = '/api/auth-telegram/login';
+        }
+        
         function closeWindow() {
           if (window.close) {
             window.close();
@@ -66,7 +80,7 @@ export const TELEGRAM_CLOSE_PAGE_ERROR_HTML = `
         
         setTimeout(() => {
           closeWindow();
-        }, 2000);
+        }, 5000);
       </script>
     </body>
   </html>
@@ -99,6 +113,10 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
         addDebugLog("Full URL: " + window.location.href);
         addDebugLog("Fragment: " + window.location.hash);
         addDebugLog("UserAgent: " + navigator.userAgent);
+        addDebugLog("Protocol: " + window.location.protocol);
+        addDebugLog("Host: " + window.location.host);
+        addDebugLog("Pathname: " + window.location.pathname);
+        addDebugLog("Search: " + window.location.search);
         
         function processFragment() {
           addDebugLog("=== PROCESSING FRAGMENT ===");
@@ -176,7 +194,11 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                 
                 if (decodedData === 'false' || decodedData === false) {
                   addDebugLog("Auth failed - received false from Telegram");
-                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=timing_issue';
+                  addDebugLog("User denied authorization or error occurred");
+                  addDebugLog("Bot ID: " + (window.location.search.match(/bot_id=([^&]+)/) ? window.location.search.match(/bot_id=([^&]+)/)[1] : 'not found'));
+                  addDebugLog("Origin: " + (window.location.search.match(/origin=([^&]+)/) ? decodeURIComponent(window.location.search.match(/origin=([^&]+)/)[1]) : 'not found'));
+                  addDebugLog("Redirecting to auth error...");
+                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
                   return;
                 }
                 
