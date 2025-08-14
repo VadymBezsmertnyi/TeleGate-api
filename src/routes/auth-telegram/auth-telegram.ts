@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { createHash, createHmac } from "crypto";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import express from "express";
 
 // constants
 import {
@@ -18,6 +19,10 @@ import axios from "axios";
 
 dotenv.config();
 const router = Router();
+
+// Middleware для парсингу POST даних
+router.use(express.urlencoded({ extended: true }));
+router.use(express.json());
 
 function validateTelegramAuth(authData: any, botToken: string): boolean {
   const { hash, ...dataToCheck } = authData;
@@ -87,23 +92,33 @@ router.get("/close", async (req: Request, res: Response) => {
 });
 
 router.get("/redirect", async (req: Request, res: Response) => {
-  console.log("=== REDIRECT ROUTE CALLED ===");
+  console.log("=== REDIRECT ROUTE CALLED (GET) ===");
   console.log("Timestamp:", new Date().toISOString());
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
-    console.log("Redirect params:", JSON.stringify(req.query));
+    console.log("Received query params:", {
+      id: id,
+      username: username,
+      first_name: first_name,
+      last_name: last_name,
+      photo_url: photo_url,
+      auth_date: auth_date,
+      hash: hash,
+    });
     console.log("Request headers:", JSON.stringify(req.headers));
     console.log("Request URL:", req.url);
     console.log("Request method:", req.method);
 
     // Check if we have fragment data in URL
     const url = req.url || "";
+    console.log("Processing URL:", url);
     const fragmentMatch =
       url.match(/#tgAuthResult=([^&]+)/) || url.match(/#([^&]+)/);
 
     if (fragmentMatch) {
       console.log("Found fragment data:", fragmentMatch[1]);
+      console.log("Fragment match type:", fragmentMatch[0]);
       try {
         const encodedData = fragmentMatch[1];
         let decodedData;
@@ -248,10 +263,23 @@ router.get("/redirect", async (req: Request, res: Response) => {
     }
 
     if (!id || !auth_date || !hash) {
-      console.log("Missing required params, sending fragment processor");
+      console.log("Missing required params, checking for OAuth stage...");
       console.log("URL:", req.url);
       console.log("Query params:", req.query);
       console.log("Body:", req.body);
+
+      // Перевіряємо чи є session_id в query параметрах
+      const sessionId = req.query.session_id;
+      if (sessionId) {
+        console.log("Found session_id:", sessionId);
+        console.log(
+          "No auth params but session exists, redirecting to bot-connect"
+        );
+        // Тут можна додати логіку для збереження сесії
+        res.redirect(`/api/bot-telegram/connect?session_id=${sessionId}`);
+        return;
+      }
+
       res.set({
         "Cache-Control": "no-cache, no-store, must-revalidate",
         Pragma: "no-cache",
@@ -372,11 +400,27 @@ router.get("/redirect", async (req: Request, res: Response) => {
 });
 
 router.post("/redirect", async (req: Request, res: Response) => {
+  console.log("=== REDIRECT ROUTE CALLED (POST) ===");
+  console.log("Timestamp:", new Date().toISOString());
   try {
     const params = { ...req.query, ...req.body };
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       params;
+
+    console.log("Received POST params:", {
+      id: id,
+      username: username,
+      first_name: first_name,
+      last_name: last_name,
+      photo_url: photo_url,
+      auth_date: auth_date,
+      hash: hash,
+    });
+    console.log("Request body:", req.body);
+    console.log("Request query:", req.query);
+
     if (!id || !auth_date || !hash) {
+      console.log("Missing required params, sending fragment processor");
       res.send(TELEGRAM_FRAGMENT_PROCESSOR_HTML);
       return;
     }
@@ -396,25 +440,32 @@ router.post("/redirect", async (req: Request, res: Response) => {
       auth_date: auth_date as string,
       hash: hash as string,
     };
+    console.log("Validating Telegram auth data...");
     if (!validateTelegramAuth(authData, botToken)) {
+      console.log("Telegram auth validation failed");
       res.redirect(`telegate://auth-error?error=invalid_signature`);
       return;
     }
+    console.log("Telegram auth validation successful");
 
     const authDateTimestamp = parseInt(auth_date as string);
     const now = Math.floor(Date.now() / 1000);
     const maxAge = 24 * 60 * 60;
     if (now - authDateTimestamp > maxAge) {
+      console.log("Auth date expired");
       res.redirect(`telegate://auth-error?error=expired`);
       return;
     }
+    console.log("Auth date validation passed");
 
     const telegramId = parseInt(id as string);
     const token = `token_${telegramId}_${Date.now()}`;
+    console.log("Processing user with Telegram ID:", telegramId);
 
     let user = await UserModel.findOne({ telegramId }).lean();
 
     if (user) {
+      console.log("Updating existing user:", user._id);
       await UserModel.findByIdAndUpdate(user._id, {
         username: (username as string) || user.username,
         firstName: (first_name as string) || user.firstName,
@@ -424,7 +475,9 @@ router.post("/redirect", async (req: Request, res: Response) => {
         isActive: true,
         updatedAt: new Date(),
       });
+      console.log("User updated successfully");
     } else {
+      console.log("Creating new user");
       const _id = new mongoose.Types.ObjectId();
       await UserModel.create({
         _id,
@@ -436,17 +489,21 @@ router.post("/redirect", async (req: Request, res: Response) => {
         lastActivityAt: new Date(),
         isActive: true,
       });
+      console.log("New user created successfully");
     }
 
-    res.redirect(
-      `telegate://auth-success?token=${token}&userId=${telegramId}&username=${
-        (username as string) || ""
-      }&firstName=${(first_name as string) || ""}&lastName=${
-        (last_name as string) || ""
-      }&photoUrl=${(photo_url as string) || ""}`
-    );
+    const deepLink = `telegate://auth-success?token=${token}&userId=${telegramId}&username=${
+      (username as string) || ""
+    }&firstName=${(first_name as string) || ""}&lastName=${
+      (last_name as string) || ""
+    }&photoUrl=${(photo_url as string) || ""}`;
+
+    console.log("Redirecting to deep link:", deepLink);
+    res.redirect(deepLink);
+    console.log("=== POST REDIRECT SUCCESS ===");
   } catch (error) {
     console.error("Error during POST redirect:", error);
+    console.log("=== POST REDIRECT ERROR ===");
     res.redirect(`telegate://auth-error?error=server_error`);
   }
 });

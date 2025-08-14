@@ -184,18 +184,71 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   const authData = JSON.parse(decodedData);
                   addDebugLog("Parsed auth data successfully");
                   
-                  const params = new URLSearchParams();
-                  if (authData.id) params.append('id', authData.id.toString());
-                  if (authData.username) params.append('username', authData.username);
-                  if (authData.first_name) params.append('first_name', authData.first_name);
-                  if (authData.last_name) params.append('last_name', authData.last_name);
-                  if (authData.photo_url) params.append('photo_url', authData.photo_url);
-                  if (authData.auth_date) params.append('auth_date', authData.auth_date.toString());
-                  if (authData.hash) params.append('hash', authData.hash);
+                  // Створюємо форму для POST запиту
+                  const form = document.createElement('form');
+                  form.method = 'POST';
+                  form.action = window.location.pathname;
                   
-                  const newUrl = window.location.pathname + '?' + params.toString();
-                  addDebugLog("Redirecting to: " + newUrl);
-                  window.location.href = newUrl;
+                  // Додаємо всі дані авторизації як hidden поля
+                  if (authData.id) {
+                    const idField = document.createElement('input');
+                    idField.type = 'hidden';
+                    idField.name = 'id';
+                    idField.value = authData.id.toString();
+                    form.appendChild(idField);
+                  }
+                  
+                  if (authData.username) {
+                    const usernameField = document.createElement('input');
+                    usernameField.type = 'hidden';
+                    usernameField.name = 'username';
+                    usernameField.value = authData.username;
+                    form.appendChild(usernameField);
+                  }
+                  
+                  if (authData.first_name) {
+                    const firstNameField = document.createElement('input');
+                    firstNameField.type = 'hidden';
+                    firstNameField.name = 'first_name';
+                    firstNameField.value = authData.first_name;
+                    form.appendChild(firstNameField);
+                  }
+                  
+                  if (authData.last_name) {
+                    const lastNameField = document.createElement('input');
+                    lastNameField.type = 'hidden';
+                    lastNameField.name = 'last_name';
+                    lastNameField.value = authData.last_name;
+                    form.appendChild(lastNameField);
+                  }
+                  
+                  if (authData.photo_url) {
+                    const photoUrlField = document.createElement('input');
+                    photoUrlField.type = 'hidden';
+                    photoUrlField.name = 'photo_url';
+                    photoUrlField.value = authData.photo_url;
+                    form.appendChild(photoUrlField);
+                  }
+                  
+                  if (authData.auth_date) {
+                    const authDateField = document.createElement('input');
+                    authDateField.type = 'hidden';
+                    authDateField.name = 'auth_date';
+                    authDateField.value = authData.auth_date.toString();
+                    form.appendChild(authDateField);
+                  }
+                  
+                  if (authData.hash) {
+                    const hashField = document.createElement('input');
+                    hashField.type = 'hidden';
+                    hashField.name = 'hash';
+                    hashField.value = authData.hash;
+                    form.appendChild(hashField);
+                  }
+                  
+                  addDebugLog("Submitting form with auth data");
+                  document.body.appendChild(form);
+                  form.submit();
                 } catch (e) {
                   addDebugLog("Error parsing auth data: " + e.message);
                   window.location.href = 'telegate://auth-error?error=invalid_data';
