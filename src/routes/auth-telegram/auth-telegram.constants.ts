@@ -197,96 +197,26 @@ export const TELEGRAM_FRAGMENT_PROCESSOR_HTML = `
                   addDebugLog("User denied authorization or error occurred");
                   addDebugLog("Bot ID: " + (window.location.search.match(/bot_id=([^&]+)/) ? window.location.search.match(/bot_id=([^&]+)/)[1] : 'not found'));
                   addDebugLog("Origin: " + (window.location.search.match(/origin=([^&]+)/) ? decodeURIComponent(window.location.search.match(/origin=([^&]+)/)[1]) : 'not found'));
-                  addDebugLog("Redirecting to auth error...");
-                  window.location.href = 'telegate://auth-error?error=auth_denied&reason=user_cancelled';
+                  addDebugLog("Sending auth error to app...");
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'auth_error',
+                    error: 'auth_denied',
+                    reason: 'user_cancelled'
+                  }));
                   return;
                 }
                 
                 try {
-                  const authData = JSON.parse(decodedData);
-                  addDebugLog("Parsed auth data successfully");
-                  addDebugLog("Auth data: " + JSON.stringify(authData));
-                  
-                  // Створюємо форму для POST запиту
-                  const form = document.createElement('form');
-                  form.method = 'POST';
-                  form.action = window.location.pathname;
-                  form.style.display = 'none';
-                  
-                  addDebugLog("Creating form with action: " + form.action);
-                  
-                  // Додаємо всі дані авторизації як hidden поля
-                  if (authData.id) {
-                    const idField = document.createElement('input');
-                    idField.type = 'hidden';
-                    idField.name = 'id';
-                    idField.value = authData.id.toString();
-                    form.appendChild(idField);
-                    addDebugLog("Added id field: " + authData.id);
-                  }
-                  
-                  if (authData.username) {
-                    const usernameField = document.createElement('input');
-                    usernameField.type = 'hidden';
-                    usernameField.name = 'username';
-                    usernameField.value = authData.username;
-                    form.appendChild(usernameField);
-                    addDebugLog("Added username field: " + authData.username);
-                  }
-                  
-                  if (authData.first_name) {
-                    const firstNameField = document.createElement('input');
-                    firstNameField.type = 'hidden';
-                    firstNameField.name = 'first_name';
-                    firstNameField.value = authData.first_name;
-                    form.appendChild(firstNameField);
-                    addDebugLog("Added first_name field: " + authData.first_name);
-                  }
-                  
-                  if (authData.last_name) {
-                    const lastNameField = document.createElement('input');
-                    lastNameField.type = 'hidden';
-                    lastNameField.name = 'last_name';
-                    lastNameField.value = authData.last_name;
-                    form.appendChild(lastNameField);
-                    addDebugLog("Added last_name field: " + authData.last_name);
-                  }
-                  
-                  if (authData.photo_url) {
-                    const photoUrlField = document.createElement('input');
-                    photoUrlField.type = 'hidden';
-                    photoUrlField.name = 'photo_url';
-                    photoUrlField.value = authData.photo_url;
-                    form.appendChild(photoUrlField);
-                    addDebugLog("Added photo_url field: " + authData.photo_url);
-                  }
-                  
-                  if (authData.auth_date) {
-                    const authDateField = document.createElement('input');
-                    authDateField.type = 'hidden';
-                    authDateField.name = 'auth_date';
-                    authDateField.value = authData.auth_date.toString();
-                    form.appendChild(authDateField);
-                    addDebugLog("Added auth_date field: " + authData.auth_date);
-                  }
-                  
-                  if (authData.hash) {
-                    const hashField = document.createElement('input');
-                    hashField.type = 'hidden';
-                    hashField.name = 'hash';
-                    hashField.value = authData.hash;
-                    form.appendChild(hashField);
-                    addDebugLog("Added hash field: " + authData.hash);
-                  }
-                  
-                  addDebugLog("Submitting form with auth data");
-                  document.body.appendChild(form);
-                  
-                  // Додаємо невелику затримку перед відправкою
-                  setTimeout(() => {
-                    addDebugLog("Submitting form now...");
-                    form.submit();
-                  }, 100);
+                                          const authData = JSON.parse(decodedData);
+                        addDebugLog("Parsed auth data successfully");
+                        addDebugLog("Auth data: " + JSON.stringify(authData));
+                        
+                        // Відправляємо дані в React Native через postMessage
+                        addDebugLog("Sending auth data to React Native...");
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                          type: 'fragment_data',
+                          encodedData: encodedData
+                        }));
                 } catch (e) {
                   addDebugLog("Error parsing auth data: " + e.message);
                   window.location.href = 'telegate://auth-error?error=invalid_data';
