@@ -1,38 +1,9 @@
 import { Request } from "express";
 import mongoose from "mongoose";
-import axios from "axios";
 import GroupModel from "../groups/group.model";
 import UserModel from "../users/users.model";
+import { validateTelegramToken } from "../../helpers/telegram.helper";
 import { MembersQuery } from "./members.types";
-
-export const validateTelegramToken = async (
-  token: string,
-  botToken: string
-) => {
-  try {
-    const tokenParts = token.split("_");
-    if (tokenParts.length !== 3) return { isValid: false, userData: null };
-
-    const telegramId = parseInt(tokenParts[1]);
-    const timestamp = parseInt(tokenParts[2]);
-    const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000;
-
-    if (now - timestamp > maxAge) return { isValid: false, userData: null };
-
-    const response = await axios.get(
-      `https://api.telegram.org/bot${botToken}/getMe`
-    );
-
-    if (response.status !== 200 || !response.data.ok) {
-      return { isValid: false, userData: null };
-    }
-
-    return { isValid: true, userData: { id: telegramId } };
-  } catch (error) {
-    return { isValid: false, userData: null };
-  }
-};
 
 export const getAuthenticatedUser = async (req: Request) => {
   const authHeader = req.headers.authorization;
@@ -48,7 +19,7 @@ export const getAuthenticatedUser = async (req: Request) => {
   if (!telegramValidation.isValid || !telegramValidation.userData) return null;
 
   const user = await UserModel.findOne({
-    telegramId: telegramValidation.userData.id,
+    telegramId: telegramValidation.userId,
     isActive: true,
   }).lean();
 
