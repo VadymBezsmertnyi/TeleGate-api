@@ -82,15 +82,11 @@ export const getOwnerGroups = async (
   const filter: any = {};
   if (ownerId) filter.addedBy = new mongoose.Types.ObjectId(ownerId);
   if (ownerTelegramId) {
-    const user = await UserModel.findOne({
-      telegramId: ownerTelegramId,
+    const member = await MemberModel.findOne({
+      tgUserId: ownerTelegramId,
     }).lean();
-    if (user) {
-      const member = await MemberModel.findOne({
-        user: user._id,
-      }).lean();
-      if (member) filter.addedBy = member._id;
-    }
+    console.log("member:", member);
+    if (member) filter.addedBy = member._id;
   }
 
   const groups = await GroupModel.find(filter).select("_id").lean();
