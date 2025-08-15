@@ -1,7 +1,6 @@
 import { Request } from "express";
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
-import GroupMemberRelationModel from "./group-member-relation.model";
 import UserModel from "../users/users.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
 import { GroupsQuery, GroupsFilter, SortQuery } from "./groups.types";
@@ -107,9 +106,7 @@ export const getOwnerGroups = async (
 export const getGroupsWithMemberCount = async (groups: any[]) => {
   return Promise.all(
     groups.map(async (group) => {
-      const memberCount = await GroupMemberRelationModel.countDocuments({
-        groupId: group._id,
-      });
+      const memberCount = group.members ? group.members.length : 0;
       return transformGroupToPublic(group, memberCount);
     })
   );

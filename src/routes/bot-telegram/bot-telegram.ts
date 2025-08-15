@@ -3,8 +3,7 @@ import dotenv from "dotenv";
 import {
   createOrUpdateMember,
   createOrUpdateGroup,
-  createGroupMemberRelation,
-  determineRole,
+  synchronizeGroupMemberRelationship,
 } from "./bot-telegram.helper";
 import { GroupData, MemberData } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
@@ -57,7 +56,6 @@ const startBotTelegram = async () => {
         canReadAllGroupMessages: currentChatMember.can_read_all_group_messages,
         supportsInlineQueries: currentChatMember.supports_inline_queries,
       };
-
       const member = await createOrUpdateMember(memberData);
       const currentChat = chat as Chat & {
         is_forum?: boolean;
@@ -66,7 +64,6 @@ const startBotTelegram = async () => {
         description?: string;
         photo?: any;
       };
-
       let photoUrl: string | undefined;
       if (currentChat.photo) {
         try {
@@ -91,17 +88,19 @@ const startBotTelegram = async () => {
         botStatus: newStatus,
         addedBy: member._id.toString(),
       };
-
       const group = await createOrUpdateGroup(groupData);
-
-      const role = determineRole(newStatus);
-      await createGroupMemberRelation({
-        groupId: group._id.toString(),
-        memberId: member._id.toString(),
-        status: newStatus,
-        role,
-        addedBy: member._id.toString(),
-      });
+      if (newStatus === "member" || newStatus === "administrator")
+        await synchronizeGroupMemberRelationship(
+          group._id.toString(),
+          member._id.toString(),
+          true
+        );
+      else if (newStatus === "left" || newStatus === "kicked")
+        await synchronizeGroupMemberRelationship(
+          group._id.toString(),
+          member._id.toString(),
+          false
+        );
 
       const existingGroup = await GroupModel.findOne({
         tgChatId: chat.id.toString(),
@@ -147,14 +146,11 @@ const startBotTelegram = async () => {
             };
 
             const adminMember = await createOrUpdateMember(adminMemberData);
-            const adminRole = determineRole(admin.status);
-            await createGroupMemberRelation({
-              groupId: group._id.toString(),
-              memberId: adminMember._id.toString(),
-              status: admin.status,
-              role: adminRole,
-              addedBy: member._id.toString(),
-            });
+            await synchronizeGroupMemberRelationship(
+              group._id.toString(),
+              adminMember._id.toString(),
+              true
+            );
           }
         } catch (adminError) {
           console.warn("Помилка при отриманні адміністраторів:", adminError);
@@ -179,7 +175,6 @@ const startBotTelegram = async () => {
   bot.on("chat_member", async (ctx) => {
     const chat = ctx.update.chat_member.chat;
     const newChatMember = ctx.update.chat_member.new_chat_member;
-    const from = ctx.update.chat_member.from;
 
     if (
       chat.type === "group" ||
@@ -212,17 +207,25 @@ const startBotTelegram = async () => {
           supportsInlineQueries:
             newCurrentChatMember.user.supports_inline_queries,
         };
-
         const member = await createOrUpdateMember(memberData);
-        const role = determineRole(newChatMember.status);
-
-        await createGroupMemberRelation({
-          groupId: group._id.toString(),
-          memberId: member._id.toString(),
-          status: newChatMember.status,
-          role,
-          addedBy: from.id.toString(),
-        });
+        if (
+          newChatMember.status === "member" ||
+          newChatMember.status === "administrator"
+        )
+          await synchronizeGroupMemberRelationship(
+            group._id.toString(),
+            member._id.toString(),
+            true
+          );
+        else if (
+          newChatMember.status === "left" ||
+          newChatMember.status === "kicked"
+        )
+          await synchronizeGroupMemberRelationship(
+            group._id.toString(),
+            member._id.toString(),
+            false
+          );
       } catch (error) {
         console.warn("Помилка при оновленні статусу учасника:", error);
       }
@@ -254,17 +257,12 @@ const startBotTelegram = async () => {
         canReadAllGroupMessages: fromMember.can_read_all_group_messages,
         supportsInlineQueries: fromMember.supports_inline_queries,
       };
-
       const member = await createOrUpdateMember(memberData);
-      const role = determineRole("member");
-
-      await createGroupMemberRelation({
-        groupId: group._id.toString(),
-        memberId: member._id.toString(),
-        status: "member",
-        role,
-      });
-
+      await synchronizeGroupMemberRelationship(
+        group._id.toString(),
+        member._id.toString(),
+        true
+      );
       const messageWithNewMembers = ctx.message as any;
       if (
         messageWithNewMembers.new_chat_members &&
@@ -285,15 +283,12 @@ const startBotTelegram = async () => {
             };
 
             const botMember = await createOrUpdateMember(botMemberData);
-            const botRole = determineRole("member");
 
-            await createGroupMemberRelation({
-              groupId: group._id.toString(),
-              memberId: botMember._id.toString(),
-              status: "member",
-              role: botRole,
-              addedBy: member._id.toString(),
-            });
+            await synchronizeGroupMemberRelationship(
+              group._id.toString(),
+              botMember._id.toString(),
+              true
+            );
 
             const existingGroup = await GroupModel.findOne({
               tgChatId: chat.id.toString(),
@@ -302,130 +297,50 @@ const startBotTelegram = async () => {
               existingGroup.botStatus = "member";
               await existingGroup.save();
             }
+          } else {
+            const newMemberData: MemberData = {
+              tgUserId: newMember.id.toString(),
+              isBot: newMember.is_bot,
+              firstName: newMember.first_name,
+              lastName: newMember.last_name,
+              username: newMember.username,
+              languageCode: newMember.language_code,
+              canJoinGroups: newMember.can_join_groups,
+              canReadAllGroupMessages: newMember.can_read_all_group_messages,
+              supportsInlineQueries: newMember.supports_inline_queries,
+            };
 
-            try {
-              const { updateGroupInfoFromTelegram } = await import(
-                "./bot-telegram.helper"
-              );
-              await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
-            } catch (error) {
-              console.warn(
-                "Помилка при оновленні інформації про групу:",
-                error
-              );
-            }
+            const newMemberCreated = await createOrUpdateMember(newMemberData);
+
+            await synchronizeGroupMemberRelationship(
+              group._id.toString(),
+              newMemberCreated._id.toString(),
+              true
+            );
           }
         }
       }
-
       if (messageWithNewMembers.left_chat_member) {
         const leftMember = messageWithNewMembers.left_chat_member;
-        if (leftMember.is_bot && leftMember.id === ctx.botInfo?.id) {
-          const leftMemberData: MemberData = {
-            tgUserId: leftMember.id.toString(),
-            isBot: leftMember.is_bot,
-            firstName: leftMember.first_name,
-            lastName: leftMember.last_name,
-            username: leftMember.username,
-            languageCode: leftMember.language_code,
-            canJoinGroups: leftMember.can_join_groups,
-            canReadAllGroupMessages: leftMember.can_read_all_group_messages,
-            supportsInlineQueries: leftMember.supports_inline_queries,
-          };
+        const leftMemberData: MemberData = {
+          tgUserId: leftMember.id.toString(),
+          isBot: leftMember.is_bot,
+          firstName: leftMember.first_name,
+          lastName: leftMember.last_name,
+          username: leftMember.username,
+          languageCode: leftMember.language_code,
+          canJoinGroups: leftMember.can_join_groups,
+          canReadAllGroupMessages: leftMember.can_read_all_group_messages,
+          supportsInlineQueries: leftMember.supports_inline_queries,
+        };
 
-          const leftBotMember = await createOrUpdateMember(leftMemberData);
-          await createGroupMemberRelation({
-            groupId: group._id.toString(),
-            memberId: leftBotMember._id.toString(),
-            status: "left",
-            role: "member",
-            addedBy: member._id.toString(),
-          });
+        const leftMemberCreated = await createOrUpdateMember(leftMemberData);
 
-          const existingGroup = await GroupModel.findOne({
-            tgChatId: chat.id.toString(),
-          });
-          if (existingGroup) {
-            existingGroup.botStatus = "left";
-            await existingGroup.save();
-          }
-        }
-      }
-
-      if (messageWithNewMembers.left_chat_participant) {
-        const leftParticipant = messageWithNewMembers.left_chat_participant;
-        if (leftParticipant.is_bot && leftParticipant.id === ctx.botInfo?.id) {
-          const leftParticipantData: MemberData = {
-            tgUserId: leftParticipant.id.toString(),
-            isBot: leftParticipant.is_bot,
-            firstName: leftParticipant.first_name,
-            lastName: leftParticipant.last_name,
-            username: leftParticipant.username,
-            languageCode: leftParticipant.language_code,
-            canJoinGroups: leftParticipant.can_join_groups,
-            canReadAllGroupMessages:
-              leftParticipant.can_read_all_group_messages,
-            supportsInlineQueries: leftParticipant.supports_inline_queries,
-          };
-
-          const leftBotParticipant = await createOrUpdateMember(
-            leftParticipantData
-          );
-          await createGroupMemberRelation({
-            groupId: group._id.toString(),
-            memberId: leftBotParticipant._id.toString(),
-            status: "left",
-            role: "member",
-            addedBy: member._id.toString(),
-          });
-
-          const existingGroup = await GroupModel.findOne({
-            tgChatId: chat.id.toString(),
-          });
-          if (existingGroup) {
-            existingGroup.botStatus = "left";
-            await existingGroup.save();
-          }
-        }
-      }
-
-      if (messageWithNewMembers.new_chat_photo) {
-        try {
-          const { updateGroupInfoFromTelegram } = await import(
-            "./bot-telegram.helper"
-          );
-          await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
-        } catch (error) {
-          console.warn("Помилка при оновленні фото групи:", error);
-        }
-      }
-
-      if (messageWithNewMembers.delete_chat_photo) {
-        try {
-          const existingGroup = await GroupModel.findOne({
-            tgChatId: chat.id.toString(),
-          });
-          if (existingGroup) {
-            existingGroup.photoUrl = undefined;
-            await existingGroup.save();
-          }
-        } catch (error) {
-          console.warn("Помилка при видаленні фото групи:", error);
-        }
-      }
-
-      if (messageWithNewMembers.new_chat_title) {
-        try {
-          const existingGroup = await GroupModel.findOne({
-            tgChatId: chat.id.toString(),
-          });
-          if (existingGroup) {
-            existingGroup.title = messageWithNewMembers.new_chat_title;
-            await existingGroup.save();
-          }
-        } catch (error) {
-          console.warn("Помилка при оновленні назви групи:", error);
-        }
+        await synchronizeGroupMemberRelationship(
+          group._id.toString(),
+          leftMemberCreated._id.toString(),
+          false
+        );
       }
     } catch (error) {
       console.warn("Помилка при обробці повідомлення:", error);
@@ -455,7 +370,7 @@ const startBotTelegram = async () => {
         await ctx.reply("❌ Не вдалося оновити інформацію про групу");
       }
     } catch (error) {
-      console.error("Помилка при оновленні інформації про групу:", error);
+      console.warn("Помилка при оновленні інформації про групу:", error);
       await ctx.reply("❌ Помилка при оновленні інформації про групу");
     }
   });

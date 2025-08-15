@@ -18,7 +18,7 @@ router.get("/connect", async (req: Request, res: Response) => {
       session_id: session_id,
     });
   } catch (error) {
-    console.error("Error in bot connect route:", error);
+    console.warn("Error in bot connect route:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

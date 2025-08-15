@@ -1,7 +1,5 @@
 import { Router, Request, Response } from "express";
-import mongoose from "mongoose";
 import MemberModel from "./member.model";
-import GroupMemberRelationModel from "../groups/group-member-relation.model";
 import {
   membersQuerySchema,
   memberParamsSchema,
@@ -43,32 +41,12 @@ router.get("/", async (req: Request, res: Response) => {
     const filter = buildMembersQuery(query);
     const sort = buildSortQuery(sortBy, order);
     const skip = (page - 1) * limit;
-    let memberIds: string[] = [];
-    if (query.status) {
-      const relations = await GroupMemberRelationModel.find({
-        status: query.status,
-      })
-        .select("memberId")
-        .lean();
-      memberIds = relations.map((rel) => rel.memberId.toString());
-      if (memberIds.length === 0) {
-        return res.json({
-          data: [],
-          meta: {
-            page,
-            limit,
-            total: 0,
-            pages: 0,
-          },
-        });
-      }
-      filter._id = {
-        $in: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
-      };
-    }
-
     const [members, total] = await Promise.all([
-      MemberModel.find(filter).sort(sort as any).skip(skip).limit(limit).lean(),
+      MemberModel.find(filter)
+        .sort(sort as any)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       MemberModel.countDocuments(filter),
     ]);
     const transformedMembers = members.map(transformMemberToPublic);
@@ -152,34 +130,12 @@ router.get("/owner", async (req: Request, res: Response) => {
     filter.groups = { $in: ownerGroups };
     const sort = buildSortQuery(sortBy, order);
     const skip = (page - 1) * limit;
-
-    let memberIds: string[] = [];
-    if (query.status) {
-      const relations = await GroupMemberRelationModel.find({
-        status: query.status,
-        groupId: { $in: ownerGroups },
-      })
-        .select("memberId")
-        .lean();
-      memberIds = relations.map((rel) => rel.memberId.toString());
-      if (memberIds.length === 0) {
-        return res.json({
-          data: [],
-          meta: {
-            page,
-            limit,
-            total: 0,
-            pages: 0,
-          },
-        });
-      }
-      filter._id = {
-        $in: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
-      };
-    }
-
     const [members, total] = await Promise.all([
-      MemberModel.find(filter).sort(sort as any).skip(skip).limit(limit).lean(),
+      MemberModel.find(filter)
+        .sort(sort as any)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       MemberModel.countDocuments(filter),
     ]);
 

@@ -88,7 +88,7 @@ export interface GroupData {
     | "restricted"
     | "left"
     | "kicked";
-  addedBy: string;
+  addedBy?: string;
 }
 
 export interface MemberData {
@@ -102,18 +102,4 @@ export interface MemberData {
   canReadAllGroupMessages?: boolean;
   supportsInlineQueries?: boolean;
   userId?: string;
-}
-
-export interface GroupMemberRelation {
-  groupId: string;
-  memberId: string;
-  status:
-    | "creator"
-    | "administrator"
-    | "member"
-    | "restricted"
-    | "left"
-    | "kicked";
-  role: "admin" | "moderator" | "member";
-  addedBy?: string;
 }

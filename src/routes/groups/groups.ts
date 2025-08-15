@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
-import GroupMemberRelationModel from "./group-member-relation.model";
 import {
   groupsQuerySchema,
   groupParamsSchema,
@@ -52,16 +51,20 @@ router.get("/", async (req: Request, res: Response) => {
       if (membersFrom) memberCountFilter.$gte = membersFrom;
       if (membersTo) memberCountFilter.$lte = membersTo;
 
-      const groupMemberCounts = await GroupMemberRelationModel.aggregate([
+      const groupMemberCounts = await GroupModel.aggregate([
         {
-          $group: {
-            _id: "$groupId",
-            count: { $sum: 1 },
+          $addFields: {
+            memberCount: { $size: { $ifNull: ["$members", []] } },
           },
         },
         {
           $match: {
-            count: memberCountFilter,
+            memberCount: memberCountFilter,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
           },
         },
       ]);
@@ -193,21 +196,25 @@ router.get("/owner", async (req: Request, res: Response) => {
       if (membersFrom) memberCountFilter.$gte = membersFrom;
       if (membersTo) memberCountFilter.$lte = membersTo;
 
-      const groupMemberCounts = await GroupMemberRelationModel.aggregate([
+      const groupMemberCounts = await GroupModel.aggregate([
         {
           $match: {
-            groupId: { $in: ownerGroups },
+            _id: { $in: ownerGroups },
           },
         },
         {
-          $group: {
-            _id: "$groupId",
-            count: { $sum: 1 },
+          $addFields: {
+            memberCount: { $size: { $ifNull: ["$members", []] } },
           },
         },
         {
           $match: {
-            count: memberCountFilter,
+            memberCount: memberCountFilter,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
           },
         },
       ]);
@@ -313,9 +320,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         });
     }
 
-    const memberCount = await GroupMemberRelationModel.countDocuments({
-      groupId: group._id,
-    });
+    const memberCount = group.members ? group.members.length : 0;
 
     const transformedGroup = transformGroupToPublic(group, memberCount);
     const response = {

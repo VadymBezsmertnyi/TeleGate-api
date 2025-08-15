@@ -1,12 +1,6 @@
 import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
-import GroupMemberRelationModel from "../groups/group-member-relation.model";
-import {
-  GroupData,
-  MemberData,
-  GroupMemberRelation,
-} from "./bot-telegram.types";
-
+import { GroupData, MemberData } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 
 export const createOrUpdateMember = async (memberData: MemberData) => {
@@ -81,42 +75,51 @@ export const createOrUpdateGroup = async (groupData: GroupData) => {
   return await newGroup.save();
 };
 
-export const createGroupMemberRelation = async (
-  relationData: GroupMemberRelation
+export const synchronizeGroupMemberRelationship = async (
+  groupId: string,
+  memberId: string,
+  shouldAdd: boolean = true
 ) => {
-  const existingRelation = await GroupMemberRelationModel.findOne({
-    groupId: relationData.groupId,
-    memberId: relationData.memberId,
-  });
-  if (existingRelation) {
-    existingRelation.status = relationData.status;
-    existingRelation.role = relationData.role;
-    existingRelation.addedBy = relationData.addedBy as any;
-    return await existingRelation.save();
-  }
-
-  const newRelation = new GroupMemberRelationModel({
-    groupId: relationData.groupId,
-    memberId: relationData.memberId,
-    status: relationData.status,
-    role: relationData.role,
-    addedBy: relationData.addedBy,
-  });
-
-  const savedRelation = await newRelation.save();
-
   try {
-    const member = await MemberModel.findById(relationData.memberId);
-    if (member && member.user) {
-      await UserModel.findByIdAndUpdate(member.user, {
-        $addToSet: { groups: relationData.groupId },
+    if (shouldAdd) {
+      await GroupModel.findByIdAndUpdate(groupId, {
+        $addToSet: { members: memberId },
       });
+      await MemberModel.findByIdAndUpdate(memberId, {
+        $addToSet: { groups: groupId },
+      });
+      const member = await MemberModel.findById(memberId);
+      if (member && member.user) {
+        await UserModel.findByIdAndUpdate(member.user, {
+          $addToSet: { groups: groupId },
+        });
+        await GroupModel.findByIdAndUpdate(groupId, {
+          $addToSet: { users: member.user },
+        });
+      }
+    } else {
+      await GroupModel.findByIdAndUpdate(groupId, {
+        $pull: { members: memberId },
+      });
+      await MemberModel.findByIdAndUpdate(memberId, {
+        $pull: { groups: groupId },
+      });
+      const member = await MemberModel.findById(memberId);
+      if (member && member.user) {
+        await UserModel.findByIdAndUpdate(member.user, {
+          $pull: { groups: groupId },
+        });
+        await GroupModel.findByIdAndUpdate(groupId, {
+          $pull: { users: member.user },
+        });
+      }
     }
   } catch (error) {
-    console.warn("Помилка при оновленні зв'язків користувача з групою:", error);
+    console.warn(
+      "Помилка при синхронізації зв'язків групи та учасника:",
+      error
+    );
   }
-
-  return savedRelation;
 };
 
 export const determineRole = (
@@ -136,7 +139,6 @@ export const determineRole = (
 export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
   try {
     const chat = await bot.telegram.getChat(chatId);
-
     let photoUrl: string | undefined;
     if (chat.photo) {
       try {
@@ -162,13 +164,13 @@ export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
         existingGroup.description = groupData.description;
       if (groupData.photoUrl) existingGroup.photoUrl = groupData.photoUrl;
       await existingGroup.save();
-      
+
       return existingGroup;
     }
 
     return null;
   } catch (error) {
-    console.error("Помилка при оновленні інформації про групу:", error);
+    console.warn("Помилка при оновленні інформації про групу:", error);
     return null;
   }
 };

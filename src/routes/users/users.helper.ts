@@ -1,6 +1,5 @@
 import UserModel from "./users.model";
 import MemberModel from "../members/member.model";
-import GroupMemberRelationModel from "../groups/group-member-relation.model";
 
 export const linkUserWithMembersAndGroups = async (
   telegramId: number,
@@ -10,34 +9,27 @@ export const linkUserWithMembersAndGroups = async (
     const member = await MemberModel.findOne({
       tgUserId: telegramId.toString(),
     });
-
     if (member) {
       member.user = userId as any;
       await member.save();
-
-      const groupRelations = await GroupMemberRelationModel.find({
-        memberId: member._id,
-      }).populate("groupId");
-
-      const groups = groupRelations.map((relation) => relation.groupId);
-
+      const groups = member.groups || [];
       await UserModel.findByIdAndUpdate(userId, {
         $addToSet: {
           members: member._id,
-          groups: { $each: groups.map((group) => group._id) },
+          groups: { $each: groups },
         },
       });
 
       return {
         member: member._id,
-        groups: groups.map((group) => group._id),
-        groupRelations: groupRelations.length,
+        groups: groups,
+        groupRelations: groups.length,
       };
     }
 
     return null;
   } catch (error) {
-    console.error(
+    console.warn(
       "Помилка при зв'язуванні користувача з членами та групами:",
       error
     );
@@ -53,31 +45,23 @@ export const updateUserMembersAndGroups = async (
     const member = await MemberModel.findOne({
       tgUserId: telegramId.toString(),
     });
+    if (!member) return null;
 
-    if (!member) {
-      return null;
-    }
-
-    const groupRelations = await GroupMemberRelationModel.find({
-      memberId: member._id,
-    }).populate("groupId");
-
-    const groups = groupRelations.map((relation) => relation.groupId);
-
+    const groups = member.groups || [];
     await UserModel.findByIdAndUpdate(userId, {
       $addToSet: {
         members: member._id,
-        groups: { $each: groups.map((group) => group._id) },
+        groups: { $each: groups },
       },
     });
 
     return {
       member: member._id,
-      groups: groups.map((group) => group._id),
-      groupRelations: groupRelations.length,
+      groups: groups,
+      groupRelations: groups.length,
     };
   } catch (error) {
-    console.error("Помилка при оновленні зв'язків користувача:", error);
+    console.warn("Помилка при оновленні зв'язків користувача:", error);
     return null;
   }
 };
@@ -113,7 +97,7 @@ export const getUserMembersAndGroups = async (userId: string) => {
       groups: user.groups || [],
     };
   } catch (error) {
-    console.error("Помилка при отриманні даних користувача:", error);
+    console.warn("Помилка при отриманні даних користувача:", error);
     return null;
   }
 };
