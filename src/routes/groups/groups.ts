@@ -95,7 +95,7 @@ router.get("/", async (req: Request, res: Response) => {
         .lean(),
       GroupModel.countDocuments(filter),
     ]);
-    const transformedGroups = await getGroupsWithMemberCount(groups);
+    const transformedGroups = getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
     const response = {
       data: transformedGroups,
@@ -245,7 +245,7 @@ router.get("/owner", async (req: Request, res: Response) => {
       GroupModel.countDocuments(filter),
     ]);
 
-    const transformedGroups = await getGroupsWithMemberCount(groups);
+    const transformedGroups = getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
 
     const response = {
@@ -275,6 +275,28 @@ router.get("/owner", async (req: Request, res: Response) => {
         code: ERROR_CODES.INTERNAL_ERROR,
         message: "Failed to fetch owner groups",
       },
+    });
+  }
+});
+
+router.get("/test", async (req: Request, res: Response) => {
+  try {
+    const groups = await GroupModel.find({})
+      .populate("addedBy", "firstName lastName username")
+      .lean();
+
+    const transformedGroups = getGroupsWithMemberCount(groups);
+
+    return res.json({
+      success: true,
+      count: groups.length,
+      sample: transformedGroups[0] || null,
+      rawSample: groups[0] || null,
+    });
+  } catch (error) {
+    console.warn("Test endpoint error:", error);
+    return res.status(500).json({
+      error: "Test failed",
     });
   }
 });

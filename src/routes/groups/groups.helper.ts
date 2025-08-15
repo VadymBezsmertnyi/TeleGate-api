@@ -103,11 +103,9 @@ export const getOwnerGroups = async (
   return groups.map((group) => group._id);
 };
 
-export const getGroupsWithMemberCount = async (groups: any[]) => {
-  return Promise.all(
-    groups.map(async (group) => {
-      const memberCount = group.members ? group.members.length : 0;
-      return transformGroupToPublic(group, memberCount);
-    })
-  );
+export const getGroupsWithMemberCount = (groups: any[]) => {
+  return groups.map((group) => {
+    const memberCount = group.members ? group.members.length : 0;
+    return transformGroupToPublic(group, memberCount);
+  });
 };
