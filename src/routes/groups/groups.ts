@@ -112,7 +112,6 @@ router.get("/", async (req: Request, res: Response) => {
         "Response validation failed:",
         JSON.stringify(responseValidation.error, null, 2)
       );
-      console.warn("Response data:", response);
       return res.status(500).json({
         error: {
           code: ERROR_CODES.INTERNAL_ERROR,
