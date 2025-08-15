@@ -8,18 +8,12 @@ router.get("/", async (req, res) => {
   try {
     const { page = 1, limit = 20, search, filter } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
-
     let query: any = {};
-
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
-    }
-
-    if (filter === "connected") {
+    if (search) query.title = { $regex: search, $options: "i" };
+    if (filter === "connected")
       query.botStatus = { $in: ["creator", "administrator", "member"] };
-    } else if (filter === "disconnected") {
+    else if (filter === "disconnected")
       query.botStatus = { $in: ["left", "kicked", "restricted"] };
-    }
 
     const groups = await GroupModel.find(query)
       .populate("addedBy", "firstName lastName username")
@@ -28,7 +22,6 @@ router.get("/", async (req, res) => {
       .limit(Number(limit));
 
     const total = await GroupModel.countDocuments(query);
-
     const groupsWithMemberCount = await Promise.all(
       groups.map(async (group) => {
         const memberCount = await GroupMemberRelationModel.countDocuments({
