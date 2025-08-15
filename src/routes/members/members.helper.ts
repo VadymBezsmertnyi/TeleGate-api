@@ -2,6 +2,7 @@ import { Request } from "express";
 import mongoose from "mongoose";
 import GroupModel from "../groups/group.model";
 import UserModel from "../users/users.model";
+import MemberModel from "./member.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
 import { MembersQuery } from "./members.types";
 
@@ -84,7 +85,12 @@ export const getOwnerGroups = async (
     const user = await UserModel.findOne({
       telegramId: ownerTelegramId,
     }).lean();
-    if (user) filter.addedBy = user._id;
+    if (user) {
+      const member = await MemberModel.findOne({
+        user: user._id,
+      }).lean();
+      if (member) filter.addedBy = member._id;
+    }
   }
 
   const groups = await GroupModel.find(filter).select("_id").lean();
