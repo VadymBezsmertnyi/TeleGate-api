@@ -63,12 +63,12 @@ export const transformMemberToPublic = (member: any) => ({
   tgUserId: member.tgUserId,
   isBot: member.isBot,
   firstName: member.firstName,
-  lastName: member.lastName,
-  username: member.username,
-  languageCode: member.languageCode,
-  canJoinGroups: member.canJoinGroups,
-  canReadAllGroupMessages: member.canReadAllGroupMessages,
-  supportsInlineQueries: member.supportsInlineQueries,
+  lastName: member.lastName || null,
+  username: member.username || null,
+  languageCode: member.languageCode || null,
+  canJoinGroups: member.canJoinGroups || null,
+  canReadAllGroupMessages: member.canReadAllGroupMessages || null,
+  supportsInlineQueries: member.supportsInlineQueries || null,
   createdAt: member.createdAt,
   updatedAt: member.updatedAt,
 });
@@ -85,7 +85,6 @@ export const getOwnerGroups = async (
     const member = await MemberModel.findOne({
       tgUserId: ownerTelegramId,
     }).lean();
-    console.log("member:", member);
     if (member) filter.addedBy = member._id;
   }
 
