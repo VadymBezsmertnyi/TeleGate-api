@@ -6,7 +6,8 @@ export const GROUPS_CONSTANTS = {
   DEFAULT_ORDER: "desc",
   SORT_FIELDS: ["createdAt", "updatedAt", "name", "membersCount"] as const,
   ORDER_VALUES: ["asc", "desc"] as const,
-  STATUS_VALUES: [
+  STATUS_VALUES: ["active", "archived", "blocked"] as const,
+  BOT_STATUS_VALUES: [
     "creator",
     "administrator",
     "member",

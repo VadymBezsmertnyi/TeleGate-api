@@ -18,16 +18,7 @@ export const groupSchema = z.object({
       premium_subscription: z.boolean().nullable(),
     })
     .nullable(),
-  botStatus: z
-    .enum([
-      "creator",
-      "administrator",
-      "member",
-      "restricted",
-      "left",
-      "kicked",
-    ])
-    .nullable(),
+  botStatus: z.enum(GROUPS_CONSTANTS.BOT_STATUS_VALUES).nullable(),
   addedBy: z.any().nullable(),
   users: z.array(z.any()),
   members: z.array(z.any()),
@@ -53,16 +44,7 @@ export const groupPublicSchema = z.object({
       premium_subscription: z.boolean().nullable(),
     })
     .nullable(),
-  botStatus: z
-    .enum([
-      "creator",
-      "administrator",
-      "member",
-      "restricted",
-      "left",
-      "kicked",
-    ])
-    .nullable(),
+  botStatus: z.enum(GROUPS_CONSTANTS.BOT_STATUS_VALUES).nullable(),
   membersCount: z.number(),
   addedBy: z
     .object({
