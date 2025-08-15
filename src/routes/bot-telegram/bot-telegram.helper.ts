@@ -14,7 +14,7 @@ export const getUserPhotoUrl = async (
     );
 
     if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
-      const photo = userPhotos.photos[0][0]; // Отримуємо перше фото найвищої якості
+      const photo = userPhotos.photos[0][0];
       const file = await bot.telegram.getFile(photo.file_id);
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -35,7 +35,6 @@ export const createOrUpdateMember = async (memberData: MemberData) => {
   });
 
   if (existingMember) {
-    // Оновлюємо існуючого користувача, якщо є нові дані
     if (
       memberData.photoUrl &&
       memberData.photoUrl !== existingMember.photoUrl

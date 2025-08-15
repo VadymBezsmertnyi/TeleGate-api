@@ -48,7 +48,6 @@ const startBotTelegram = async () => {
         supports_inline_queries?: boolean;
       };
 
-      // Отримуємо аватар користувача
       let photoUrl: string | undefined;
       if (!from.is_bot) {
         try {
@@ -147,7 +146,6 @@ const startBotTelegram = async () => {
               };
             };
 
-            // Отримуємо аватар адміністратора
             let adminPhotoUrl: string | undefined;
             if (!admin.user.is_bot) {
               try {
@@ -227,7 +225,6 @@ const startBotTelegram = async () => {
           };
         };
 
-        // Отримуємо аватар нового учасника
         let newMemberPhotoUrl: string | undefined;
         if (!newChatMember.user.is_bot) {
           try {
@@ -297,7 +294,6 @@ const startBotTelegram = async () => {
         supports_inline_queries?: boolean;
       };
 
-      // Отримуємо аватар відправника повідомлення
       let senderPhotoUrl: string | undefined;
       if (!from.is_bot) {
         try {
@@ -332,7 +328,6 @@ const startBotTelegram = async () => {
       ) {
         for (const newMember of messageWithNewMembers.new_chat_members) {
           if (newMember.is_bot && newMember.id === ctx.botInfo?.id) {
-            // Отримуємо аватар бота
             let botPhotoUrl: string | undefined;
             if (!newMember.is_bot) {
               try {
@@ -374,7 +369,6 @@ const startBotTelegram = async () => {
               await existingGroup.save();
             }
           } else {
-            // Отримуємо аватар нового учасника
             let newMemberPhotoUrl: string | undefined;
             if (!newMember.is_bot) {
               try {
@@ -415,7 +409,6 @@ const startBotTelegram = async () => {
       }
       if (messageWithNewMembers.left_chat_member) {
         const leftMember = messageWithNewMembers.left_chat_member;
-        // Отримуємо аватар учасника, що покинув групу
         let leftMemberPhotoUrl: string | undefined;
         if (!leftMember.is_bot) {
           try {
