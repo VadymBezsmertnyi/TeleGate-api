@@ -84,13 +84,13 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     const [groups, total] = await Promise.all([
-      GroupModel.find()
+      GroupModel.find(filter)
         .populate("addedBy", "firstName lastName username")
         .sort(sort as any)
         .skip(skip)
         .limit(limit)
         .lean(),
-      GroupModel.countDocuments(),
+      GroupModel.countDocuments(filter),
     ]);
     const transformedGroups = await getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
