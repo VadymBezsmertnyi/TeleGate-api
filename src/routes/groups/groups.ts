@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
+import MemberModel from "../members/member.model";
 import {
   groupsQuerySchema,
   groupParamsSchema,
@@ -284,7 +285,6 @@ router.get("/test", async (req: Request, res: Response) => {
     const groups = await GroupModel.find({})
       .populate("addedBy", "firstName lastName username")
       .lean();
-
     const transformedGroups = getGroupsWithMemberCount(groups);
 
     return res.json({
@@ -314,11 +314,9 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     const { id } = paramsValidation.data;
     const authenticatedUser = await getAuthenticatedUser(req);
-
     const group = await GroupModel.findById(id)
       .populate("addedBy", "firstName lastName username")
       .lean();
-
     if (!group)
       return res.status(404).json({
         error: {
@@ -328,10 +326,19 @@ router.get("/:id", async (req: Request, res: Response) => {
       });
 
     if (authenticatedUser) {
-      const isOwner =
-        group.addedBy &&
-        group.addedBy._id.toString() === authenticatedUser._id.toString();
+      const member = await MemberModel.findOne({
+        tgUserId: authenticatedUser.telegramId.toString(),
+      }).lean();
+      if (!member)
+        return res.status(403).json({
+          error: {
+            code: ERROR_CODES.FORBIDDEN,
+            message: "Member not found",
+          },
+        });
 
+      const isOwner =
+        group.addedBy && group.addedBy._id.toString() === member._id.toString();
       if (!isOwner)
         return res.status(403).json({
           error: {
@@ -342,12 +349,10 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     const memberCount = group.members ? group.members.length : 0;
-
     const transformedGroup = transformGroupToPublic(group, memberCount);
     const response = {
       data: transformedGroup,
     };
-
     const responseValidation = groupResponseSchema.safeParse(response);
     if (!responseValidation.success)
       return res.status(500).json({
