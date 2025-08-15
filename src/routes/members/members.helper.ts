@@ -1,5 +1,6 @@
 import { Request } from "express";
 import mongoose from "mongoose";
+import axios from "axios";
 import GroupModel from "../groups/group.model";
 import UserModel from "../users/users.model";
 import { MembersQuery } from "./members.types";
@@ -9,14 +10,6 @@ export const validateTelegramToken = async (
   botToken: string
 ) => {
   try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${botToken}/getMe`
-    );
-    if (!response.ok) return { isValid: false, userData: null };
-
-    const data = await response.json();
-    if (!data.ok) return { isValid: false, userData: null };
-
     const tokenParts = token.split("_");
     if (tokenParts.length !== 3) return { isValid: false, userData: null };
 
@@ -26,6 +19,14 @@ export const validateTelegramToken = async (
     const maxAge = 24 * 60 * 60 * 1000;
 
     if (now - timestamp > maxAge) return { isValid: false, userData: null };
+
+    const response = await axios.get(
+      `https://api.telegram.org/bot${botToken}/getMe`
+    );
+
+    if (response.status !== 200 || !response.data.ok) {
+      return { isValid: false, userData: null };
+    }
 
     return { isValid: true, userData: { id: telegramId } };
   } catch (error) {
