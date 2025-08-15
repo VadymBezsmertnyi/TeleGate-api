@@ -11,6 +11,7 @@ const memberSM = new Schema(
     canJoinGroups: { type: Boolean },
     canReadAllGroupMessages: { type: Boolean },
     supportsInlineQueries: { type: Boolean },
+    photoUrl: { type: String },
     user: { type: Schema.Types.ObjectId, ref: "users" },
     groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
   },

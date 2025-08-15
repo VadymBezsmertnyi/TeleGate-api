@@ -101,5 +101,6 @@ export interface MemberData {
   canJoinGroups?: boolean;
   canReadAllGroupMessages?: boolean;
   supportsInlineQueries?: boolean;
+  photoUrl?: string;
   userId?: string;
 }

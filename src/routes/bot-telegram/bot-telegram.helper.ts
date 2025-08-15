@@ -3,11 +3,48 @@ import MemberModel from "../members/member.model";
 import { GroupData, MemberData } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 
+export const getUserPhotoUrl = async (
+  bot: any,
+  userId: string
+): Promise<string | undefined> => {
+  try {
+    const userPhotos = await bot.telegram.getUserProfilePhotos(
+      parseInt(userId),
+      { limit: 1 }
+    );
+
+    if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
+      const photo = userPhotos.photos[0][0]; // Отримуємо перше фото найвищої якості
+      const file = await bot.telegram.getFile(photo.file_id);
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+      if (botToken)
+        return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.warn(`Помилка при отриманні фото користувача ${userId}:`, error);
+    return undefined;
+  }
+};
+
 export const createOrUpdateMember = async (memberData: MemberData) => {
   const existingMember = await MemberModel.findOne({
     tgUserId: memberData.tgUserId,
   });
-  if (existingMember) return existingMember;
+
+  if (existingMember) {
+    // Оновлюємо існуючого користувача, якщо є нові дані
+    if (
+      memberData.photoUrl &&
+      memberData.photoUrl !== existingMember.photoUrl
+    ) {
+      existingMember.photoUrl = memberData.photoUrl;
+      await existingMember.save();
+    }
+    return existingMember;
+  }
 
   const newMember = new MemberModel({
     tgUserId: memberData.tgUserId,
@@ -19,6 +56,7 @@ export const createOrUpdateMember = async (memberData: MemberData) => {
     canJoinGroups: memberData.canJoinGroups,
     canReadAllGroupMessages: memberData.canReadAllGroupMessages,
     supportsInlineQueries: memberData.supportsInlineQueries,
+    photoUrl: memberData.photoUrl,
     user: memberData.userId,
   });
 

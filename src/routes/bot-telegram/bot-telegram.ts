@@ -4,10 +4,12 @@ import {
   createOrUpdateMember,
   createOrUpdateGroup,
   synchronizeGroupMemberRelationship,
+  getUserPhotoUrl,
 } from "./bot-telegram.helper";
 import { GroupData, MemberData } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
 import { Chat, ChatMember, User } from "telegraf/typings/core/types/typegram";
+import MemberModel from "../members/member.model";
 
 dotenv.config();
 
@@ -45,6 +47,17 @@ const startBotTelegram = async () => {
         can_read_all_group_messages?: boolean;
         supports_inline_queries?: boolean;
       };
+
+      // Отримуємо аватар користувача
+      let photoUrl: string | undefined;
+      if (!from.is_bot) {
+        try {
+          photoUrl = await getUserPhotoUrl(ctx, from.id.toString());
+        } catch (error) {
+          console.warn("Помилка при отриманні аватара користувача:", error);
+        }
+      }
+
       const memberData: MemberData = {
         tgUserId: from.id.toString(),
         isBot: from.is_bot,
@@ -55,6 +68,7 @@ const startBotTelegram = async () => {
         canJoinGroups: currentChatMember.can_join_groups,
         canReadAllGroupMessages: currentChatMember.can_read_all_group_messages,
         supportsInlineQueries: currentChatMember.supports_inline_queries,
+        photoUrl,
       };
       const member = await createOrUpdateMember(memberData);
       const currentChat = chat as Chat & {
@@ -64,13 +78,13 @@ const startBotTelegram = async () => {
         description?: string;
         photo?: any;
       };
-      let photoUrl: string | undefined;
+      let groupPhotoUrl: string | undefined;
       if (currentChat.photo) {
         try {
           const file = await ctx.telegram.getFile(
             currentChat.photo.big_file_id
           );
-          photoUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+          groupPhotoUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
         } catch (error) {
           console.warn("Помилка при отриманні фото групи:", error);
         }
@@ -81,7 +95,7 @@ const startBotTelegram = async () => {
         type: chat.type,
         title: chat.title,
         description: currentChat.description,
-        photoUrl,
+        photoUrl: groupPhotoUrl,
         isForum: currentChat.is_forum,
         allMembersAreAdministrators: currentChat.all_members_are_administrators,
         acceptedGiftTypes: currentChat.accepted_gift_types,
@@ -132,6 +146,23 @@ const startBotTelegram = async () => {
                 supports_inline_queries?: boolean;
               };
             };
+
+            // Отримуємо аватар адміністратора
+            let adminPhotoUrl: string | undefined;
+            if (!admin.user.is_bot) {
+              try {
+                adminPhotoUrl = await getUserPhotoUrl(
+                  ctx,
+                  admin.user.id.toString()
+                );
+              } catch (error) {
+                console.warn(
+                  "Помилка при отриманні аватара адміністратора:",
+                  error
+                );
+              }
+            }
+
             const adminMemberData: MemberData = {
               tgUserId: admin.user.id.toString(),
               isBot: admin.user.is_bot,
@@ -143,6 +174,7 @@ const startBotTelegram = async () => {
               canReadAllGroupMessages:
                 currentAdmin.user.can_read_all_group_messages,
               supportsInlineQueries: currentAdmin.user.supports_inline_queries,
+              photoUrl: adminPhotoUrl,
             };
 
             const adminMember = await createOrUpdateMember(adminMemberData);
@@ -194,6 +226,23 @@ const startBotTelegram = async () => {
             supports_inline_queries?: boolean;
           };
         };
+
+        // Отримуємо аватар нового учасника
+        let newMemberPhotoUrl: string | undefined;
+        if (!newChatMember.user.is_bot) {
+          try {
+            newMemberPhotoUrl = await getUserPhotoUrl(
+              ctx,
+              newChatMember.user.id.toString()
+            );
+          } catch (error) {
+            console.warn(
+              "Помилка при отриманні аватара нового учасника:",
+              error
+            );
+          }
+        }
+
         const memberData: MemberData = {
           tgUserId: newChatMember.user.id.toString(),
           isBot: newChatMember.user.is_bot,
@@ -206,6 +255,7 @@ const startBotTelegram = async () => {
             newCurrentChatMember.user.can_read_all_group_messages,
           supportsInlineQueries:
             newCurrentChatMember.user.supports_inline_queries,
+          photoUrl: newMemberPhotoUrl,
         };
         const member = await createOrUpdateMember(memberData);
         if (
@@ -246,6 +296,17 @@ const startBotTelegram = async () => {
         can_read_all_group_messages?: boolean;
         supports_inline_queries?: boolean;
       };
+
+      // Отримуємо аватар відправника повідомлення
+      let senderPhotoUrl: string | undefined;
+      if (!from.is_bot) {
+        try {
+          senderPhotoUrl = await getUserPhotoUrl(ctx, from.id.toString());
+        } catch (error) {
+          console.warn("Помилка при отриманні аватара відправника:", error);
+        }
+      }
+
       const memberData: MemberData = {
         tgUserId: from.id.toString(),
         isBot: from.is_bot,
@@ -256,6 +317,7 @@ const startBotTelegram = async () => {
         canJoinGroups: fromMember.can_join_groups,
         canReadAllGroupMessages: fromMember.can_read_all_group_messages,
         supportsInlineQueries: fromMember.supports_inline_queries,
+        photoUrl: senderPhotoUrl,
       };
       const member = await createOrUpdateMember(memberData);
       await synchronizeGroupMemberRelationship(
@@ -270,6 +332,19 @@ const startBotTelegram = async () => {
       ) {
         for (const newMember of messageWithNewMembers.new_chat_members) {
           if (newMember.is_bot && newMember.id === ctx.botInfo?.id) {
+            // Отримуємо аватар бота
+            let botPhotoUrl: string | undefined;
+            if (!newMember.is_bot) {
+              try {
+                botPhotoUrl = await getUserPhotoUrl(
+                  ctx,
+                  newMember.id.toString()
+                );
+              } catch (error) {
+                console.warn("Помилка при отриманні аватара бота:", error);
+              }
+            }
+
             const botMemberData: MemberData = {
               tgUserId: newMember.id.toString(),
               isBot: newMember.is_bot,
@@ -280,6 +355,7 @@ const startBotTelegram = async () => {
               canJoinGroups: newMember.can_join_groups,
               canReadAllGroupMessages: newMember.can_read_all_group_messages,
               supportsInlineQueries: newMember.supports_inline_queries,
+              photoUrl: botPhotoUrl,
             };
 
             const botMember = await createOrUpdateMember(botMemberData);
@@ -298,6 +374,22 @@ const startBotTelegram = async () => {
               await existingGroup.save();
             }
           } else {
+            // Отримуємо аватар нового учасника
+            let newMemberPhotoUrl: string | undefined;
+            if (!newMember.is_bot) {
+              try {
+                newMemberPhotoUrl = await getUserPhotoUrl(
+                  ctx,
+                  newMember.id.toString()
+                );
+              } catch (error) {
+                console.warn(
+                  "Помилка при отриманні аватара нового учасника:",
+                  error
+                );
+              }
+            }
+
             const newMemberData: MemberData = {
               tgUserId: newMember.id.toString(),
               isBot: newMember.is_bot,
@@ -308,6 +400,7 @@ const startBotTelegram = async () => {
               canJoinGroups: newMember.can_join_groups,
               canReadAllGroupMessages: newMember.can_read_all_group_messages,
               supportsInlineQueries: newMember.supports_inline_queries,
+              photoUrl: newMemberPhotoUrl,
             };
 
             const newMemberCreated = await createOrUpdateMember(newMemberData);
@@ -322,6 +415,22 @@ const startBotTelegram = async () => {
       }
       if (messageWithNewMembers.left_chat_member) {
         const leftMember = messageWithNewMembers.left_chat_member;
+        // Отримуємо аватар учасника, що покинув групу
+        let leftMemberPhotoUrl: string | undefined;
+        if (!leftMember.is_bot) {
+          try {
+            leftMemberPhotoUrl = await getUserPhotoUrl(
+              ctx,
+              leftMember.id.toString()
+            );
+          } catch (error) {
+            console.warn(
+              "Помилка при отриманні аватара учасника, що покинув групу:",
+              error
+            );
+          }
+        }
+
         const leftMemberData: MemberData = {
           tgUserId: leftMember.id.toString(),
           isBot: leftMember.is_bot,
@@ -332,6 +441,7 @@ const startBotTelegram = async () => {
           canJoinGroups: leftMember.can_join_groups,
           canReadAllGroupMessages: leftMember.can_read_all_group_messages,
           supportsInlineQueries: leftMember.supports_inline_queries,
+          photoUrl: leftMemberPhotoUrl,
         };
 
         const leftMemberCreated = await createOrUpdateMember(leftMemberData);
@@ -372,6 +482,46 @@ const startBotTelegram = async () => {
     } catch (error) {
       console.warn("Помилка при оновленні інформації про групу:", error);
       await ctx.reply("❌ Помилка при оновленні інформації про групу");
+    }
+  });
+
+  bot.command("update_member_avatars", async (ctx) => {
+    try {
+      const { getUserPhotoUrl } = await import("./bot-telegram.helper");
+      const members = await MemberModel.find({
+        photoUrl: { $exists: false },
+      }).limit(10);
+
+      if (members.length === 0) {
+        await ctx.reply("✅ Всі аватари користувачів вже оновлені!");
+        return;
+      }
+
+      let updatedCount = 0;
+      for (const member of members) {
+        if (!member.isBot) {
+          try {
+            const photoUrl = await getUserPhotoUrl(ctx, member.tgUserId);
+            if (photoUrl) {
+              member.photoUrl = photoUrl;
+              await member.save();
+              updatedCount++;
+            }
+          } catch (error) {
+            console.warn(
+              `Помилка при оновленні аватара для ${member.tgUserId}:`,
+              error
+            );
+          }
+        }
+      }
+
+      await ctx.reply(
+        `✅ Оновлено аватари для ${updatedCount} користувачів з ${members.length}`
+      );
+    } catch (error) {
+      console.warn("Помилка при оновленні аватара користувачів:", error);
+      await ctx.reply("❌ Помилка при оновленні аватара користувачів");
     }
   });
 
