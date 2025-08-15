@@ -9,7 +9,7 @@ export const groupSchema = z.object({
   description: z.string().nullable(),
   photoUrl: z.string().nullable(),
   isForum: z.boolean(),
-  allMembersAreAdministrators: z.boolean().nullable(),
+  allMembersAreAdministrators: z.boolean().nullable().optional(),
   acceptedGiftTypes: z
     .object({
       unlimited_gifts: z.boolean().nullable(),
@@ -17,7 +17,8 @@ export const groupSchema = z.object({
       unique_gifts: z.boolean().nullable(),
       premium_subscription: z.boolean().nullable(),
     })
-    .nullable(),
+    .nullable()
+    .optional(),
   botStatus: z.enum(GROUPS_CONSTANTS.BOT_STATUS_VALUES).nullable(),
   addedBy: z.any().nullable(),
   users: z.array(z.any()),
