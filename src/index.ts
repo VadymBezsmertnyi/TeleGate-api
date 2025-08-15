@@ -9,6 +9,7 @@ import NodeCache from "node-cache";
 import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
 import usersRouter from "./routes/users/users";
 import groupsRouter from "./routes/groups/groups";
+import membersRouter from "./routes/members/members";
 import botConnectRouter from "./routes/bot-telegram/bot-connect";
 
 // start bot telegram
@@ -47,6 +48,7 @@ app.listen(PORT, () => {
 app.use("/api/auth-telegram", authTelegramRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/groups", groupsRouter);
+app.use("/api/members", membersRouter);
 app.use("/api/bot-telegram", botConnectRouter);
 
 startBotTelegram();
