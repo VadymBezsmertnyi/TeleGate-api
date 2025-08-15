@@ -58,8 +58,6 @@ export const buildSortQuery = (sortBy: string, order: string) => {
   return { [sortBy]: sortOrder as 1 | -1 };
 };
 
-
-
 export const getOwnerGroups = async (
   ownerId?: string,
   ownerTelegramId?: number

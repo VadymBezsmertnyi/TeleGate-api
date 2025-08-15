@@ -5,14 +5,14 @@ export const memberSchema = z.object({
   tgUserId: z.string(),
   isBot: z.boolean(),
   firstName: z.string(),
-  lastName: z.string().nullable(),
-  username: z.string().nullable(),
-  languageCode: z.string().nullable(),
-  canJoinGroups: z.boolean().nullable(),
-  canReadAllGroupMessages: z.boolean().nullable(),
-  supportsInlineQueries: z.boolean().nullable(),
-  user: z.any().nullable(),
-  groups: z.array(z.any()),
+  lastName: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
+  languageCode: z.string().nullable().optional(),
+  canJoinGroups: z.boolean().nullable().optional(),
+  canReadAllGroupMessages: z.boolean().nullable().optional(),
+  supportsInlineQueries: z.boolean().nullable().optional(),
+  user: z.any().nullable().optional(),
+  groups: z.array(z.any()).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -62,7 +62,7 @@ export const memberParamsSchema = z.object({
 });
 
 export const membersResponseSchema = z.object({
-  data: z.array(memberPublicSchema),
+  data: z.array(memberSchema),
   meta: z.object({
     page: z.number(),
     limit: z.number(),
@@ -72,7 +72,7 @@ export const membersResponseSchema = z.object({
 });
 
 export const memberResponseSchema = z.object({
-  data: memberPublicSchema,
+  data: memberSchema,
 });
 
 export const errorResponseSchema = z.object({
