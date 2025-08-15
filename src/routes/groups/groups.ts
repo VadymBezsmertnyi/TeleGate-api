@@ -1,92 +1,342 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
+import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import GroupMemberRelationModel from "./group-member-relation.model";
+import {
+  groupsQuerySchema,
+  groupParamsSchema,
+  groupsResponseSchema,
+  groupResponseSchema,
+} from "./groups.schemas";
+import {
+  getAuthenticatedUser,
+  buildGroupsQuery,
+  buildSortQuery,
+  transformGroupToPublic,
+  getOwnerGroups,
+  getGroupsWithMemberCount,
+} from "./groups.helper";
+import { ERROR_CODES } from "./groups.constants";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, search, filter } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
-    let query: any = {};
-    if (search) query.title = { $regex: search, $options: "i" };
-    if (filter === "connected")
-      query.botStatus = { $in: ["creator", "administrator", "member"] };
-    else if (filter === "disconnected")
-      query.botStatus = { $in: ["left", "kicked", "restricted"] };
+    const queryValidation = groupsQuerySchema.safeParse(req.query);
+    if (!queryValidation.success)
+      return res.status(400).json({
+        error: {
+          code: ERROR_CODES.VALIDATION_ERROR,
+          message: "Invalid query parameters",
+        },
+      });
 
-    const groups = await GroupModel.find(query)
-      .populate("addedBy", "firstName lastName username")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
+    const query = queryValidation.data;
+    const { page, limit, sortBy, order, membersFrom, membersTo } = query;
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({
+        error: {
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: "Authentication required",
+        },
+      });
 
-    const total = await GroupModel.countDocuments(query);
-    const groupsWithMemberCount = await Promise.all(
-      groups.map(async (group) => {
-        const memberCount = await GroupMemberRelationModel.countDocuments({
-          groupId: group._id,
+    const filter = buildGroupsQuery(query);
+    const sort = buildSortQuery(sortBy, order);
+    const skip = (page - 1) * limit;
+
+    let groupIds: string[] = [];
+    if (membersFrom || membersTo) {
+      const memberCountFilter: any = {};
+      if (membersFrom) memberCountFilter.$gte = membersFrom;
+      if (membersTo) memberCountFilter.$lte = membersTo;
+
+      const groupMemberCounts = await GroupMemberRelationModel.aggregate([
+        {
+          $group: {
+            _id: "$groupId",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $match: {
+            count: memberCountFilter,
+          },
+        },
+      ]);
+
+      groupIds = groupMemberCounts.map((item) => item._id.toString());
+      if (groupIds.length === 0) {
+        return res.json({
+          data: [],
+          meta: {
+            page,
+            limit,
+            total: 0,
+            pages: 0,
+          },
         });
+      }
+      filter._id = {
+        $in: groupIds.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+    }
 
-        return {
-          id: group._id,
-          tgChatId: group.tgChatId,
-          name: group.title,
-          type: group.type,
-          description: group.description,
-          photoUrl: group.photoUrl,
-          isForum: group.isForum,
-          botStatus: group.botStatus,
-          memberCount,
-          lastActivity: group.updatedAt,
-          addedBy: group.addedBy,
-        };
-      })
-    );
+    const [groups, total] = await Promise.all([
+      GroupModel.find(filter)
+        .populate("addedBy", "firstName lastName username")
+        .sort(sort as any)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GroupModel.countDocuments(filter),
+    ]);
 
-    res.json({
-      groups: groupsWithMemberCount,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
+    const transformedGroups = await getGroupsWithMemberCount(groups);
+    const pages = Math.ceil(total / limit);
+
+    const response = {
+      data: transformedGroups,
+      meta: {
+        page,
+        limit,
         total,
-        pages: Math.ceil(total / Number(limit)),
+        pages,
+      },
+    };
+
+    const responseValidation = groupsResponseSchema.safeParse(response);
+    if (!responseValidation.success)
+      return res.status(500).json({
+        error: {
+          code: ERROR_CODES.INTERNAL_ERROR,
+          message: "Data validation failed",
+        },
+      });
+
+    return res.json(responseValidation.data);
+  } catch (error) {
+    console.warn("Error fetching groups:", error);
+    return res.status(500).json({
+      error: {
+        code: ERROR_CODES.INTERNAL_ERROR,
+        message: "Failed to fetch groups",
       },
     });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch groups" });
   }
 });
 
-router.get("/:groupId", async (req, res) => {
+router.get("/owner", async (req: Request, res: Response) => {
   try {
-    const { groupId } = req.params;
-    const group = await GroupModel.findById(groupId).populate(
-      "addedBy",
-      "firstName lastName username"
+    const queryValidation = groupsQuerySchema.safeParse(req.query);
+    if (!queryValidation.success)
+      return res.status(400).json({
+        error: {
+          code: ERROR_CODES.VALIDATION_ERROR,
+          message: "Invalid query parameters",
+        },
+      });
+
+    const query = queryValidation.data;
+    const {
+      page,
+      limit,
+      sortBy,
+      order,
+      ownerId,
+      ownerTelegramId,
+      membersFrom,
+      membersTo,
+    } = query;
+    const authenticatedUser = await getAuthenticatedUser(req);
+    let targetOwnerId = ownerId;
+    let targetOwnerTelegramId = ownerTelegramId;
+
+    if (authenticatedUser) {
+      targetOwnerId = authenticatedUser._id.toString();
+      targetOwnerTelegramId = authenticatedUser.telegramId;
+    } else if (!targetOwnerId && !targetOwnerTelegramId)
+      return res.status(401).json({
+        error: {
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: "Authentication required or owner identification",
+        },
+      });
+
+    const ownerGroups = await getOwnerGroups(
+      targetOwnerId,
+      targetOwnerTelegramId
     );
-    if (!group) return res.status(404).json({ error: "Group not found" });
+    if (ownerGroups.length === 0)
+      return res.json({
+        data: [],
+        meta: {
+          page,
+          limit,
+          total: 0,
+          pages: 0,
+        },
+      });
+
+    const filter = buildGroupsQuery(query);
+    filter._id = { $in: ownerGroups };
+    const sort = buildSortQuery(sortBy, order);
+    const skip = (page - 1) * limit;
+
+    let groupIds: string[] = [];
+    if (membersFrom || membersTo) {
+      const memberCountFilter: any = {};
+      if (membersFrom) memberCountFilter.$gte = membersFrom;
+      if (membersTo) memberCountFilter.$lte = membersTo;
+
+      const groupMemberCounts = await GroupMemberRelationModel.aggregate([
+        {
+          $match: {
+            groupId: { $in: ownerGroups },
+          },
+        },
+        {
+          $group: {
+            _id: "$groupId",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $match: {
+            count: memberCountFilter,
+          },
+        },
+      ]);
+
+      groupIds = groupMemberCounts.map((item) => item._id.toString());
+      if (groupIds.length === 0) {
+        return res.json({
+          data: [],
+          meta: {
+            page,
+            limit,
+            total: 0,
+            pages: 0,
+          },
+        });
+      }
+      filter._id = {
+        $in: groupIds.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+    }
+
+    const [groups, total] = await Promise.all([
+      GroupModel.find(filter)
+        .populate("addedBy", "firstName lastName username")
+        .sort(sort as any)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GroupModel.countDocuments(filter),
+    ]);
+
+    const transformedGroups = await getGroupsWithMemberCount(groups);
+    const pages = Math.ceil(total / limit);
+
+    const response = {
+      data: transformedGroups,
+      meta: {
+        page,
+        limit,
+        total,
+        pages,
+      },
+    };
+
+    const responseValidation = groupsResponseSchema.safeParse(response);
+    if (!responseValidation.success)
+      return res.status(500).json({
+        error: {
+          code: ERROR_CODES.INTERNAL_ERROR,
+          message: "Data validation failed",
+        },
+      });
+
+    return res.json(responseValidation.data);
+  } catch (error) {
+    console.warn("Error fetching owner groups:", error);
+    return res.status(500).json({
+      error: {
+        code: ERROR_CODES.INTERNAL_ERROR,
+        message: "Failed to fetch owner groups",
+      },
+    });
+  }
+});
+
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const paramsValidation = groupParamsSchema.safeParse(req.params);
+    if (!paramsValidation.success)
+      return res.status(400).json({
+        error: {
+          code: ERROR_CODES.VALIDATION_ERROR,
+          message: "Invalid group ID",
+        },
+      });
+
+    const { id } = paramsValidation.data;
+    const authenticatedUser = await getAuthenticatedUser(req);
+
+    const group = await GroupModel.findById(id)
+      .populate("addedBy", "firstName lastName username")
+      .lean();
+
+    if (!group)
+      return res.status(404).json({
+        error: {
+          code: ERROR_CODES.NOT_FOUND,
+          message: "Group not found",
+        },
+      });
+
+    if (authenticatedUser) {
+      const isOwner =
+        group.addedBy &&
+        group.addedBy._id.toString() === authenticatedUser._id.toString();
+
+      if (!isOwner)
+        return res.status(403).json({
+          error: {
+            code: ERROR_CODES.FORBIDDEN,
+            message: "Access denied",
+          },
+        });
+    }
 
     const memberCount = await GroupMemberRelationModel.countDocuments({
       groupId: group._id,
     });
-    const groupData = {
-      id: group._id,
-      tgChatId: group.tgChatId,
-      name: group.title,
-      type: group.type,
-      description: group.description,
-      photoUrl: group.photoUrl,
-      isForum: group.isForum,
-      botStatus: group.botStatus,
-      memberCount,
-      lastActivity: group.updatedAt,
-      addedBy: group.addedBy,
+
+    const transformedGroup = transformGroupToPublic(group, memberCount);
+    const response = {
+      data: transformedGroup,
     };
 
-    return res.json(groupData);
+    const responseValidation = groupResponseSchema.safeParse(response);
+    if (!responseValidation.success)
+      return res.status(500).json({
+        error: {
+          code: ERROR_CODES.INTERNAL_ERROR,
+          message: "Data validation failed",
+        },
+      });
+
+    return res.json(responseValidation.data);
   } catch (error) {
-    return res.status(500).json({ error: "Failed to fetch group" });
+    console.warn("Error fetching group:", error);
+    return res.status(500).json({
+      error: {
+        code: ERROR_CODES.INTERNAL_ERROR,
+        message: "Failed to fetch group",
+      },
+    });
   }
 });
 
