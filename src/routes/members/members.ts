@@ -10,7 +10,6 @@ import {
   getAuthenticatedUser,
   buildMembersQuery,
   buildSortQuery,
-  transformMemberToPublic,
   getOwnerGroups,
 } from "./members.helper";
 
@@ -49,11 +48,10 @@ router.get("/", async (req: Request, res: Response) => {
         .lean(),
       MemberModel.countDocuments(filter),
     ]);
-    const transformedMembers = members.map(transformMemberToPublic);
     const pages = Math.ceil(total / limit);
 
     const response = {
-      data: transformedMembers,
+      data: members,
       meta: {
         page,
         limit,
@@ -139,10 +137,9 @@ router.get("/owner", async (req: Request, res: Response) => {
       MemberModel.countDocuments(filter),
     ]);
 
-    const transformedMembers = members.map(transformMemberToPublic);
     const pages = Math.ceil(total / limit);
     const response = {
-      data: transformedMembers,
+      data: members,
       meta: {
         page,
         limit,
@@ -220,9 +217,8 @@ router.get("/:id", async (req: Request, res: Response) => {
         });
     }
 
-    const transformedMember = transformMemberToPublic(member);
     const response = {
-      data: transformedMember,
+      data: member,
     };
     const responseValidation = memberResponseSchema.safeParse(response);
     if (!responseValidation.success)

@@ -58,20 +58,7 @@ export const buildSortQuery = (sortBy: string, order: string) => {
   return { [sortBy]: sortOrder as 1 | -1 };
 };
 
-export const transformMemberToPublic = (member: any) => ({
-  id: member._id.toString(),
-  tgUserId: member.tgUserId,
-  isBot: member.isBot,
-  firstName: member.firstName,
-  lastName: member.lastName || null,
-  username: member.username || null,
-  languageCode: member.languageCode || null,
-  canJoinGroups: member.canJoinGroups || null,
-  canReadAllGroupMessages: member.canReadAllGroupMessages || null,
-  supportsInlineQueries: member.supportsInlineQueries || null,
-  createdAt: member.createdAt,
-  updatedAt: member.updatedAt,
-});
+
 
 export const getOwnerGroups = async (
   ownerId?: string,
