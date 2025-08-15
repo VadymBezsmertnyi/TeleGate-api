@@ -82,7 +82,7 @@ export const buildMembersQuery = (query: MembersQuery) => {
 
 export const buildSortQuery = (sortBy: string, order: string) => {
   const sortOrder = order === "asc" ? 1 : -1;
-  return { [sortBy]: sortOrder };
+  return { [sortBy]: sortOrder as 1 | -1 };
 };
 
 export const transformMemberToPublic = (member: any) => ({

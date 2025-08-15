@@ -68,7 +68,7 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     const [members, total] = await Promise.all([
-      MemberModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+      MemberModel.find(filter).sort(sort as any).skip(skip).limit(limit).lean(),
       MemberModel.countDocuments(filter),
     ]);
     const transformedMembers = members.map(transformMemberToPublic);
@@ -179,7 +179,7 @@ router.get("/owner", async (req: Request, res: Response) => {
     }
 
     const [members, total] = await Promise.all([
-      MemberModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+      MemberModel.find(filter).sort(sort as any).skip(skip).limit(limit).lean(),
       MemberModel.countDocuments(filter),
     ]);
 
