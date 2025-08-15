@@ -84,18 +84,16 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     const [groups, total] = await Promise.all([
-      GroupModel.find(filter)
+      GroupModel.find()
         .populate("addedBy", "firstName lastName username")
         .sort(sort as any)
         .skip(skip)
         .limit(limit)
         .lean(),
-      GroupModel.countDocuments(filter),
+      GroupModel.countDocuments(),
     ]);
-
     const transformedGroups = await getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
-
     const response = {
       data: transformedGroups,
       meta: {
@@ -105,15 +103,20 @@ router.get("/", async (req: Request, res: Response) => {
         pages,
       },
     };
-
     const responseValidation = groupsResponseSchema.safeParse(response);
-    if (!responseValidation.success)
+    if (!responseValidation.success) {
+      console.warn(
+        "Response validation failed:",
+        JSON.stringify(responseValidation.error, null, 2)
+      );
+      console.warn("Response data:", response);
       return res.status(500).json({
         error: {
           code: ERROR_CODES.INTERNAL_ERROR,
           message: "Data validation failed",
         },
       });
+    }
 
     return res.json(responseValidation.data);
   } catch (error) {
