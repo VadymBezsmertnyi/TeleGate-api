@@ -1,4 +1,11 @@
-export interface SendMessageRequest {
+import { z } from "zod";
+import { sendMessageSchema } from "./bot-send-messages.schemas";
+
+// Типи, що генеруються з Zod схем
+export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
+
+// Базові інтерфейси
+export interface SendMessageData {
   userId: string;
   groupId: string;
   message: string;

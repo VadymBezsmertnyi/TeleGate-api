@@ -1,15 +1,7 @@
 import { Telegraf } from "telegraf";
 import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
-
-interface SendMessageResult {
-  success: boolean;
-  data?: {
-    messageId: number;
-    sentAt: Date;
-  };
-  error?: string;
-}
+import { SendMessageResult } from "./bot-send-messages.types";
 
 export const sendMessageToUser = async (
   userId: string,

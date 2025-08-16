@@ -9,4 +9,4 @@ export const sendMessageSchema = z.object({
     .max(4096, "Message too long"),
 });
 
-export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
+
