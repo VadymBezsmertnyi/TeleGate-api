@@ -18,37 +18,25 @@ const sendMessageToUserInGroup = async (
         error: `Group with tgChatId ${tgChatId} not found`,
       };
 
-    // Перевіряємо чи це форум
     if ("is_forum" in group && group.is_forum) {
-      // Для форумів спробуємо знайти існуючу гілку "debtors" або створити нову
       let messageThreadId: number | undefined;
       let topicName = "debtors";
 
       try {
-        // Спробуємо створити гілку "debtors" (боржники)
         const createdTopic = await bot.telegram.createForumTopic(
           tgChatId,
           topicName,
           {
-            icon_color: 7322096, // Червоний колір для боржників
+            icon_color: 7322096,
           }
         );
         messageThreadId = createdTopic.message_thread_id;
-        console.log(`Created new forum topic: ${topicName}`);
       } catch (error: any) {
-        console.log("Error creating forum topic:", error.description);
-
-        // Якщо немає прав або гілка вже існує, шукаємо відкриті гілки
         if (
           error.description &&
           (error.description.includes("not enough rights") ||
             error.description.includes("already exists"))
         ) {
-          console.log(
-            "Bot doesn't have rights to create topics, searching for open topics"
-          );
-
-          // Спробуємо відправити повідомлення в основну групу, але обробимо помилку TOPIC_CLOSED
           try {
             const messageWithTag = `@${username} ${message}\n\n⚠️ Увага: Для кращої організації повідомлень створіть гілку "debtors" в цьому форумі.`;
             const sentMessage = await bot.telegram.sendMessage(
@@ -64,15 +52,11 @@ const sendMessageToUserInGroup = async (
               },
             };
           } catch (sendError: any) {
-            // Якщо отримали помилку TOPIC_CLOSED, спробуємо знайти відкриту гілку
             if (
               sendError.description &&
               sendError.description.includes("TOPIC_CLOSED")
             ) {
-              console.log("Main topic is closed, trying to find open topics");
-
-              // Спробуємо відправити в різні гілки з відомими ID
-              const commonTopicIds = [1, 2, 3, 4, 5]; // Поширені ID гілок
+              const commonTopicIds = [1, 2, 3, 4, 5];
 
               for (const topicId of commonTopicIds) {
                 try {
@@ -85,9 +69,6 @@ const sendMessageToUserInGroup = async (
                     }
                   );
 
-                  console.log(
-                    `Successfully sent message to topic ID: ${topicId}`
-                  );
                   return {
                     success: true,
                     data: {
@@ -96,23 +77,20 @@ const sendMessageToUserInGroup = async (
                     },
                   };
                 } catch (topicError: any) {
-                  console.log(
-                    `Failed to send to topic ID ${topicId}:`,
-                    topicError.description
-                  );
-                  continue; // Спробуємо наступну гілку
+                  continue;
                 }
               }
 
-              // Якщо всі спроби невдалі, повертаємо помилку
-              console.log("All topic attempts failed");
+              console.warn("All forum topics are closed or inaccessible");
               return {
                 success: false,
                 error: "All forum topics are closed or inaccessible",
               };
             } else {
-              // Для інших помилок відправки
-              console.log("Error sending message:", sendError.description);
+              console.warn(
+                "Failed to send message to group:",
+                sendError.description
+              );
               return {
                 success: false,
                 error: "Failed to send message to group",
@@ -120,8 +98,6 @@ const sendMessageToUserInGroup = async (
             }
           }
         } else {
-          // Для інших помилок також відправляємо в основну групу
-          console.log("Sending message to main group due to other error");
           const messageWithTag = `@${username} ${message}`;
           const sentMessage = await bot.telegram.sendMessage(
             tgChatId,
@@ -138,7 +114,6 @@ const sendMessageToUserInGroup = async (
         }
       }
 
-      // Якщо гілка була створена успішно, відправляємо повідомлення в неї
       if (messageThreadId) {
         const messageWithTag = `@${username} ${message}`;
         const sentMessage = await bot.telegram.sendMessage(
@@ -157,7 +132,6 @@ const sendMessageToUserInGroup = async (
           },
         };
       } else {
-        // Fallback: якщо гілка не була створена, відправляємо в основну групу
         const messageWithTag = `@${username} ${message}`;
         const sentMessage = await bot.telegram.sendMessage(
           tgChatId,
@@ -173,7 +147,6 @@ const sendMessageToUserInGroup = async (
         };
       }
     } else {
-      // Для звичайної групи просто тегуємо користувача
       const messageWithTag = `@${username} ${message}`;
       const sentMessage = await bot.telegram.sendMessage(
         tgChatId,
