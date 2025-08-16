@@ -1,31 +1,21 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 import { sendMessageSchema } from "./bot-send-messages.schemas";
-import { validateTelegramToken } from "../../helpers/telegram.helper";
 import { sendMessageToUser } from "./bot-send-messages.helper";
+import { getAuthenticatedUser } from "../groups/groups.helper";
 
 dotenv.config();
 const router = Router();
 
 router.post("/send-message", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
-
-    const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
       return res.status(500).json({ error: "Bot token not configured" });
-
-    const telegramValidation = await validateTelegramToken(token, botToken);
-    if (!telegramValidation.isValid || !telegramValidation.userData)
-      return res.status(401).json({ error: "Invalid or expired token" });
 
     // Валідація вхідних даних
     const validationResult = sendMessageSchema.safeParse(req.body);
@@ -36,10 +26,7 @@ router.post("/send-message", async (req: Request, res: Response) => {
       });
 
     const { userId, groupId, message } = validationResult.data;
-
-    // Відправка повідомлення
     const result = await sendMessageToUser(userId, groupId, message, botToken);
-
     if (result.success)
       return res.json({
         success: true,
