@@ -39,14 +39,8 @@ router.post("/", async (req: Request, res: Response) => {
     );
 
     const responseResult = templateResponseSchema.safeParse(template);
-    if (!responseResult.success) {
-      console.log(
-        "Response validation failed:",
-        JSON.stringify(responseResult.error)
-      );
-
+    if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
-    }
 
     return res.status(201).json({ data: responseResult.data });
   } catch (error) {
