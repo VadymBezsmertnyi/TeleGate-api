@@ -5,6 +5,7 @@ import {
   createOrUpdateGroup,
   synchronizeGroupMemberRelationship,
   getUserPhotoUrl,
+  processMentionedUsers,
 } from "./bot-telegram.helper";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
@@ -321,6 +322,13 @@ const startBotTelegram = async () => {
         member._id.toString(),
         true
       );
+
+      // Обробляємо згадки користувачів в повідомленні
+      try {
+        await processMentionedUsers(ctx, ctx.message, group._id.toString());
+      } catch (mentionError) {
+        console.warn("Помилка при обробці згадок користувачів:", mentionError);
+      }
       const messageWithNewMembers = ctx.message as any;
       if (
         messageWithNewMembers.new_chat_members &&
