@@ -6,6 +6,7 @@ import {
   synchronizeGroupMemberRelationship,
   getUserPhotoUrl,
   processMentionedUsers,
+  updateGroupInfoFromTelegram,
 } from "./bot-telegram.helper";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
@@ -126,9 +127,6 @@ const startBotTelegram = async () => {
 
       if (newStatus === "member" || newStatus === "administrator") {
         try {
-          const { updateGroupInfoFromTelegram } = await import(
-            "./bot-telegram.helper"
-          );
           await updateGroupInfoFromTelegram(chat.id.toString(), ctx);
         } catch (error) {
           console.warn("Помилка при оновленні інформації про групу:", error);
@@ -467,9 +465,6 @@ const startBotTelegram = async () => {
 
   bot.command("update_group_info", async (ctx) => {
     try {
-      const { updateGroupInfoFromTelegram } = await import(
-        "./bot-telegram.helper"
-      );
       const updatedGroup = await updateGroupInfoFromTelegram(
         ctx.chat!.id.toString(),
         ctx
@@ -488,7 +483,6 @@ const startBotTelegram = async () => {
 
   bot.command("update_member_avatars", async (ctx) => {
     try {
-      const { getUserPhotoUrl } = await import("./bot-telegram.helper");
       const members = await MemberModel.find({
         photoUrl: { $exists: false },
       }).limit(10);
