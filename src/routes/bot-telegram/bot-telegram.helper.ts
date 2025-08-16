@@ -263,8 +263,28 @@ export const processMentionedUsers = async (
   groupId: string
 ): Promise<void> => {
   try {
+    console.log(`🔍 Аналіз повідомлення для згадок...`);
+    console.log(`📝 Message type:`, message.type || 'text');
+    console.log(`📝 Message text:`, message.text);
+    console.log(`📋 Message entities:`, JSON.stringify(message.entities, null, 2));
+    console.log(`📊 Entities type:`, typeof message.entities);
+    console.log(`📊 Is array:`, Array.isArray(message.entities));
+    
+    // Перевіряємо, чи є текст в повідомленні
+    if (!message.text) {
+      console.log(`❌ Повідомлення не містить тексту`);
+      return;
+    }
+    
+    // Перевіряємо, чи є @ в тексті
+    if (!message.text.includes('@')) {
+      console.log(`❌ Повідомлення не містить @ символів`);
+      // Але все одно продовжуємо для reply/forwarded повідомлень
+    }
+    
     // Перевіряємо наявність згадок в повідомленні
     if (!message.entities || !Array.isArray(message.entities)) {
+      console.log(`❌ Немає entities або entities не є масивом`);
       return;
     }
 
@@ -272,14 +292,87 @@ export const processMentionedUsers = async (
 
     // Знаходимо всі згадки користувачів
     for (const entity of message.entities) {
+      console.log(`🔍 Entity:`, JSON.stringify(entity, null, 2));
+      console.log(`📋 Entity type:`, entity.type);
+      console.log(`👤 Entity user:`, entity.user);
+      
       if (entity.type === 'mention' && entity.user) {
+        console.log(`✅ Знайдено mention з user:`, entity.user.id);
         mentionedUsers.push(entity.user.id.toString());
       } else if (entity.type === 'text_mention' && entity.user) {
+        console.log(`✅ Знайдено text_mention з user:`, entity.user.id);
         mentionedUsers.push(entity.user.id.toString());
+      } else {
+        console.log(`❌ Entity не є згадкою користувача`);
+      }
+    }
+
+    // Додаткова перевірка: шукаємо @username в тексті
+    if (message.text && typeof message.text === 'string') {
+      const mentionRegex = /@(\w+)/g;
+      const matches = message.text.match(mentionRegex);
+      if (matches) {
+        console.log(`🔍 Знайдено @username в тексті:`, matches);
+        for (const match of matches) {
+          const username = match.substring(1); // Видаляємо @
+          console.log(`👤 Шукаємо користувача з username:`, username);
+          
+          try {
+            // Спробуємо знайти користувача за username
+            const chatMember = await bot.telegram.getChatMember(message.chat.id, `@${username}`);
+            if (chatMember && chatMember.user) {
+              console.log(`✅ Знайдено користувача за username:`, chatMember.user.id);
+              if (!mentionedUsers.includes(chatMember.user.id.toString())) {
+                mentionedUsers.push(chatMember.user.id.toString());
+              }
+            }
+          } catch (error) {
+            console.log(`❌ Не вдалося знайти користувача за username ${username}:`, error);
+          }
+        }
       }
     }
 
     console.log(`📝 Знайдено згадок користувачів: ${mentionedUsers.length}`);
+
+    // Перевіряємо reply повідомлення
+    if (message.reply_to_message && message.reply_to_message.from) {
+      console.log(`🔄 Це reply повідомлення від користувача:`, message.reply_to_message.from.id);
+      if (!mentionedUsers.includes(message.reply_to_message.from.id.toString())) {
+        mentionedUsers.push(message.reply_to_message.from.id.toString());
+        console.log(`✅ Додано користувача з reply повідомлення`);
+      }
+    }
+
+    // Перевіряємо forwarded повідомлення
+    if (message.forward_from) {
+      console.log(`📤 Це forwarded повідомлення від користувача:`, message.forward_from.id);
+      if (!mentionedUsers.includes(message.forward_from.id.toString())) {
+        mentionedUsers.push(message.forward_from.id.toString());
+        console.log(`✅ Додано користувача з forwarded повідомлення`);
+      }
+    }
+
+    // Перевіряємо нових членів групи
+    if (message.new_chat_members && Array.isArray(message.new_chat_members)) {
+      console.log(`👥 Нові члени групи:`, message.new_chat_members.length);
+      for (const newMember of message.new_chat_members) {
+        if (newMember.id && !mentionedUsers.includes(newMember.id.toString())) {
+          mentionedUsers.push(newMember.id.toString());
+          console.log(`✅ Додано нового члена групи:`, newMember.id);
+        }
+      }
+    }
+
+    console.log(`📊 Загальна кількість користувачів для обробки: ${mentionedUsers.length}`);
+    console.log(`👥 Список користувачів:`, mentionedUsers);
+
+    // Додаємо відправника повідомлення, якщо він ще не в списку
+    // (зазвичай відправник вже оброблений в основному коді, але для повноти)
+    if (message.from && message.from.id && !mentionedUsers.includes(message.from.id.toString())) {
+      mentionedUsers.push(message.from.id.toString());
+      console.log(`✅ Додано відправника повідомлення:`, message.from.id);
+    }
 
     // Обробляємо кожного згаданого користувача
     for (const userId of mentionedUsers) {
