@@ -85,8 +85,8 @@ export const getTemplates = async (
   ]);
 
   return {
-    templates,
-    pagination: {
+    data: templates,
+    meta: {
       page,
       limit,
       total,

@@ -32,15 +32,23 @@ router.post("/", async (req: Request, res: Response) => {
         error: "Invalid request data",
         details: validationResult.error,
       });
+
     const template = await createTemplate(
       validationResult.data,
       user._id.toString()
     );
-    const responseResult = templateResponseSchema.safeParse(template);
-    if (!responseResult.success)
-      return res.status(500).json({ error: "Data validation error" });
 
-    return res.status(201).json(responseResult.data);
+    const responseResult = templateResponseSchema.safeParse(template);
+    if (!responseResult.success) {
+      console.log(
+        "Response validation failed:",
+        JSON.stringify(responseResult.error)
+      );
+
+      return res.status(500).json({ error: "Data validation error" });
+    }
+
+    return res.status(201).json({ data: responseResult.data });
   } catch (error) {
     console.error("Error creating template:", error);
     if (error instanceof Error) {
@@ -54,7 +62,6 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   try {
     const user = await getAuthenticatedUser(req);
-    console.log("Authenticated user:", user);
     if (!user)
       return res.status(401).json({ error: "Authentication required" });
 
@@ -63,20 +70,16 @@ router.get("/", async (req: Request, res: Response) => {
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
     });
-    if (!validationResult.success) {
-      console.log("Validation result:", validationResult.success);
-      console.log("Validation error details:", validationResult.error);
+    if (!validationResult.success)
       return res.status(400).json({
         error: "Invalid query parameters",
         details: validationResult.error,
       });
-    }
 
     const result = await getTemplates(
       user._id.toString(),
       validationResult.data
     );
-    console.log("Templates retrieved:", result);
 
     return res.json(result);
   } catch (error) {
@@ -103,7 +106,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
 
-    return res.json(responseResult.data);
+    return res.json({ data: responseResult.data });
   } catch (error) {
     console.error("Error getting template:", error);
     if (error instanceof Error)
@@ -139,7 +142,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
 
-    return res.json(responseResult.data);
+    return res.json({ data: responseResult.data });
   } catch (error) {
     console.error("Error updating template:", error);
     if (error instanceof Error)
