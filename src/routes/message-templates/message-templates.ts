@@ -6,7 +6,6 @@ import {
   filterTemplatesSchema,
   templateResponseSchema,
 } from "./message-templates.schemas";
-import { validateTelegramToken } from "../../helpers/telegram.helper";
 import {
   createTemplate,
   updateTemplate,
@@ -15,40 +14,17 @@ import {
   getTemplates,
   getTemplateStats,
 } from "./message-templates.helper";
-import UserModel from "../users/users.model";
+import { getAuthenticatedUser } from "../groups/groups.helper";
 
 dotenv.config();
 const router = Router();
 
-// Middleware для отримання користувача
-const getUserFromToken = async (req: Request) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer "))
-    throw new Error("Missing or invalid authorization header");
-
-  const token = authHeader.substring(7);
-  if (!token) throw new Error("Missing token");
-
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  if (!botToken) throw new Error("Bot token not configured");
-
-  const telegramValidation = await validateTelegramToken(token, botToken);
-  if (!telegramValidation.isValid || !telegramValidation.userData)
-    throw new Error("Invalid or expired token");
-
-  const user = await UserModel.findOne({
-    telegramId: telegramValidation.userData.id,
-    isActive: true,
-  }).lean();
-
-  if (!user) throw new Error("User not found");
-  return user;
-};
-
 // Створення шаблону
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
     const validationResult = createTemplateSchema.safeParse(req.body);
     if (!validationResult.success)
@@ -56,12 +32,10 @@ router.post("/", async (req: Request, res: Response) => {
         error: "Invalid request data",
         details: validationResult.error,
       });
-
     const template = await createTemplate(
       validationResult.data,
       user._id.toString()
     );
-
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
@@ -79,14 +53,15 @@ router.post("/", async (req: Request, res: Response) => {
 // Отримання всіх шаблонів з фільтрацією
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
     const validationResult = filterTemplatesSchema.safeParse({
       ...req.query,
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
     });
-
     if (!validationResult.success)
       return res.status(400).json({
         error: "Invalid query parameters",
@@ -111,13 +86,13 @@ router.get("/", async (req: Request, res: Response) => {
 // Отримання конкретного шаблону
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
-    const { id } = req.params;
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
+    const { id } = req.params;
     const template = await getTemplateById(id, user._id.toString());
-    if (!template) {
-      return res.status(404).json({ error: "Template not found" });
-    }
+    if (!template) return res.status(404).json({ error: "Template not found" });
 
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
@@ -126,9 +101,9 @@ router.get("/:id", async (req: Request, res: Response) => {
     return res.json(responseResult.data);
   } catch (error) {
     console.error("Error getting template:", error);
-    if (error instanceof Error) {
+    if (error instanceof Error)
       return res.status(400).json({ error: error.message });
-    }
+
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -136,9 +111,11 @@ router.get("/:id", async (req: Request, res: Response) => {
 // Оновлення шаблону
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
-    const { id } = req.params;
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
+    const { id } = req.params;
     const validationResult = updateTemplateSchema.safeParse(req.body);
     if (!validationResult.success)
       return res.status(400).json({
@@ -151,9 +128,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       user._id.toString(),
       validationResult.data
     );
-    if (!template) {
-      return res.status(404).json({ error: "Template not found" });
-    }
+    if (!template) return res.status(404).json({ error: "Template not found" });
 
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
@@ -162,9 +137,9 @@ router.put("/:id", async (req: Request, res: Response) => {
     return res.json(responseResult.data);
   } catch (error) {
     console.error("Error updating template:", error);
-    if (error instanceof Error) {
+    if (error instanceof Error)
       return res.status(400).json({ error: error.message });
-    }
+
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -172,20 +147,20 @@ router.put("/:id", async (req: Request, res: Response) => {
 // Видалення шаблону
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
-    const { id } = req.params;
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
+    const { id } = req.params;
     const template = await deleteTemplate(id, user._id.toString());
-    if (!template) {
-      return res.status(404).json({ error: "Template not found" });
-    }
+    if (!template) return res.status(404).json({ error: "Template not found" });
 
     return res.json({ message: "Template deleted successfully" });
   } catch (error) {
     console.error("Error deleting template:", error);
-    if (error instanceof Error) {
+    if (error instanceof Error)
       return res.status(400).json({ error: error.message });
-    }
+
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -193,7 +168,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
 // Статистика шаблонів
 router.get("/stats/overview", async (req: Request, res: Response) => {
   try {
-    const user = await getUserFromToken(req);
+    const user = await getAuthenticatedUser(req);
+    if (!user)
+      return res.status(401).json({ error: "Authentication required" });
 
     const stats = await getTemplateStats(user._id.toString());
 
