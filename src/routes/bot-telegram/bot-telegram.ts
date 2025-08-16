@@ -310,7 +310,6 @@ const startBotTelegram = async () => {
         true
       );
 
-      // Обробляємо згадки користувачів в повідомленні
       try {
         await processMentionedUsers(ctx, ctx.message, group._id.toString());
       } catch (mentionError) {

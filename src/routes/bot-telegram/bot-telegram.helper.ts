@@ -249,16 +249,16 @@ export const processMentionedUsers = async (
 ): Promise<void> => {
   try {
     if (!message.text) return;
-    if (!message.entities || !Array.isArray(message.entities)) return;
 
     const telegram = bot.telegram as Telegram;
     const mentionedUsers: string[] = [];
-    for (const entity of message.entities) {
-      if (entity.type === "mention" && entity.user)
-        mentionedUsers.push(entity.user.id.toString());
-      else if (entity.type === "text_mention" && entity.user)
-        mentionedUsers.push(entity.user.id.toString());
-    }
+    if (message.entities && Array.isArray(message.entities))
+      for (const entity of message.entities) {
+        if (entity.type === "mention" && entity.user)
+          mentionedUsers.push(entity.user.id.toString());
+        else if (entity.type === "text_mention" && entity.user)
+          mentionedUsers.push(entity.user.id.toString());
+      }
     if (message.reply_to_message && message.reply_to_message.from)
       if (!mentionedUsers.includes(message.reply_to_message.from.id.toString()))
         mentionedUsers.push(message.reply_to_message.from.id.toString());
