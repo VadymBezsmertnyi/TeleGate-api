@@ -199,28 +199,17 @@ router.get("/:id", async (req: Request, res: Response) => {
           message: "Member not found",
         },
       });
+    if (!authenticatedUser)
+      return res.status(401).json({
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Authentication required",
+        },
+      });
 
-    if (authenticatedUser) {
-      const memberGroups = member.groups || [];
-      const hasAccess = memberGroups.some(
-        (group: any) =>
-          group.addedBy &&
-          group.addedBy.telegramId === authenticatedUser.telegramId
-      );
-
-      if (!hasAccess)
-        return res.status(403).json({
-          error: {
-            code: "FORBIDDEN",
-            message: "Access denied",
-          },
-        });
-    }
-
-    const response = {
+    const responseValidation = memberResponseSchema.safeParse({
       data: member,
-    };
-    const responseValidation = memberResponseSchema.safeParse(response);
+    });
     if (!responseValidation.success)
       return res.status(500).json({
         error: {
