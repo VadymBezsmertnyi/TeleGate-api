@@ -7,7 +7,6 @@ export type SendMessageRequestT = z.infer<typeof sendMessageSchema>;
 // Базові інтерфейси
 export interface SendMessageDataI {
   userId: string;
-  groupId: string;
   message: string;
 }
 

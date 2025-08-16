@@ -1,43 +1,22 @@
 import { Telegraf } from "telegraf";
-import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
 import { SendMessageResultI } from "./bot-send-messages.types";
 
 export const sendMessageToUser = async (
   userId: string,
-  groupId: string,
   message: string,
   botToken: string
 ): Promise<SendMessageResultI> => {
   try {
-    // Перевіряємо, чи існує група
-    const group = await GroupModel.findOne({ _id: groupId }).lean();
-    if (!group) {
+    const member = await MemberModel.findOne({ tgUserId: userId }).lean();
+    if (!member)
       return {
         success: false,
-        error: "Group not found",
+        error: `User ${userId} not found in system`,
       };
-    }
 
-    // Перевіряємо, чи існує користувач в цій групі
-    const member = await MemberModel.findOne({
-      tgUserId: userId,
-      groups: group._id,
-    }).lean();
-
-    if (!member) {
-      return {
-        success: false,
-        error: "User not found in this group",
-      };
-    }
-
-    // Створюємо екземпляр бота
     const bot = new Telegraf(botToken);
-
-    // Відправляємо повідомлення користувачу
     const sentMessage = await bot.telegram.sendMessage(userId, message);
-
     return {
       success: true,
       data: {

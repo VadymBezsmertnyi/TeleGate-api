@@ -25,8 +25,8 @@ router.post("/send-message", async (req: Request, res: Response) => {
         details: validationResult.error,
       });
 
-    const { userId, groupId, message } = validationResult.data;
-    const result = await sendMessageToUser(userId, groupId, message, botToken);
+    const { userId, message } = validationResult.data;
+    const result = await sendMessageToUser(userId, message, botToken);
     if (result.success)
       return res.json({
         success: true,
