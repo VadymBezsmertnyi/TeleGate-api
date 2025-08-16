@@ -50,3 +50,17 @@ export const templateResponseSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+
+// Схема для метаданих пагінації
+export const paginationMetaSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  pages: z.number(),
+});
+
+// Схема для відповіді зі списком шаблонів
+export const templatesListResponseSchema = z.object({
+  data: z.array(templateResponseSchema),
+  meta: paginationMetaSchema,
+});

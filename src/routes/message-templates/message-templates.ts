@@ -5,6 +5,7 @@ import {
   updateTemplateSchema,
   filterTemplatesSchema,
   templateResponseSchema,
+  templatesListResponseSchema,
 } from "./message-templates.schemas";
 import {
   createTemplate,
@@ -32,10 +33,12 @@ router.post("/", async (req: Request, res: Response) => {
         error: "Invalid request data",
         details: validationResult.error,
       });
+
     const template = await createTemplate(
       validationResult.data,
       user._id.toString()
     );
+
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
@@ -69,7 +72,11 @@ router.get("/", async (req: Request, res: Response) => {
       validationResult.data
     );
 
-    return res.json(result);
+    const responseResult = templatesListResponseSchema.safeParse(result);
+    if (!responseResult.success)
+      return res.status(500).json({ error: "Data validation error" });
+
+    return res.json(responseResult.data);
   } catch (error) {
     console.error("Error getting templates:", error);
     if (error instanceof Error) {
