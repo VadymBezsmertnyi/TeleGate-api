@@ -302,6 +302,10 @@ export const processMentionedUsers = async (
       } else if (entity.type === 'text_mention' && entity.user) {
         console.log(`✅ Знайдено text_mention з user:`, entity.user.id);
         mentionedUsers.push(entity.user.id.toString());
+      } else if (entity.type === 'mention' && !entity.user) {
+        console.log(`⚠️ Entity mention без user об'єкта, буде оброблено через regex`);
+      } else if (entity.type === 'text_mention' && !entity.user) {
+        console.log(`⚠️ Entity text_mention без user об'єкта, буде оброблено через regex`);
       } else {
         console.log(`❌ Entity не є згадкою користувача`);
       }
@@ -318,16 +322,29 @@ export const processMentionedUsers = async (
           console.log(`👤 Шукаємо користувача з username:`, username);
           
           try {
-            // Спробуємо знайти користувача за username
-            const chatMember = await bot.telegram.getChatMember(message.chat.id, `@${username}`);
-            if (chatMember && chatMember.user) {
-              console.log(`✅ Знайдено користувача за username:`, chatMember.user.id);
-              if (!mentionedUsers.includes(chatMember.user.id.toString())) {
-                mentionedUsers.push(chatMember.user.id.toString());
+            // Спробуємо знайти користувача за username через getChat
+            const userChat = await bot.telegram.getChat(`@${username}`);
+            if (userChat && userChat.id) {
+              console.log(`✅ Знайдено користувача за username:`, userChat.id);
+              if (!mentionedUsers.includes(userChat.id.toString())) {
+                mentionedUsers.push(userChat.id.toString());
               }
             }
           } catch (error) {
             console.log(`❌ Не вдалося знайти користувача за username ${username}:`, error);
+            
+            // Альтернативний спосіб: спробуємо через getChatMember
+            try {
+              const chatMember = await bot.telegram.getChatMember(message.chat.id, `@${username}`);
+              if (chatMember && chatMember.user) {
+                console.log(`✅ Знайдено користувача через getChatMember:`, chatMember.user.id);
+                if (!mentionedUsers.includes(chatMember.user.id.toString())) {
+                  mentionedUsers.push(chatMember.user.id.toString());
+                }
+              }
+            } catch (memberError) {
+              console.log(`❌ Не вдалося знайти користувача через getChatMember:`, memberError);
+            }
           }
         }
       }
@@ -364,20 +381,29 @@ export const processMentionedUsers = async (
       }
     }
 
-    console.log(`📊 Загальна кількість користувачів для обробки: ${mentionedUsers.length}`);
-    console.log(`👥 Список користувачів:`, mentionedUsers);
+    // Видаляємо дублікати
+    const uniqueUsers = [...new Set(mentionedUsers)];
+    console.log(`📊 Загальна кількість користувачів для обробки: ${uniqueUsers.length}`);
+    console.log(`👥 Список унікальних користувачів:`, uniqueUsers);
 
     // Додаємо відправника повідомлення, якщо він ще не в списку
-    // (зазвичай відправник вже оброблений в основному коді, але для повноти)
+    // (зазвичай відправник вже оброблений в основному коді, тому пропускаємо)
     if (message.from && message.from.id && !mentionedUsers.includes(message.from.id.toString())) {
-      mentionedUsers.push(message.from.id.toString());
-      console.log(`✅ Додано відправника повідомлення:`, message.from.id);
+      console.log(`ℹ️ Відправник ${message.from.id} вже оброблений в основному коді, пропускаємо`);
+    } else if (message.from && message.from.id) {
+      console.log(`ℹ️ Відправник вже в списку:`, message.from.id);
     }
 
     // Обробляємо кожного згаданого користувача
-    for (const userId of mentionedUsers) {
+    for (const userId of uniqueUsers) {
       try {
         console.log(`👤 Обробляємо згаданого користувача: ${userId}`);
+        
+        // Перевіряємо, чи користувач вже існує в базі даних
+        const existingMember = await MemberModel.findOne({ tgUserId: userId });
+        if (existingMember) {
+          console.log(`ℹ️ Користувач ${userId} вже існує в БД, оновлюємо інформацію`);
+        }
         
         // Отримуємо інформацію про користувача
         const userInfo = await bot.telegram.getChat(parseInt(userId));
