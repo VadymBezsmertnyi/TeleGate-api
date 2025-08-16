@@ -11,7 +11,7 @@ export const sendMessageToUser = async (
 ): Promise<SendMessageResultI> => {
   try {
     // Перевіряємо, чи існує група
-    const group = await GroupModel.findOne({ tgChatId: groupId }).lean();
+    const group = await GroupModel.findOne({ _id: groupId }).lean();
     if (!group) {
       return {
         success: false,
