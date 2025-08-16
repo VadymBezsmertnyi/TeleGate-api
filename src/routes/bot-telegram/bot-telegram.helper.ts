@@ -2,7 +2,7 @@ import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
-import { ChatFromGetChat } from "telegraf/typings/core/types/typegram";
+import { ChatMember } from "telegraf/typings/core/types/typegram";
 import { Telegram } from "telegraf";
 
 export const getUserPhotoUrl = async (
@@ -11,10 +11,11 @@ export const getUserPhotoUrl = async (
 ): Promise<string | undefined> => {
   try {
     let userInfo: any = null;
+    const telegram = bot.telegram as Telegram;
     try {
-      userInfo = await bot.telegram.getChat(parseInt(userId));
+      userInfo = await telegram.getChat(parseInt(userId));
       if (userInfo && userInfo.photo) {
-        const file = await bot.telegram.getFile(userInfo.photo.big_file_id);
+        const file = await telegram.getFile(userInfo.photo.big_file_id);
         const botToken = process.env.TELEGRAM_BOT_TOKEN;
         if (botToken && file && file.file_path)
           return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
@@ -26,13 +27,11 @@ export const getUserPhotoUrl = async (
       );
     }
 
-    const userPhotos = await bot.telegram.getUserProfilePhotos(
-      parseInt(userId)
-    );
+    const userPhotos = await telegram.getUserProfilePhotos(parseInt(userId));
 
     if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
       const photo = userPhotos.photos[0][0];
-      const file = await bot.telegram.getFile(photo.file_id);
+      const file = await telegram.getFile(photo.file_id);
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
       if (botToken && file && file.file_path)
@@ -253,45 +252,13 @@ export const processMentionedUsers = async (
     if (!message.text) return;
     if (!message.entities || !Array.isArray(message.entities)) return;
 
+    const telegram = bot.telegram as Telegram;
     const mentionedUsers: string[] = [];
     for (const entity of message.entities) {
       if (entity.type === "mention" && entity.user)
         mentionedUsers.push(entity.user.id.toString());
       else if (entity.type === "text_mention" && entity.user)
         mentionedUsers.push(entity.user.id.toString());
-    }
-
-    if (message.text && typeof message.text === "string") {
-      const mentionRegex = /@(\w+)/g;
-      const matches = message.text.match(mentionRegex);
-      if (matches) {
-        for (const match of matches) {
-          const username = match.substring(1);
-          const telegram = bot.telegram as Telegram;
-
-          try {
-            const userChat = await telegram.getChat(`@${username}`);
-            if (userChat && userChat.id)
-              if (!mentionedUsers.includes(userChat.id.toString()))
-                mentionedUsers.push(userChat.id.toString());
-          } catch (error) {
-            try {
-              const chatMember = await telegram.getChatMember(
-                message.chat.id,
-                username
-              );
-              if (chatMember && chatMember.user)
-                if (!mentionedUsers.includes(chatMember.user.id.toString()))
-                  mentionedUsers.push(chatMember.user.id.toString());
-            } catch (memberError) {
-              console.warn(
-                `Не вдалося знайти користувача за username ${username}:`,
-                memberError
-              );
-            }
-          }
-        }
-      }
     }
 
     if (message.reply_to_message && message.reply_to_message.from) {
@@ -313,19 +280,23 @@ export const processMentionedUsers = async (
 
     for (const userId of uniqueUsers) {
       try {
-        const userInfo = (await bot.telegram.getChat(
+        const userInfo = (await telegram.getChatMember(
+          message.chat.id,
           parseInt(userId)
-        )) as ChatFromGetChat & {
-          is_bot?: boolean;
-          first_name?: string;
-          last_name?: string;
-          username?: string;
-          language_code?: string;
+        )) as ChatMember & {
           has_private_forwards?: boolean;
         };
+        const has_private_forwards = await telegram.getChat(
+          userInfo.user.id.toString()
+        );
+        console.log(`Обробка згаданого користувача: ${userId}`, userInfo);
+        console.log(
+          `has_private_forwards for user ${userId}:`,
+          has_private_forwards
+        );
         let photoUrl: string | undefined;
         try {
-          photoUrl = await getUserPhotoUrl(bot, userId);
+          photoUrl = await getUserPhotoUrl(bot, userInfo.user.id.toString());
         } catch (photoError) {
           console.warn(
             `Помилка отримання фото для згаданого користувача ${userId}:`,
@@ -333,17 +304,13 @@ export const processMentionedUsers = async (
           );
         }
 
-        photoUrl = userInfo.photo
-          ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${userInfo.photo.big_file_id}`
-          : photoUrl;
-
         const memberData: MemberDataI = {
           tgUserId: userId,
-          isBot: userInfo.is_bot || false,
-          firstName: userInfo.first_name || "?",
-          lastName: userInfo.last_name,
-          username: userInfo.username,
-          languageCode: userInfo.language_code,
+          isBot: userInfo.user.is_bot || false,
+          firstName: userInfo.user.first_name,
+          lastName: userInfo.user.last_name || "",
+          username: userInfo.user.username || "",
+          languageCode: userInfo.user.language_code || "",
           photoUrl,
           hasPrivateForwards: userInfo.has_private_forwards || false,
           privacySettings: {
