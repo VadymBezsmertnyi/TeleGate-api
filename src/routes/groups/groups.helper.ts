@@ -27,7 +27,7 @@ export const getAuthenticatedUser = async (req: Request) => {
 };
 
 export const buildGroupsQuery = (query: GroupsQuery): GroupsFilter => {
-  const { search, status, createdFrom, createdTo } = query;
+  const { search, status, createdFrom, createdTo, activity } = query;
   const filter: GroupsFilter = {};
 
   if (search) {
@@ -46,6 +46,30 @@ export const buildGroupsQuery = (query: GroupsQuery): GroupsFilter => {
     filter.createdAt = {};
     if (createdFrom) filter.createdAt.$gte = new Date(createdFrom);
     if (createdTo) filter.createdAt.$lte = new Date(createdTo);
+  }
+
+  if (activity) {
+    const now = new Date();
+    filter.updatedAt = {};
+
+    switch (activity) {
+      case "active_7d":
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filter.updatedAt.$gte = sevenDaysAgo;
+        break;
+      case "active_30d":
+        const thirtyDaysAgo = new Date(
+          now.getTime() - 30 * 24 * 60 * 60 * 1000
+        );
+        filter.updatedAt.$gte = thirtyDaysAgo;
+        break;
+      case "inactive":
+        const thirtyDaysAgoInactive = new Date(
+          now.getTime() - 30 * 24 * 60 * 60 * 1000
+        );
+        filter.updatedAt.$lte = thirtyDaysAgoInactive;
+        break;
+    }
   }
 
   return filter;

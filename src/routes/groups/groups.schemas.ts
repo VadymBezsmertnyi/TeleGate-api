@@ -79,6 +79,7 @@ export const groupsQuerySchema = z.object({
   createdTo: z.string().datetime().optional(),
   membersFrom: z.coerce.number().optional(),
   membersTo: z.coerce.number().optional(),
+  activity: z.enum(["active_7d", "active_30d", "inactive"]).optional(),
   ownerId: z.string().optional(),
   ownerTelegramId: z.coerce.number().optional(),
 });

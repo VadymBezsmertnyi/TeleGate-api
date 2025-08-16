@@ -13,6 +13,10 @@ export interface GroupsFilter {
     $gte?: Date;
     $lte?: Date;
   };
+  updatedAt?: {
+    $gte?: Date;
+    $lte?: Date;
+  };
   addedBy?: any;
   _id?: { $in: any[] };
 }
