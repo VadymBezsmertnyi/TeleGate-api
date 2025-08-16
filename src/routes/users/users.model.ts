@@ -15,9 +15,6 @@ const userSM = new Schema({
   groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
 });
 
-// Add indexes for efficient array queries
-userSM.index({ groups: 1 });
-
 const UserModel = model("users", userSM);
 
 export default UserModel;

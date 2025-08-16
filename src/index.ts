@@ -12,6 +12,7 @@ import groupsRouter from "./routes/groups/groups";
 import membersRouter from "./routes/members/members";
 import botConnectRouter from "./routes/bot-telegram/bot-connect";
 import botSendMessagesRouter from "./routes/bot-send-messages/bot-send-messages";
+import messageTemplatesRouter from "./routes/message-templates/message-templates";
 
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
@@ -52,6 +53,7 @@ app.use("/api/groups", groupsRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/bot-telegram", botConnectRouter);
 app.use("/api/bot-send-messages", botSendMessagesRouter);
+app.use("/api/message-templates", messageTemplatesRouter);
 
 startBotTelegram();
 
