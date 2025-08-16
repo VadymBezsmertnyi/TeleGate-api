@@ -39,7 +39,7 @@ export const filterTemplatesSchema = z.object({
 
 // Схема для відповіді з шаблоном
 export const templateResponseSchema = z.object({
-  _id: z.string(),
+  _id: z.any(),
   name: z.string(),
   content: z.string(),
   description: z.string().optional(),
