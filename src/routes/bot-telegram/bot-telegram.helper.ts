@@ -288,12 +288,6 @@ export const processMentionedUsers = async (
           userInfo = chatMember;
         }
 
-        console.log(`Обробка згаданого користувача: ${userId}`, chatMember);
-        console.log(
-          `has_private_forwards for user ${userId}:`,
-          hasPrivateForwards
-        );
-
         let photoUrl: string | undefined;
         try {
           photoUrl = await getUserPhotoUrl(bot, userId);

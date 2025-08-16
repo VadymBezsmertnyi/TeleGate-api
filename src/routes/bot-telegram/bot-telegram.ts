@@ -51,12 +51,10 @@ const startBotTelegram = async () => {
       };
 
       let photoUrl: string | undefined;
-      if (!from.is_bot) {
-        try {
-          photoUrl = await getUserPhotoUrl(ctx, from.id.toString());
-        } catch (error) {
-          console.warn("Помилка при отриманні аватара користувача:", error);
-        }
+      try {
+        photoUrl = await getUserPhotoUrl(ctx, from.id.toString());
+      } catch (error) {
+        console.warn("Помилка при отриманні аватара користувача:", error);
       }
 
       const memberData: MemberDataI = {
@@ -146,18 +144,16 @@ const startBotTelegram = async () => {
             };
 
             let adminPhotoUrl: string | undefined;
-            if (!admin.user.is_bot) {
-              try {
-                adminPhotoUrl = await getUserPhotoUrl(
-                  ctx,
-                  admin.user.id.toString()
-                );
-              } catch (error) {
-                console.warn(
-                  "Помилка при отриманні аватара адміністратора:",
-                  error
-                );
-              }
+            try {
+              adminPhotoUrl = await getUserPhotoUrl(
+                ctx,
+                admin.user.id.toString()
+              );
+            } catch (error) {
+              console.warn(
+                "Помилка при отриманні аватара адміністратора:",
+                error
+              );
             }
 
             const adminMemberData: MemberDataI = {
@@ -225,18 +221,13 @@ const startBotTelegram = async () => {
         };
 
         let newMemberPhotoUrl: string | undefined;
-        if (!newChatMember.user.is_bot) {
-          try {
-            newMemberPhotoUrl = await getUserPhotoUrl(
-              ctx,
-              newChatMember.user.id.toString()
-            );
-          } catch (error) {
-            console.warn(
-              "Помилка при отриманні аватара нового учасника:",
-              error
-            );
-          }
+        try {
+          newMemberPhotoUrl = await getUserPhotoUrl(
+            ctx,
+            newChatMember.user.id.toString()
+          );
+        } catch (error) {
+          console.warn("Помилка при отриманні аватара нового учасника:", error);
         }
 
         const memberData: MemberDataI = {
@@ -294,12 +285,10 @@ const startBotTelegram = async () => {
       };
 
       let senderPhotoUrl: string | undefined;
-      if (!from.is_bot) {
-        try {
-          senderPhotoUrl = await getUserPhotoUrl(ctx, from.id.toString());
-        } catch (error) {
-          console.warn("Помилка при отриманні аватара відправника:", error);
-        }
+      try {
+        senderPhotoUrl = await getUserPhotoUrl(ctx, from.id.toString());
+      } catch (error) {
+        console.warn("Помилка при отриманні аватара відправника:", error);
       }
 
       const memberData: MemberDataI = {
@@ -335,15 +324,10 @@ const startBotTelegram = async () => {
         for (const newMember of messageWithNewMembers.new_chat_members) {
           if (newMember.is_bot && newMember.id === ctx.botInfo?.id) {
             let botPhotoUrl: string | undefined;
-            if (!newMember.is_bot) {
-              try {
-                botPhotoUrl = await getUserPhotoUrl(
-                  ctx,
-                  newMember.id.toString()
-                );
-              } catch (error) {
-                console.warn("Помилка при отриманні аватара бота:", error);
-              }
+            try {
+              botPhotoUrl = await getUserPhotoUrl(ctx, newMember.id.toString());
+            } catch (error) {
+              console.warn("Помилка при отриманні аватара бота:", error);
             }
 
             const botMemberData: MemberDataI = {
@@ -376,18 +360,16 @@ const startBotTelegram = async () => {
             }
           } else {
             let newMemberPhotoUrl: string | undefined;
-            if (!newMember.is_bot) {
-              try {
-                newMemberPhotoUrl = await getUserPhotoUrl(
-                  ctx,
-                  newMember.id.toString()
-                );
-              } catch (error) {
-                console.warn(
-                  "Помилка при отриманні аватара нового учасника:",
-                  error
-                );
-              }
+            try {
+              newMemberPhotoUrl = await getUserPhotoUrl(
+                ctx,
+                newMember.id.toString()
+              );
+            } catch (error) {
+              console.warn(
+                "Помилка при отриманні аватара нового учасника:",
+                error
+              );
             }
 
             const newMemberData: MemberDataI = {
@@ -416,18 +398,16 @@ const startBotTelegram = async () => {
       if (messageWithNewMembers.left_chat_member) {
         const leftMember = messageWithNewMembers.left_chat_member;
         let leftMemberPhotoUrl: string | undefined;
-        if (!leftMember.is_bot) {
-          try {
-            leftMemberPhotoUrl = await getUserPhotoUrl(
-              ctx,
-              leftMember.id.toString()
-            );
-          } catch (error) {
-            console.warn(
-              "Помилка при отриманні аватара учасника, що покинув групу:",
-              error
-            );
-          }
+        try {
+          leftMemberPhotoUrl = await getUserPhotoUrl(
+            ctx,
+            leftMember.id.toString()
+          );
+        } catch (error) {
+          console.warn(
+            "Помилка при отриманні аватара учасника, що покинув групу:",
+            error
+          );
         }
 
         const leftMemberData: MemberDataI = {
