@@ -1,11 +1,33 @@
 import { Telegraf } from "telegraf";
 import MemberModel from "../members/member.model";
 import { SendMessageResultI } from "./bot-send-messages.types";
+import { ChatFromGetChat } from "telegraf/typings/core/types/typegram";
+
+const sendMessageToUserInGroup = async (
+  userId: string,
+  message: string,
+  botToken: string,
+  groupId: string
+): Promise<SendMessageResultI> => {
+  try {
+    return {
+      success: false,
+      error: "Failed to send message to user in group",
+    };
+  } catch (error) {
+    console.error("Error in sendMessageToUserInGroup:", error);
+    return {
+      success: false,
+      error: "Failed to send message to user in group",
+    };
+  }
+};
 
 export const sendMessageToUser = async (
   userId: string,
   message: string,
-  botToken: string
+  botToken: string,
+  groupId: string
 ): Promise<SendMessageResultI> => {
   try {
     const member = await MemberModel.findOne({ tgUserId: userId }).lean();
@@ -16,6 +38,14 @@ export const sendMessageToUser = async (
       };
 
     const bot = new Telegraf(botToken);
+    const memberAccess = (await bot.telegram.getChat(
+      member.tgUserId
+    )) as ChatFromGetChat & {
+      has_private_forwards?: boolean;
+    };
+    if (memberAccess.has_private_forwards)
+      return await sendMessageToUserInGroup(userId, message, botToken, groupId);
+
     const sentMessage = await bot.telegram.sendMessage(userId, message);
     return {
       success: true,

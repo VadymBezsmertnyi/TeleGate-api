@@ -17,7 +17,6 @@ router.post("/send-message", async (req: Request, res: Response) => {
     if (!botToken)
       return res.status(501).json({ error: "Bot token not configured" });
 
-    // Валідація вхідних даних
     const validationResult = sendMessageSchema.safeParse(req.body);
     if (!validationResult.success)
       return res.status(405).json({
@@ -25,8 +24,9 @@ router.post("/send-message", async (req: Request, res: Response) => {
         details: validationResult.error,
       });
 
-    const { userId, message } = validationResult.data;
-    const result = await sendMessageToUser(userId, message, botToken);
+    const { userId, message, groupId } = validationResult.data;
+    console.log("Sending message to user:", userId, "Message:", message);
+    const result = await sendMessageToUser(userId, message, botToken, groupId);
     if (result.success)
       return res.json({
         success: true,
