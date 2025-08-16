@@ -3,6 +3,7 @@ import MemberModel from "../members/member.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 import { ChatFromGetChat } from "telegraf/typings/core/types/typegram";
+import { Telegram } from "telegraf";
 
 export const getUserPhotoUrl = async (
   bot: any,
@@ -266,15 +267,16 @@ export const processMentionedUsers = async (
       if (matches) {
         for (const match of matches) {
           const username = match.substring(1);
+          const telegram = bot.telegram as Telegram;
 
           try {
-            const userChat = await bot.telegram.getChat(`@${username}`);
+            const userChat = await telegram.getChat(`@${username}`);
             if (userChat && userChat.id)
               if (!mentionedUsers.includes(userChat.id.toString()))
                 mentionedUsers.push(userChat.id.toString());
           } catch (error) {
             try {
-              const chatMember = await bot.telegram.getChatMember(
+              const chatMember = await telegram.getChatMember(
                 message.chat.id,
                 username
               );
