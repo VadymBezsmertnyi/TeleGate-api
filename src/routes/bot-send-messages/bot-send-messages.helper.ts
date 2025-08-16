@@ -1,15 +1,25 @@
 import { Telegraf } from "telegraf";
 import MemberModel from "../members/member.model";
+import GroupModel from "../groups/group.model";
+import ForumTopicModel from "../groups/forum-topic.model";
 import { SendMessageResultI } from "./bot-send-messages.types";
 import { ChatFromGetChat } from "telegraf/typings/core/types/typegram";
 
 const sendMessageToUserInGroup = async (
-  userId: string,
+  username: string,
   message: string,
   botToken: string,
   tgChatId: string
 ): Promise<SendMessageResultI> => {
   try {
+    const bot = new Telegraf(botToken);
+    const group = await bot.telegram.getChat(tgChatId);
+    if (!group || !group.id)
+      return {
+        success: false,
+        error: `Group with tgChatId ${tgChatId} not found`,
+      };
+
     return {
       success: false,
       error: "Failed to send message to user in group",
@@ -43,9 +53,9 @@ export const sendMessageToUser = async (
     )) as ChatFromGetChat & {
       has_private_forwards?: boolean;
     };
-    if (memberAccess.has_private_forwards)
+    if (memberAccess.has_private_forwards && member.username)
       return await sendMessageToUserInGroup(
-        userId,
+        member.username,
         message,
         botToken,
         tgChatId
