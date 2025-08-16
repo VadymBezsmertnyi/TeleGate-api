@@ -13,12 +13,6 @@ const messageTemplateSchema = new Schema(
       required: true,
       maxlength: 4096,
     },
-    type: {
-      type: String,
-      required: true,
-      enum: ["text", "html", "markdown"],
-      default: "text",
-    },
     description: {
       type: String,
       maxlength: 500,

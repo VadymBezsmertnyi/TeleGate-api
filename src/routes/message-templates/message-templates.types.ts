@@ -17,7 +17,6 @@ export interface MessageTemplateI {
   _id: string;
   name: string;
   content: string;
-  type: "text" | "html" | "markdown";
   description?: string;
   isActive: boolean;
   user: string;
@@ -31,7 +30,6 @@ export interface MessageTemplateI {
 export interface CreateTemplateDataI {
   name: string;
   content: string;
-  type?: "text" | "html" | "markdown";
   description?: string;
   tags?: string[];
 }
@@ -39,7 +37,6 @@ export interface CreateTemplateDataI {
 export interface UpdateTemplateDataI {
   name?: string;
   content?: string;
-  type?: "text" | "html" | "markdown";
   description?: string;
   isActive?: boolean;
   tags?: string[];
@@ -47,7 +44,6 @@ export interface UpdateTemplateDataI {
 
 export interface TemplateFiltersI {
   search?: string;
-  type?: "text" | "html" | "markdown";
   isActive?: boolean;
   tags?: string[];
   page?: number;

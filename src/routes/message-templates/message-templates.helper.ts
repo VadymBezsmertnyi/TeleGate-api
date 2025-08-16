@@ -50,7 +50,7 @@ export const getTemplates = async (
   userId: string,
   filters: FilterTemplatesRequestT
 ) => {
-  const { search, type, isActive, tags, page, limit } = filters;
+  const { search, isActive, tags, page, limit } = filters;
 
   const query: any = { user: userId };
 
@@ -61,11 +61,6 @@ export const getTemplates = async (
       { description: { $regex: search, $options: "i" } },
       { content: { $regex: search, $options: "i" } },
     ];
-  }
-
-  // Фільтр по типу
-  if (type) {
-    query.type = type;
   }
 
   // Фільтр по активності
