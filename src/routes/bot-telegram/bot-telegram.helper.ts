@@ -2,7 +2,6 @@ import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
-import { ChatMember } from "telegraf/typings/core/types/typegram";
 import { Telegram } from "telegraf";
 
 export const getUserPhotoUrl = async (
@@ -260,16 +259,12 @@ export const processMentionedUsers = async (
       else if (entity.type === "text_mention" && entity.user)
         mentionedUsers.push(entity.user.id.toString());
     }
-
-    if (message.reply_to_message && message.reply_to_message.from) {
+    if (message.reply_to_message && message.reply_to_message.from)
       if (!mentionedUsers.includes(message.reply_to_message.from.id.toString()))
         mentionedUsers.push(message.reply_to_message.from.id.toString());
-    }
-
     if (message.forward_from)
       if (!mentionedUsers.includes(message.forward_from.id.toString()))
         mentionedUsers.push(message.forward_from.id.toString());
-
     if (message.new_chat_members && Array.isArray(message.new_chat_members))
       for (const newMember of message.new_chat_members) {
         if (newMember.id && !mentionedUsers.includes(newMember.id.toString()))
@@ -277,26 +272,31 @@ export const processMentionedUsers = async (
       }
 
     const uniqueUsers = [...new Set(mentionedUsers)];
-
     for (const userId of uniqueUsers) {
       try {
-        const userInfo = (await telegram.getChatMember(
+        const chatMember = await telegram.getChatMember(
           message.chat.id,
           parseInt(userId)
-        )) as ChatMember & {
-          has_private_forwards?: boolean;
-        };
-        const has_private_forwards = await telegram.getChat(
-          userInfo.user.id.toString()
         );
-        console.log(`Обробка згаданого користувача: ${userId}`, userInfo);
+        let userInfo: any = null;
+        let hasPrivateForwards = false;
+        try {
+          userInfo = await telegram.getChat(parseInt(userId));
+          hasPrivateForwards = userInfo.has_private_forwards || false;
+        } catch (chatError) {
+          hasPrivateForwards = true;
+          userInfo = chatMember;
+        }
+
+        console.log(`Обробка згаданого користувача: ${userId}`, chatMember);
         console.log(
           `has_private_forwards for user ${userId}:`,
-          has_private_forwards
+          hasPrivateForwards
         );
+
         let photoUrl: string | undefined;
         try {
-          photoUrl = await getUserPhotoUrl(bot, userInfo.user.id.toString());
+          photoUrl = await getUserPhotoUrl(bot, userId);
         } catch (photoError) {
           console.warn(
             `Помилка отримання фото для згаданого користувача ${userId}:`,
@@ -306,24 +306,21 @@ export const processMentionedUsers = async (
 
         const memberData: MemberDataI = {
           tgUserId: userId,
-          isBot: userInfo.user.is_bot || false,
-          firstName: userInfo.user.first_name,
-          lastName: userInfo.user.last_name || "",
-          username: userInfo.user.username || "",
-          languageCode: userInfo.user.language_code || "",
+          isBot: chatMember.user.is_bot || false,
+          firstName: chatMember.user.first_name,
+          lastName: chatMember.user.last_name || "",
+          username: chatMember.user.username || "",
+          languageCode: chatMember.user.language_code || "",
           photoUrl,
-          hasPrivateForwards: userInfo.has_private_forwards || false,
+          hasPrivateForwards: hasPrivateForwards,
           privacySettings: {
-            profilePhotos: userInfo.has_private_forwards
-              ? "contacts"
-              : "everybody",
-            lastSeen: userInfo.has_private_forwards ? "contacts" : "everybody",
-            forwards: userInfo.has_private_forwards ? "contacts" : "everybody",
+            profilePhotos: hasPrivateForwards ? "contacts" : "everybody",
+            lastSeen: hasPrivateForwards ? "contacts" : "everybody",
+            forwards: hasPrivateForwards ? "contacts" : "everybody",
           },
         };
 
         const member = await createOrUpdateMember(memberData);
-
         await synchronizeGroupMemberRelationship(
           groupId,
           member._id.toString(),
