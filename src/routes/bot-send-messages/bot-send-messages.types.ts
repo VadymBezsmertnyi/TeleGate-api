@@ -2,16 +2,16 @@ import { z } from "zod";
 import { sendMessageSchema } from "./bot-send-messages.schemas";
 
 // Типи, що генеруються з Zod схем
-export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
+export type SendMessageRequestT = z.infer<typeof sendMessageSchema>;
 
 // Базові інтерфейси
-export interface SendMessageData {
+export interface SendMessageDataI {
   userId: string;
   groupId: string;
   message: string;
 }
 
-export interface SendMessageResponse {
+export interface SendMessageResponseI {
   success: boolean;
   message?: string;
   data?: {
@@ -21,7 +21,7 @@ export interface SendMessageResponse {
   error?: string;
 }
 
-export interface SendMessageResult {
+export interface SendMessageResultI {
   success: boolean;
   data?: {
     messageId: number;

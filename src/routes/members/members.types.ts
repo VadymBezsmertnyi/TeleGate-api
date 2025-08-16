@@ -9,10 +9,10 @@ import {
   errorResponseSchema,
 } from "./members.schemas";
 
-export type Member = z.infer<typeof memberSchema>;
-export type MemberPublic = z.infer<typeof memberPublicSchema>;
-export type MembersQuery = z.infer<typeof membersQuerySchema>;
-export type MemberParams = z.infer<typeof memberParamsSchema>;
-export type MembersResponse = z.infer<typeof membersResponseSchema>;
-export type MemberResponse = z.infer<typeof memberResponseSchema>;
-export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+export type MemberT = z.infer<typeof memberSchema>;
+export type MemberPublicT = z.infer<typeof memberPublicSchema>;
+export type MembersQueryT = z.infer<typeof membersQuerySchema>;
+export type MemberParamsT = z.infer<typeof memberParamsSchema>;
+export type MembersResponseT = z.infer<typeof membersResponseSchema>;
+export type MemberResponseT = z.infer<typeof memberResponseSchema>;
+export type ErrorResponseT = z.infer<typeof errorResponseSchema>;

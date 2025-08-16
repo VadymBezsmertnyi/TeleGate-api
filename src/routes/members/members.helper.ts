@@ -4,7 +4,7 @@ import GroupModel from "../groups/group.model";
 import UserModel from "../users/users.model";
 import MemberModel from "./member.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
-import { MembersQuery } from "./members.types";
+import { MembersQueryT } from "./members.types";
 
 export const getAuthenticatedUser = async (req: Request) => {
   const authHeader = req.headers.authorization;
@@ -27,7 +27,7 @@ export const getAuthenticatedUser = async (req: Request) => {
   return user;
 };
 
-export const buildMembersQuery = (query: MembersQuery) => {
+export const buildMembersQuery = (query: MembersQueryT) => {
   const { search, groupId, createdFrom, createdTo } = query;
   const filter: any = {};
 

@@ -5,6 +5,6 @@ import {
   createUserSchema,
 } from "./users.schemas";
 
-export type UserType = z.infer<typeof userSchema>;
-export type UserPublicType = z.infer<typeof userPublicSchema>;
-export type CreateUserType = z.infer<typeof createUserSchema>;
+export type UserTypeT = z.infer<typeof userSchema>;
+export type UserPublicTypeT = z.infer<typeof userPublicSchema>;
+export type CreateUserTypeT = z.infer<typeof createUserSchema>;

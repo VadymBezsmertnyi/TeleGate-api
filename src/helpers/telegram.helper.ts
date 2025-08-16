@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export interface TelegramUser {
+export interface TelegramUserI {
   id: number;
   is_bot: boolean;
   first_name: string;
@@ -10,8 +10,8 @@ export interface TelegramUser {
   is_premium?: boolean;
 }
 
-export interface TelegramChatMember {
-  user: TelegramUser;
+export interface TelegramChatMemberI {
+  user: TelegramUserI;
   status:
     | "creator"
     | "administrator"
@@ -24,7 +24,7 @@ export interface TelegramChatMember {
 export async function getTelegramUserInfo(
   userId: number,
   botToken: string
-): Promise<TelegramUser | null> {
+): Promise<TelegramUserI | null> {
   try {
     const response = await axios.get(
       `https://api.telegram.org/bot${botToken}/getChatMember`,
@@ -38,7 +38,7 @@ export async function getTelegramUserInfo(
     );
 
     if (response.data.ok && response.data.result) {
-      const chatMember: TelegramChatMember = response.data.result;
+      const chatMember: TelegramChatMemberI = response.data.result;
       return chatMember.user;
     }
 
@@ -61,7 +61,7 @@ export async function validateTelegramToken(
 ): Promise<{
   isValid: boolean;
   userId?: number;
-  userData?: TelegramUser;
+  userData?: TelegramUserI;
 }> {
   try {
     const tokenParts = token.split("_");

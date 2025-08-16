@@ -6,7 +6,7 @@ import {
   synchronizeGroupMemberRelationship,
   getUserPhotoUrl,
 } from "./bot-telegram.helper";
-import { GroupData, MemberData } from "./bot-telegram.types";
+import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
 import { Chat, ChatMember, User } from "telegraf/typings/core/types/typegram";
 import MemberModel from "../members/member.model";
@@ -57,7 +57,7 @@ const startBotTelegram = async () => {
         }
       }
 
-      const memberData: MemberData = {
+      const memberData: MemberDataI = {
         tgUserId: from.id.toString(),
         isBot: from.is_bot,
         firstName: from.first_name,
@@ -89,7 +89,7 @@ const startBotTelegram = async () => {
         }
       }
 
-      const groupData: GroupData = {
+      const groupData: GroupDataI = {
         tgChatId: chat.id.toString(),
         type: chat.type,
         title: chat.title,
@@ -161,7 +161,7 @@ const startBotTelegram = async () => {
               }
             }
 
-            const adminMemberData: MemberData = {
+            const adminMemberData: MemberDataI = {
               tgUserId: admin.user.id.toString(),
               isBot: admin.user.is_bot,
               firstName: admin.user.first_name,
@@ -240,7 +240,7 @@ const startBotTelegram = async () => {
           }
         }
 
-        const memberData: MemberData = {
+        const memberData: MemberDataI = {
           tgUserId: newChatMember.user.id.toString(),
           isBot: newChatMember.user.is_bot,
           firstName: newChatMember.user.first_name,
@@ -303,7 +303,7 @@ const startBotTelegram = async () => {
         }
       }
 
-      const memberData: MemberData = {
+      const memberData: MemberDataI = {
         tgUserId: from.id.toString(),
         isBot: from.is_bot,
         firstName: from.first_name,
@@ -340,7 +340,7 @@ const startBotTelegram = async () => {
               }
             }
 
-            const botMemberData: MemberData = {
+            const botMemberData: MemberDataI = {
               tgUserId: newMember.id.toString(),
               isBot: newMember.is_bot,
               firstName: newMember.first_name,
@@ -384,7 +384,7 @@ const startBotTelegram = async () => {
               }
             }
 
-            const newMemberData: MemberData = {
+            const newMemberData: MemberDataI = {
               tgUserId: newMember.id.toString(),
               isBot: newMember.is_bot,
               firstName: newMember.first_name,
@@ -424,7 +424,7 @@ const startBotTelegram = async () => {
           }
         }
 
-        const leftMemberData: MemberData = {
+        const leftMemberData: MemberDataI = {
           tgUserId: leftMember.id.toString(),
           isBot: leftMember.is_bot,
           firstName: leftMember.first_name,

@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 import MessageTemplateModel from "./message-template.model";
 import {
-  CreateTemplateRequest,
-  UpdateTemplateRequest,
-  FilterTemplatesRequest,
+  CreateTemplateRequestT,
+  FilterTemplatesRequestT,
+  UpdateTemplateRequestT,
 } from "./message-templates.types";
 
 export const createTemplate = async (
-  templateData: CreateTemplateRequest,
+  templateData: CreateTemplateRequestT,
   userId: string
 ) => {
   const template = await MessageTemplateModel.create({
@@ -20,7 +20,7 @@ export const createTemplate = async (
 export const updateTemplate = async (
   templateId: string,
   userId: string,
-  updateData: UpdateTemplateRequest
+  updateData: UpdateTemplateRequestT
 ) => {
   const template = await MessageTemplateModel.findOneAndUpdate(
     { _id: templateId, user: userId },
@@ -48,7 +48,7 @@ export const getTemplateById = async (templateId: string, userId: string) => {
 
 export const getTemplates = async (
   userId: string,
-  filters: FilterTemplatesRequest
+  filters: FilterTemplatesRequestT
 ) => {
   const { search, type, isActive, tags, page, limit } = filters;
 

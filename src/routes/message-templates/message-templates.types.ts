@@ -7,13 +7,13 @@ import {
 } from "./message-templates.schemas";
 
 // Типи, що генеруються з Zod схем
-export type CreateTemplateRequest = z.infer<typeof createTemplateSchema>;
-export type UpdateTemplateRequest = z.infer<typeof updateTemplateSchema>;
-export type FilterTemplatesRequest = z.infer<typeof filterTemplatesSchema>;
-export type TemplateResponse = z.infer<typeof templateResponseSchema>;
+export type CreateTemplateRequestT = z.infer<typeof createTemplateSchema>;
+export type UpdateTemplateRequestT = z.infer<typeof updateTemplateSchema>;
+export type FilterTemplatesRequestT = z.infer<typeof filterTemplatesSchema>;
+export type TemplateResponseT = z.infer<typeof templateResponseSchema>;
 
 // Базові інтерфейси
-export interface MessageTemplate {
+export interface MessageTemplateI {
   _id: string;
   name: string;
   content: string;
@@ -28,7 +28,7 @@ export interface MessageTemplate {
   updatedAt: Date;
 }
 
-export interface CreateTemplateData {
+export interface CreateTemplateDataI {
   name: string;
   content: string;
   type?: "text" | "html" | "markdown";
@@ -36,7 +36,7 @@ export interface CreateTemplateData {
   tags?: string[];
 }
 
-export interface UpdateTemplateData {
+export interface UpdateTemplateDataI {
   name?: string;
   content?: string;
   type?: "text" | "html" | "markdown";
@@ -45,7 +45,7 @@ export interface UpdateTemplateData {
   tags?: string[];
 }
 
-export interface TemplateFilters {
+export interface TemplateFiltersI {
   search?: string;
   type?: "text" | "html" | "markdown";
   isActive?: boolean;
@@ -54,26 +54,26 @@ export interface TemplateFilters {
   limit?: number;
 }
 
-export interface TemplatePagination {
+export interface TemplatePaginationI {
   page: number;
   limit: number;
   total: number;
   pages: number;
 }
 
-export interface TemplatesResponse {
-  templates: MessageTemplate[];
-  pagination: TemplatePagination;
+export interface TemplatesResponseI {
+  templates: MessageTemplateI[];
+  pagination: TemplatePaginationI;
 }
 
-export interface TemplateStats {
+export interface TemplateStatsI {
   totalTemplates: number;
   activeTemplates: number;
   totalUsage: number;
   avgUsage: number;
 }
 
-export interface ApiResponse<T> {
+export interface ApiResponseI<T> {
   success: boolean;
   data?: T;
   error?: string;

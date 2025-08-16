@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { groupsQuerySchema, groupPublicSchema } from "./groups.schemas";
 
-export type GroupsQuery = z.infer<typeof groupsQuerySchema>;
-export type GroupPublic = z.infer<typeof groupPublicSchema>;
+export type GroupsQueryT = z.infer<typeof groupsQuerySchema>;
+export type GroupPublicT = z.infer<typeof groupPublicSchema>;
 
-export interface GroupsFilter {
+export interface GroupsFilterI {
   $or?: Array<{
     [key: string]: { $regex: string; $options: string };
   }>;
@@ -21,6 +21,6 @@ export interface GroupsFilter {
   _id?: { $in: any[] };
 }
 
-export interface SortQuery {
+export interface SortQueryI {
   [key: string]: 1 | -1;
 }

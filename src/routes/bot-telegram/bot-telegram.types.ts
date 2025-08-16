@@ -14,20 +14,20 @@ import {
   AcceptedGiftTypesSchema,
 } from "./bot-telegram.schemas";
 
-export type User = z.infer<typeof UserSchema>;
-export type Chat = z.infer<typeof ChatSchema>;
-export type ChatMember = z.infer<typeof ChatMemberSchema>;
-export type Message = z.infer<typeof MessageSchema>;
-export type MyChatMember = z.infer<typeof MyChatMemberSchema>;
-export type BotInfo = z.infer<typeof BotInfoSchema>;
-export type TelegramContext = z.infer<typeof TelegramContextSchema>;
-export type Update = z.infer<typeof UpdateSchema>;
-export type TelegramBotContext = z.infer<typeof TelegramBotContextSchema>;
-export type ForumTopicCreated = z.infer<typeof ForumTopicCreatedSchema>;
-export type ForumTopicClosed = z.infer<typeof ForumTopicClosedSchema>;
-export type AcceptedGiftTypes = z.infer<typeof AcceptedGiftTypesSchema>;
+export type UserT = z.infer<typeof UserSchema>;
+export type ChatT = z.infer<typeof ChatSchema>;
+export type ChatMemberT = z.infer<typeof ChatMemberSchema>;
+export type MessageT = z.infer<typeof MessageSchema>;
+export type MyChatMemberT = z.infer<typeof MyChatMemberSchema>;
+export type BotInfoT = z.infer<typeof BotInfoSchema>;
+export type TelegramContextT = z.infer<typeof TelegramContextSchema>;
+export type UpdateT = z.infer<typeof UpdateSchema>;
+export type TelegramBotContextT = z.infer<typeof TelegramBotContextSchema>;
+export type ForumTopicCreatedT = z.infer<typeof ForumTopicCreatedSchema>;
+export type ForumTopicClosedT = z.infer<typeof ForumTopicClosedSchema>;
+export type AcceptedGiftTypesT = z.infer<typeof AcceptedGiftTypesSchema>;
 
-export interface ForumTopic {
+export interface ForumTopicI {
   name: string;
   iconColor: number;
   messageThreadId: number;
@@ -35,26 +35,26 @@ export interface ForumTopic {
   createdAt: Date;
 }
 
-export interface MessageUpdate {
+export interface MessageUpdateI {
   update_id: number;
-  message: Message;
+  message: MessageT;
 }
 
-export interface MyChatMemberUpdate {
+export interface MyChatMemberUpdateI {
   update_id: number;
-  my_chat_member: MyChatMember;
+  my_chat_member: MyChatMemberT;
 }
 
-export type TelegramUpdate = MessageUpdate | MyChatMemberUpdate;
+export type TelegramUpdateT = MessageUpdateI | MyChatMemberUpdateI;
 
-export interface TelegramBotContextData {
-  update: TelegramUpdate;
-  telegram: TelegramContext;
-  botInfo: BotInfo;
+export interface TelegramBotContextDataI {
+  update: TelegramUpdateT;
+  telegram: TelegramContextT;
+  botInfo: BotInfoT;
   state?: Record<string, any>;
 }
 
-export interface GroupMember {
+export interface GroupMemberI {
   tgUserId: string;
   status:
     | "creator"
@@ -67,7 +67,7 @@ export interface GroupMember {
   addedBy?: string;
 }
 
-export interface GroupData {
+export interface GroupDataI {
   tgChatId: string;
   type: "private" | "group" | "supergroup" | "channel";
   title?: string;
@@ -91,7 +91,7 @@ export interface GroupData {
   addedBy?: string;
 }
 
-export interface MemberData {
+export interface MemberDataI {
   tgUserId: string;
   isBot: boolean;
   firstName: string;

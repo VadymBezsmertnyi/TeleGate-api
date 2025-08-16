@@ -1,14 +1,14 @@
 import { Telegraf } from "telegraf";
 import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
-import { SendMessageResult } from "./bot-send-messages.types";
+import { SendMessageResultI } from "./bot-send-messages.types";
 
 export const sendMessageToUser = async (
   userId: string,
   groupId: string,
   message: string,
   botToken: string
-): Promise<SendMessageResult> => {
+): Promise<SendMessageResultI> => {
   try {
     // Перевіряємо, чи існує група
     const group = await GroupModel.findOne({ tgChatId: groupId }).lean();

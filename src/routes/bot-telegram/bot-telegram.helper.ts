@@ -1,6 +1,6 @@
 import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
-import { GroupData, MemberData } from "./bot-telegram.types";
+import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 
 export const getUserPhotoUrl = async (
@@ -29,7 +29,7 @@ export const getUserPhotoUrl = async (
   }
 };
 
-export const createOrUpdateMember = async (memberData: MemberData) => {
+export const createOrUpdateMember = async (memberData: MemberDataI) => {
   const existingMember = await MemberModel.findOne({
     tgUserId: memberData.tgUserId,
   });
@@ -82,7 +82,7 @@ export const createOrUpdateMember = async (memberData: MemberData) => {
   return savedMember;
 };
 
-export const createOrUpdateGroup = async (groupData: GroupData) => {
+export const createOrUpdateGroup = async (groupData: GroupDataI) => {
   const existingGroup = await GroupModel.findOne({
     tgChatId: groupData.tgChatId,
   });
@@ -188,7 +188,7 @@ export const updateGroupInfoFromTelegram = async (chatId: string, bot: any) => {
       }
     }
 
-    const groupData: Partial<GroupData> = {
+    const groupData: Partial<GroupDataI> = {
       title: chat.title,
       description: chat.description,
       photoUrl,

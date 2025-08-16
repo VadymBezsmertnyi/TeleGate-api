@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import UserModel from "../users/users.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
-import { GroupsQuery, GroupsFilter, SortQuery } from "./groups.types";
+import { GroupsQueryT, GroupsFilterI, SortQueryI } from "./groups.types";
 
 export const getAuthenticatedUser = async (req: Request) => {
   const authHeader = req.headers.authorization;
@@ -26,9 +26,9 @@ export const getAuthenticatedUser = async (req: Request) => {
   return user;
 };
 
-export const buildGroupsQuery = (query: GroupsQuery): GroupsFilter => {
+export const buildGroupsQuery = (query: GroupsQueryT): GroupsFilterI => {
   const { search, status, createdFrom, createdTo, activity } = query;
-  const filter: GroupsFilter = {};
+  const filter: GroupsFilterI = {};
 
   if (search) {
     filter.$or = [
@@ -75,7 +75,7 @@ export const buildGroupsQuery = (query: GroupsQuery): GroupsFilter => {
   return filter;
 };
 
-export const buildSortQuery = (sortBy: string, order: string): SortQuery => {
+export const buildSortQuery = (sortBy: string, order: string): SortQueryI => {
   const sortOrder = order === "asc" ? 1 : -1;
   const sortField = sortBy === "name" ? "title" : sortBy;
   return { [sortField]: sortOrder };
