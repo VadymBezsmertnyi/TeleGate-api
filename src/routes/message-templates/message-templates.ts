@@ -59,11 +59,7 @@ router.get("/", async (req: Request, res: Response) => {
     if (!user)
       return res.status(401).json({ error: "Authentication required" });
 
-    const validationResult = filterTemplatesSchema.safeParse({
-      ...req.query,
-      page: req.query.page ? parseInt(req.query.page as string) : 1,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-    });
+    const validationResult = filterTemplatesSchema.safeParse(req.query);
     if (!validationResult.success)
       return res.status(400).json({
         error: "Invalid query parameters",
