@@ -28,7 +28,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     const validationResult = createTemplateSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: "Invalid request data",
         details: validationResult.error,
       });
@@ -40,7 +40,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
-      return res.status(500).json({ error: "Data validation error" });
+      return res.status(405).json({ error: "Data validation error" });
 
     return res.status(201).json({ data: responseResult.data });
   } catch (error) {
@@ -61,7 +61,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     const validationResult = filterTemplatesSchema.safeParse(req.query);
     if (!validationResult.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: "Invalid query parameters",
         details: validationResult.error,
       });
@@ -94,7 +94,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
-      return res.status(500).json({ error: "Data validation error" });
+      return res.status(405).json({ error: "Data validation error" });
 
     return res.json({ data: responseResult.data });
   } catch (error) {
@@ -116,7 +116,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     const { id } = req.params;
     const validationResult = updateTemplateSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: "Invalid request data",
         details: validationResult.error,
       });
@@ -130,7 +130,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
-      return res.status(500).json({ error: "Data validation error" });
+      return res.status(405).json({ error: "Data validation error" });
 
     return res.json({ data: responseResult.data });
   } catch (error) {

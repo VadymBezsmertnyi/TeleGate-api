@@ -86,9 +86,9 @@ router.get("/close", async (req: Request, res: Response) => {
 });
 
 router.get("/redirect", async (req: Request, res: Response) => {
-      try {
-      const { id, username, first_name, last_name, photo_url, auth_date, hash } =
-        req.query;
+  try {
+    const { id, username, first_name, last_name, photo_url, auth_date, hash } =
+      req.query;
 
     const url = req.url || "";
     const fragmentMatch =
@@ -429,7 +429,7 @@ router.get("/user-groups/:userId", async (req: Request, res: Response) => {
     const { userId } = req.params;
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
-      return res.status(500).json({ error: "Bot token not configured" });
+      return res.status(501).json({ error: "Bot token not configured" });
     if (!userId || isNaN(parseInt(userId)))
       return res.status(400).json({ error: "Invalid user ID" });
     const telegramUserId = parseInt(userId);

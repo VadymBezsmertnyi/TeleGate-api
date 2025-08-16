@@ -24,7 +24,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const queryValidation = groupsQuerySchema.safeParse(req.query);
     if (!queryValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.VALIDATION_ERROR,
           message: "Invalid query parameters",
@@ -108,18 +108,13 @@ router.get("/", async (req: Request, res: Response) => {
       },
     };
     const responseValidation = groupsResponseSchema.safeParse(response);
-    if (!responseValidation.success) {
-      console.warn(
-        "Response validation failed:",
-        JSON.stringify(responseValidation.error, null, 2)
-      );
-      return res.status(500).json({
+    if (!responseValidation.success)
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.INTERNAL_ERROR,
           message: "Data validation failed",
         },
       });
-    }
 
     return res.json(responseValidation.data);
   } catch (error) {
@@ -137,7 +132,7 @@ router.get("/owner", async (req: Request, res: Response) => {
   try {
     const queryValidation = groupsQuerySchema.safeParse(req.query);
     if (!queryValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.VALIDATION_ERROR,
           message: "Invalid query parameters",
@@ -261,7 +256,7 @@ router.get("/owner", async (req: Request, res: Response) => {
 
     const responseValidation = groupsResponseSchema.safeParse(response);
     if (!responseValidation.success)
-      return res.status(500).json({
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.INTERNAL_ERROR,
           message: "Data validation failed",
@@ -305,7 +300,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   try {
     const paramsValidation = groupParamsSchema.safeParse(req.params);
     if (!paramsValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.VALIDATION_ERROR,
           message: "Invalid group ID",
@@ -355,7 +350,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     };
     const responseValidation = groupResponseSchema.safeParse(response);
     if (!responseValidation.success)
-      return res.status(500).json({
+      return res.status(405).json({
         error: {
           code: ERROR_CODES.INTERNAL_ERROR,
           message: "Data validation failed",

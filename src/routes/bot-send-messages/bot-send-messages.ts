@@ -15,12 +15,12 @@ router.post("/send-message", async (req: Request, res: Response) => {
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
-      return res.status(500).json({ error: "Bot token not configured" });
+      return res.status(501).json({ error: "Bot token not configured" });
 
     // Валідація вхідних даних
     const validationResult = sendMessageSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: "Invalid request data",
         details: validationResult.error,
       });
@@ -34,7 +34,7 @@ router.post("/send-message", async (req: Request, res: Response) => {
         data: result.data,
       });
     else
-      return res.status(400).json({
+      return res.status(405).json({
         success: false,
         error: result.error,
       });

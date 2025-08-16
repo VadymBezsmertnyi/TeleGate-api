@@ -19,7 +19,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const queryValidation = membersQuerySchema.safeParse(req.query);
     if (!queryValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
           message: "Invalid query parameters",
@@ -62,7 +62,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     const responseValidation = membersResponseSchema.safeParse(response);
     if (!responseValidation.success)
-      return res.status(500).json({
+      return res.status(405).json({
         error: {
           code: "INTERNAL_ERROR",
           message: "Data validation failed",
@@ -85,7 +85,7 @@ router.get("/owner", async (req: Request, res: Response) => {
   try {
     const queryValidation = membersQuerySchema.safeParse(req.query);
     if (!queryValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
           message: "Invalid query parameters",
@@ -150,7 +150,7 @@ router.get("/owner", async (req: Request, res: Response) => {
 
     const responseValidation = membersResponseSchema.safeParse(response);
     if (!responseValidation.success)
-      return res.status(500).json({
+      return res.status(405).json({
         error: {
           code: "INTERNAL_ERROR",
           message: "Data validation failed",
@@ -173,7 +173,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   try {
     const paramsValidation = memberParamsSchema.safeParse(req.params);
     if (!paramsValidation.success)
-      return res.status(400).json({
+      return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
           message: "Invalid member ID",
@@ -211,7 +211,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       data: member,
     });
     if (!responseValidation.success)
-      return res.status(500).json({
+      return res.status(405).json({
         error: {
           code: "INTERNAL_ERROR",
           message: "Data validation failed",

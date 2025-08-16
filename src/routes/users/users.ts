@@ -28,7 +28,7 @@ router.get("/me", async (req: Request, res: Response) => {
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
-      return res.status(500).json({ error: "Bot token not configured" });
+      return res.status(501).json({ error: "Bot token not configured" });
 
     const telegramValidation = await validateTelegramToken(token, botToken);
     if (!telegramValidation.isValid || !telegramValidation.userData)
@@ -57,10 +57,7 @@ router.get("/me", async (req: Request, res: Response) => {
 
       user = newUser.toObject();
 
-      await linkUserWithMembersAndGroups(
-        telegramUser.id,
-        _id.toString()
-      );
+      await linkUserWithMembersAndGroups(telegramUser.id, _id.toString());
     } else {
       await UserModel.findByIdAndUpdate(user._id, {
         username: telegramUser.username || user.username,
@@ -88,7 +85,7 @@ router.get("/me", async (req: Request, res: Response) => {
 
     const resultCheckZod = userPublicSchema.safeParse(userData);
     if (!resultCheckZod.success)
-      return res.status(500).json({ error: "Data validation error" });
+      return res.status(405).json({ error: "Data validation error" });
 
     res.json(resultCheckZod.data);
   } catch (error) {
@@ -107,10 +104,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       isActive: true,
     }).lean();
 
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const userData = {
       id: user.telegramId,
@@ -119,14 +113,11 @@ router.get("/:id", async (req: Request, res: Response) => {
       last_name: user.lastName,
       photo_url: user.photoUrl,
     };
-
     const resultCheckZod = userPublicSchema.safeParse(userData);
-    if (!resultCheckZod.success) {
-      res.status(500).json({ error: "Data validation error" });
-      return;
-    }
+    if (!resultCheckZod.success)
+      return res.status(405).json({ error: "Data validation error" });
 
-    res.send({
+    return res.send({
       result: true,
       data: {
         user: resultCheckZod.data,
@@ -134,7 +125,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    res.status(500).send({ message: "Internal server error", error });
+    return res.status(500).send({ message: "Internal server error", error });
   }
 });
 
@@ -224,7 +215,7 @@ router.get("/me/full", async (req: Request, res: Response) => {
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken)
-      return res.status(500).json({ error: "Bot token not configured" });
+      return res.status(501).json({ error: "Bot token not configured" });
 
     const telegramValidation = await validateTelegramToken(token, botToken);
     if (!telegramValidation.isValid || !telegramValidation.userData)
