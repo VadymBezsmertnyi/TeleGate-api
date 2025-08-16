@@ -4,7 +4,7 @@ import {
   CreateTemplateRequest,
   UpdateTemplateRequest,
   FilterTemplatesRequest,
-} from "./message-templates.schemas";
+} from "./message-templates.types";
 
 export const createTemplate = async (
   templateData: CreateTemplateRequest,

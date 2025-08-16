@@ -54,9 +54,3 @@ export const templateResponseSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
-// Типи
-export type CreateTemplateRequest = z.infer<typeof createTemplateSchema>;
-export type UpdateTemplateRequest = z.infer<typeof updateTemplateSchema>;
-export type FilterTemplatesRequest = z.infer<typeof filterTemplatesSchema>;
-export type TemplateResponse = z.infer<typeof templateResponseSchema>;

@@ -1,3 +1,18 @@
+import { z } from "zod";
+import {
+  createTemplateSchema,
+  updateTemplateSchema,
+  filterTemplatesSchema,
+  templateResponseSchema,
+} from "./message-templates.schemas";
+
+// Типи, що генеруються з Zod схем
+export type CreateTemplateRequest = z.infer<typeof createTemplateSchema>;
+export type UpdateTemplateRequest = z.infer<typeof updateTemplateSchema>;
+export type FilterTemplatesRequest = z.infer<typeof filterTemplatesSchema>;
+export type TemplateResponse = z.infer<typeof templateResponseSchema>;
+
+// Базові інтерфейси
 export interface MessageTemplate {
   _id: string;
   name: string;
