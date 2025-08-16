@@ -7,7 +7,7 @@ const sendMessageToUserInGroup = async (
   userId: string,
   message: string,
   botToken: string,
-  groupId: string
+  tgChatId: string
 ): Promise<SendMessageResultI> => {
   try {
     return {
@@ -27,7 +27,7 @@ export const sendMessageToUser = async (
   userId: string,
   message: string,
   botToken: string,
-  groupId: string
+  tgChatId: string
 ): Promise<SendMessageResultI> => {
   try {
     const member = await MemberModel.findOne({ tgUserId: userId }).lean();
@@ -44,7 +44,12 @@ export const sendMessageToUser = async (
       has_private_forwards?: boolean;
     };
     if (memberAccess.has_private_forwards)
-      return await sendMessageToUserInGroup(userId, message, botToken, groupId);
+      return await sendMessageToUserInGroup(
+        userId,
+        message,
+        botToken,
+        tgChatId
+      );
 
     const sentMessage = await bot.telegram.sendMessage(userId, message);
     return {

@@ -6,5 +6,5 @@ export const sendMessageSchema = z.object({
     .string()
     .min(1, "Message text is required")
     .max(4096, "Message too long"),
-  groupId: z.string(),
+  tgChatId: z.string(),
 });
