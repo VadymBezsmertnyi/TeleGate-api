@@ -5,7 +5,6 @@ import {
   updateTemplateSchema,
   filterTemplatesSchema,
   templateResponseSchema,
-  templatesListResponseSchema,
 } from "./message-templates.schemas";
 import {
   createTemplate,
@@ -33,12 +32,10 @@ router.post("/", async (req: Request, res: Response) => {
         error: "Invalid request data",
         details: validationResult.error,
       });
-
     const template = await createTemplate(
       validationResult.data,
       user._id.toString()
     );
-
     const responseResult = templateResponseSchema.safeParse(template);
     if (!responseResult.success)
       return res.status(500).json({ error: "Data validation error" });
@@ -57,26 +54,31 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   try {
     const user = await getAuthenticatedUser(req);
+    console.log("Authenticated user:", user);
     if (!user)
       return res.status(401).json({ error: "Authentication required" });
 
-    const validationResult = filterTemplatesSchema.safeParse(req.query);
-    if (!validationResult.success)
+    const validationResult = filterTemplatesSchema.safeParse({
+      ...req.query,
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
+    });
+    if (!validationResult.success) {
+      console.log("Validation result:", validationResult.success);
+      console.log("Validation error details:", validationResult.error);
       return res.status(400).json({
         error: "Invalid query parameters",
         details: validationResult.error,
       });
+    }
 
     const result = await getTemplates(
       user._id.toString(),
       validationResult.data
     );
+    console.log("Templates retrieved:", result);
 
-    const responseResult = templatesListResponseSchema.safeParse(result);
-    if (!responseResult.success)
-      return res.status(500).json({ error: "Data validation error" });
-
-    return res.json(responseResult.data);
+    return res.json(result);
   } catch (error) {
     console.error("Error getting templates:", error);
     if (error instanceof Error) {

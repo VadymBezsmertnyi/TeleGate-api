@@ -31,10 +31,10 @@ export const updateTemplateSchema = z.object({
 // Схема для фільтрації шаблонів
 export const filterTemplatesSchema = z.object({
   search: z.string().optional(),
-  isActive: z.coerce.boolean().optional(),
+  isActive: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
+  page: z.number().min(1).default(1),
+  limit: z.number().min(1).max(100).default(20),
 });
 
 // Схема для відповіді з шаблоном
@@ -49,18 +49,4 @@ export const templateResponseSchema = z.object({
   lastUsedAt: z.date().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
-
-// Схема для метаданих пагінації
-export const paginationMetaSchema = z.object({
-  page: z.number(),
-  limit: z.number(),
-  total: z.number(),
-  pages: z.number(),
-});
-
-// Схема для відповіді зі списком шаблонів
-export const templatesListResponseSchema = z.object({
-  data: z.array(templateResponseSchema),
-  meta: paginationMetaSchema,
 });
