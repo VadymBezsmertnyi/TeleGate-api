@@ -12,6 +12,12 @@ const memberSM = new Schema(
     canReadAllGroupMessages: { type: Boolean },
     supportsInlineQueries: { type: Boolean },
     photoUrl: { type: String },
+    hasPrivateForwards: { type: Boolean, default: false },
+    privacySettings: {
+      profilePhotos: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' },
+      lastSeen: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' },
+      forwards: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' }
+    },
     user: { type: Schema.Types.ObjectId, ref: "users" },
     groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
   },

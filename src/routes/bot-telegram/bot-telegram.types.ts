@@ -102,5 +102,11 @@ export interface MemberDataI {
   canReadAllGroupMessages?: boolean;
   supportsInlineQueries?: boolean;
   photoUrl?: string;
+  hasPrivateForwards?: boolean;
+  privacySettings?: {
+    profilePhotos?: 'everybody' | 'contacts' | 'nobody';
+    lastSeen?: 'everybody' | 'contacts' | 'nobody';
+    forwards?: 'everybody' | 'contacts' | 'nobody';
+  };
   userId?: string;
 }
