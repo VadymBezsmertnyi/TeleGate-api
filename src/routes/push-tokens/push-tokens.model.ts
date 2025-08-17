@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 const pushTokenSM = new Schema({
   _id: { type: Schema.Types.ObjectId, required: true },
-  userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
+  telegramId: { type: Number, required: true, ref: "users", field: "telegramId" },
   token: { type: String, required: true, unique: true },
   platform: {
     type: String,
