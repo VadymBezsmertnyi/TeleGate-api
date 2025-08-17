@@ -13,6 +13,7 @@ import membersRouter from "./routes/members/members";
 import botConnectRouter from "./routes/bot-telegram/bot-connect";
 import botSendMessagesRouter from "./routes/bot-send-messages/bot-send-messages";
 import messageTemplatesRouter from "./routes/message-templates/message-templates";
+import pushTokensRouter from "./routes/push-tokens/push-tokens";
 
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
@@ -52,6 +53,7 @@ app.listen(PORT, () => {
 
 app.use("/api/auth-telegram", authTelegramRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/push-tokens", pushTokensRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/bot-telegram", botConnectRouter);

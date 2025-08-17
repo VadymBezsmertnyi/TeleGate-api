@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 
 import { pushTokenSchema } from "./push-tokens.schemas";
 import PushTokenModel from "./push-tokens.model";
-import UserModel from "./users.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
 
 const router = Router();
@@ -29,12 +28,6 @@ router.post("/", async (req: Request, res: Response) => {
 
     const telegramUser = telegramValidation.userData;
 
-    const user = await UserModel.findOne({
-      telegramId: telegramUser.id,
-      isActive: true,
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
     const validationResult = pushTokenSchema.safeParse(req.body);
     if (!validationResult.success)
       return res.status(400).json({
@@ -45,7 +38,7 @@ router.post("/", async (req: Request, res: Response) => {
     const { token: pushToken, platform } = validationResult.data;
     const existingToken = await PushTokenModel.findOne({ token: pushToken });
     if (existingToken) {
-      if (existingToken.userId.toString() === user._id.toString()) {
+      if (existingToken.telegramId === telegramUser.id) {
         await PushTokenModel.findByIdAndUpdate(existingToken._id, {
           platform,
           isActive: true,
@@ -61,7 +54,7 @@ router.post("/", async (req: Request, res: Response) => {
     const _id = new mongoose.Types.ObjectId();
     await PushTokenModel.create({
       _id,
-      userId: user._id,
+      telegramId: telegramUser.id,
       token: pushToken,
       platform,
       isActive: true,
@@ -101,15 +94,9 @@ router.delete("/:token", async (req: Request, res: Response) => {
     if (!pushToken)
       return res.status(400).json({ error: "Push token is required" });
 
-    const user = await UserModel.findOne({
-      telegramId: telegramUser.id,
-      isActive: true,
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
     const pushTokenDoc = await PushTokenModel.findOne({
       token: pushToken,
-      userId: user._id,
+      telegramId: telegramUser.id,
     });
     if (!pushTokenDoc)
       return res.status(404).json({ error: "Push token not found" });
