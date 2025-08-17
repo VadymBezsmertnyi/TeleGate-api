@@ -52,7 +52,7 @@ export const sendPushNotification = async (
       tokens,
     };
 
-    const response = await messaging.sendMulticast(message);
+    const response = await messaging.sendEachForMulticast(message);
 
     console.warn(
       `Successfully sent messages: ${response.successCount}/${tokens.length}`
