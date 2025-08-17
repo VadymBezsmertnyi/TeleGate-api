@@ -11,6 +11,7 @@ const pushTokenSM = new Schema({
   },
   deviceBrand: { type: String, default: "unknown" },
   deviceModel: { type: String, default: "unknown" },
+  deviceName: { type: String, default: "unknown" },
   isSimulator: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },

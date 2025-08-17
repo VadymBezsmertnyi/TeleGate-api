@@ -48,6 +48,7 @@ router.post("/", async (req: Request, res: Response) => {
       platform,
       deviceBrand,
       deviceModel,
+      deviceName,
       isSimulator,
     } = validationResult.data;
     const existingToken = await PushTokenModel.findOne({ token: pushToken });
@@ -57,6 +58,7 @@ router.post("/", async (req: Request, res: Response) => {
           platform,
           deviceBrand,
           deviceModel,
+          deviceName,
           isSimulator,
           isActive: true,
           updatedAt: new Date(),
@@ -80,6 +82,7 @@ router.post("/", async (req: Request, res: Response) => {
       platform,
       deviceBrand,
       deviceModel,
+      deviceName,
       isSimulator,
       isActive: true,
     });

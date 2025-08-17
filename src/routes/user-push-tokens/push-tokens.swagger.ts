@@ -18,6 +18,7 @@
  *             platform: "ios"
  *             deviceBrand: "Apple"
  *             deviceModel: "iPhone 14"
+ *             deviceName: "iPhone 14 Pro"
  *             isSimulator: false
  *     responses:
  *       201:

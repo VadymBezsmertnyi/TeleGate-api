@@ -7,6 +7,7 @@ export const pushTokenSchema = z.object({
   }),
   deviceBrand: z.string().optional().default("unknown"),
   deviceModel: z.string().optional().default("unknown"),
+  deviceName: z.string().optional().default("unknown"),
   isSimulator: z.boolean().optional().default(false),
 });
 
@@ -16,6 +17,7 @@ export const pushTokenResponseSchema = z.object({
   platform: z.enum(["ios", "android", "web"]),
   deviceBrand: z.string(),
   deviceModel: z.string(),
+  deviceName: z.string(),
   isSimulator: z.boolean(),
   isActive: z.boolean(),
   createdAt: z.date(),
