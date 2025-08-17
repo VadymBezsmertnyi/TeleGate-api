@@ -4,9 +4,7 @@ import path from "path";
 let firebaseApp: admin.app.App | null = null;
 
 export const initializeFirebase = () => {
-  if (firebaseApp) {
-    return firebaseApp;
-  }
+  if (firebaseApp) return firebaseApp;
 
   try {
     const serviceAccountPath = path.join(
@@ -28,9 +26,8 @@ export const initializeFirebase = () => {
 };
 
 export const getFirebaseApp = () => {
-  if (!firebaseApp) {
-    return initializeFirebase();
-  }
+  if (!firebaseApp) return initializeFirebase();
+
   return firebaseApp;
 };
 
