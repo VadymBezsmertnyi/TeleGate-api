@@ -5,7 +5,6 @@ import { pushTokenSchema } from "./push-tokens.schemas";
 import PushTokenModel from "./push-tokens.model";
 import UserModel from "./users.model";
 import { validateTelegramToken } from "../../helpers/telegram.helper";
-import pushTokensTestRouter from "./push-tokens.test";
 
 const router = Router();
 
@@ -123,7 +122,5 @@ router.delete("/:token", async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-router.use("/test", pushTokensTestRouter);
 
 export default router;

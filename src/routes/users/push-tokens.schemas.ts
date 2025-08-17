@@ -3,7 +3,7 @@ import { z } from "zod";
 export const pushTokenSchema = z.object({
   token: z.string().min(1, "Token is required"),
   platform: z.enum(["ios", "android", "web"], {
-    errorMap: () => ({ message: "Platform must be ios, android, or web" }),
+    message: "Platform must be ios, android, or web",
   }),
 });
 
