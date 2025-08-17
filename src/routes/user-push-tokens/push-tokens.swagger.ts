@@ -160,3 +160,91 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
+/**
+ * @swagger
+ * /users/push-tokens/test-notification:
+ *   post:
+ *     summary: Відправка тестового push-повідомлення всім користувачам
+ *     description: Відправляє тестове push-повідомлення всім користувачам з активними токенами
+ *     tags: [Users Push Tokens]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 1000
+ *                 description: Текст повідомлення
+ *                 example: "Це тестове повідомлення"
+ *               title:
+ *                 type: string
+ *                 description: Заголовок повідомлення (необов'язково)
+ *                 example: "TeleGate Test"
+ *     responses:
+ *       200:
+ *         description: Тестове повідомлення успішно відправлено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Test notification sent successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalTokens:
+ *                       type: number
+ *                       description: Загальна кількість токенів
+ *                       example: 10
+ *                     successCount:
+ *                       type: number
+ *                       description: Кількість успішно відправлених повідомлень
+ *                       example: 8
+ *                     failureCount:
+ *                       type: number
+ *                       description: Кількість невдалих відправлень
+ *                       example: 2
+ *                     sentMessage:
+ *                       type: string
+ *                       description: Відправлений текст повідомлення
+ *                       example: "Це тестове повідомлення"
+ *                     sentTitle:
+ *                       type: string
+ *                       description: Відправлений заголовок повідомлення
+ *                       example: "TeleGate"
+ *       400:
+ *         description: Помилка валідації
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Користувач не знайдений або немає активних токенів
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */

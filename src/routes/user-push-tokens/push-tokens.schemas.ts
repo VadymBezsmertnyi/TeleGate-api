@@ -16,5 +16,14 @@ export const pushTokenResponseSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const testNotificationSchema = z.object({
+  message: z
+    .string()
+    .min(1, "Message is required")
+    .max(1000, "Message too long"),
+  title: z.string().optional(),
+});
+
 export type PushTokenT = z.infer<typeof pushTokenSchema>;
 export type PushTokenResponseT = z.infer<typeof pushTokenResponseSchema>;
+export type TestNotificationT = z.infer<typeof testNotificationSchema>;

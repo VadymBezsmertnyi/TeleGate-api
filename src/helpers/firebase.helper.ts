@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import * as admin from "firebase-admin";
 import path from "path";
 
 let firebaseApp: admin.app.App | null = null;
@@ -11,12 +11,10 @@ export const initializeFirebase = () => {
       __dirname,
       "../../keys/telegate-f59d5-firebase-adminsdk-fbsvc-5dfe4845b4.json"
     );
-
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccountPath),
       projectId: "telegate-f59d5",
     });
-
     console.warn("Firebase Admin SDK initialized successfully");
     return firebaseApp;
   } catch (error) {
@@ -33,39 +31,23 @@ export const getFirebaseApp = () => {
 
 export const sendPushNotification = async (
   tokens: string[],
-  notification: {
-    title: string;
-    body: string;
-  },
-  data?: Record<string, string>
-) => {
-  try {
-    const app = getFirebaseApp();
-    const messaging = app.messaging();
+  message: string,
+  title?: string
+): Promise<admin.messaging.BatchResponse> => {
+  const app = getFirebaseApp();
+  const messaging = app.messaging();
 
-    const message = {
-      notification,
-      data,
-      tokens,
-    };
+  const messagePayload: admin.messaging.MulticastMessage = {
+    tokens,
+    notification: {
+      title: title || "TeleGate",
+      body: message,
+    },
+    data: {
+      message,
+      title: title || "TeleGate",
+    },
+  };
 
-    const response = await messaging.sendEachForMulticast(message);
-
-    console.warn(
-      `Successfully sent messages: ${response.successCount}/${tokens.length}`
-    );
-
-    if (response.failureCount > 0) {
-      const failedTokens = response.responses
-        .map((resp, idx) => (!resp.success ? tokens[idx] : null))
-        .filter(Boolean);
-
-      console.warn("Failed tokens:", failedTokens);
-    }
-
-    return response;
-  } catch (error) {
-    console.warn("Error sending push notification:", error);
-    throw error;
-  }
+  return await messaging.sendEachForMulticast(messagePayload);
 };
