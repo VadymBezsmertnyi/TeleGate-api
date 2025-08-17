@@ -13,6 +13,7 @@ const userSM = new Schema({
   updatedAt: { type: Date, default: Date.now },
   members: [{ type: Schema.Types.ObjectId, ref: "Member" }],
   groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
+  pushTokens: [{ type: Schema.Types.ObjectId, ref: "PushTokens" }],
 });
 
 const UserModel = model("users", userSM);

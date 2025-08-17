@@ -14,6 +14,6 @@ const pushTokenSM = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const PushTokenModel = model("pushTokens", pushTokenSM);
+const PushTokenModel = model("PushTokens", pushTokenSM);
 
 export default PushTokenModel;
