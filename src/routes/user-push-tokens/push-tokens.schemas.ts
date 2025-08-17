@@ -5,12 +5,18 @@ export const pushTokenSchema = z.object({
   platform: z.enum(["ios", "android", "web"], {
     message: "Platform must be ios, android, or web",
   }),
+  deviceBrand: z.string().optional().default("unknown"),
+  deviceModel: z.string().optional().default("unknown"),
+  isSimulator: z.boolean().optional().default(false),
 });
 
 export const pushTokenResponseSchema = z.object({
   id: z.string(),
   token: z.string(),
   platform: z.enum(["ios", "android", "web"]),
+  deviceBrand: z.string(),
+  deviceModel: z.string(),
+  isSimulator: z.boolean(),
   isActive: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),

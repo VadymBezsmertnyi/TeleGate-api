@@ -43,12 +43,21 @@ router.post("/", async (req: Request, res: Response) => {
         details: validationResult.error.issues,
       });
 
-    const { token: pushToken, platform } = validationResult.data;
+    const {
+      token: pushToken,
+      platform,
+      deviceBrand,
+      deviceModel,
+      isSimulator,
+    } = validationResult.data;
     const existingToken = await PushTokenModel.findOne({ token: pushToken });
     if (existingToken) {
       if (existingToken.userId.toString() === user._id.toString()) {
         await PushTokenModel.findByIdAndUpdate(existingToken._id, {
           platform,
+          deviceBrand,
+          deviceModel,
+          isSimulator,
           isActive: true,
           updatedAt: new Date(),
         });
@@ -69,6 +78,9 @@ router.post("/", async (req: Request, res: Response) => {
       userId: user._id,
       token: pushToken,
       platform,
+      deviceBrand,
+      deviceModel,
+      isSimulator,
       isActive: true,
     });
     await UserModel.findByIdAndUpdate(user._id, {

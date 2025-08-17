@@ -16,6 +16,9 @@
  *           example:
  *             token: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
  *             platform: "ios"
+ *             deviceBrand: "Apple"
+ *             deviceModel: "iPhone 14"
+ *             isSimulator: false
  *     responses:
  *       201:
  *         description: Токен успішно зареєстровано
