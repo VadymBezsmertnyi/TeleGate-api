@@ -2,12 +2,7 @@ import { Schema, model } from "mongoose";
 
 const pushTokenSM = new Schema({
   _id: { type: Schema.Types.ObjectId, required: true },
-  telegramId: {
-    type: Number,
-    required: true,
-    ref: "users",
-    field: "telegramId",
-  },
+  userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
   token: { type: String, required: true, unique: true },
   platform: {
     type: String,
@@ -18,9 +13,6 @@ const pushTokenSM = new Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
-
-pushTokenSM.index({ telegramId: 1, platform: 1 });
-pushTokenSM.index({ token: 1 }, { unique: true });
 
 const PushTokenModel = model("pushTokens", pushTokenSM);
 
