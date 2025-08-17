@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cron from "node-cron";
 import NodeCache from "node-cache";
+import swaggerUi from "swagger-ui-express";
 
 // routes
 import authTelegramRouter from "./routes/auth-telegram/auth-telegram";
@@ -21,6 +22,9 @@ import startBotTelegram from "./routes/bot-telegram/bot-telegram";
 // firebase
 import { initializeFirebase } from "./helpers/firebase.helper";
 
+// swagger
+import { specs } from "./config/swagger";
+
 const app = express();
 
 dotenv.config();
@@ -37,18 +41,28 @@ const cache = new NodeCache({ stdTTL: 300, checkperiod: 120 });
 mongoose
   .connect(db)
   .then(() => {
-    console.warn("Connect to db: success");
+    console.warn("🗄️  MongoDB connected successfully");
   })
   .catch((error: Error) => {
-    console.warn("Connect to db: failed", error);
+    console.warn("❌ MongoDB connection failed:", error);
   });
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("TeleGate API is running!");
 });
 
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
 app.listen(PORT, () => {
-  return console.warn(`Express is listening at http://localhost:${PORT}`);
+  const isProduction = process.env.NODE_ENV === "production";
+  const baseUrl = isProduction
+    ? "https://telegate-api-4b26ec7aa804.herokuapp.com"
+    : `http://localhost:${PORT}`;
+
+  console.warn(`🚀 Express is listening at ${baseUrl}`);
+  console.warn(`📚 Swagger UI is available at ${baseUrl}/api-docs`);
+  console.warn(`🔗 API Base URL: ${baseUrl}/api`);
 });
 
 app.use("/api/auth-telegram", authTelegramRouter);
@@ -66,7 +80,7 @@ startBotTelegram();
 try {
   initializeFirebase();
 } catch (error) {
-  console.warn("Failed to initialize Firebase:", error);
+  console.warn("❌ Failed to initialize Firebase:", error);
 }
 
 cron.schedule("*/5 * * * *", () => {
