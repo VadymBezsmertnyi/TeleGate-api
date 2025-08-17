@@ -19,6 +19,9 @@ import userPushTokensRouter from "./routes/user-push-tokens/push-tokens";
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
 
+// helpers
+import { updateAllExpiredPhotos } from "./routes/bot-telegram/bot-telegram.helper";
+
 // firebase
 import { initializeFirebase } from "./helpers/firebase.helper";
 
@@ -86,4 +89,13 @@ try {
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
   console.warn("🗑️ NodeCache flushed (cron 5min)");
+});
+
+updateAllExpiredPhotos();
+cron.schedule("0 2 * * *", async () => {
+  try {
+    await updateAllExpiredPhotos();
+  } catch (error) {
+    console.warn("❌ Помилка автоматичного оновлення фото (cron):", error);
+  }
 });

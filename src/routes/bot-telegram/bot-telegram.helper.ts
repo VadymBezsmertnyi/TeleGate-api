@@ -2,39 +2,136 @@ import GroupModel from "../groups/group.model";
 import MemberModel from "../members/member.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
-import { Telegram } from "telegraf";
+import { Telegraf, Telegram } from "telegraf";
+
+export const updateAllExpiredPhotos = async (bot?: any) => {
+  try {
+    if (!bot) {
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      if (!token) {
+        console.warn("❌ TELEGRAM_BOT_TOKEN не задано");
+        return;
+      }
+      bot = new Telegraf(token);
+    }
+
+    const telegram = bot.telegram as Telegram;
+    let updatedMembers = 0;
+    let updatedGroups = 0;
+    let errors = 0;
+    const membersWithExpiredPhotos = await MemberModel.find({
+      photoUrl: { $regex: /^https:\/\/api\.telegram\.org/ },
+    });
+
+    for (const member of membersWithExpiredPhotos) {
+      try {
+        const newPhotoUrl = await getUserPhotoUrl(bot, member.tgUserId);
+        if (newPhotoUrl) {
+          member.photoUrl = newPhotoUrl;
+          await member.save();
+          updatedMembers++;
+        } else {
+          console.warn(
+            `⚠️ Не вдалося отримати нове фото для ${member.tgUserId} (${member.firstName})`
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `❌ Помилка оновлення фото для ${member.tgUserId}:`,
+          error
+        );
+        errors++;
+      }
+    }
+
+    const groupsWithExpiredPhotos = await GroupModel.find({
+      photoUrl: { $regex: /^https:\/\/api\.telegram\.org/ },
+    });
+    for (const group of groupsWithExpiredPhotos) {
+      try {
+        const chat = await telegram.getChat(group.tgChatId);
+        if (chat.photo) {
+          const file = await telegram.getFile(chat.photo.big_file_id);
+          const botToken = process.env.TELEGRAM_BOT_TOKEN;
+          if (botToken) {
+            const newPhotoUrl = `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+            group.photoUrl = newPhotoUrl;
+            await group.save();
+            updatedGroups++;
+          }
+        }
+      } catch (error) {
+        console.warn(
+          `❌ Помилка оновлення фото групи ${group.tgChatId}:`,
+          error
+        );
+        errors++;
+      }
+    }
+
+    console.warn(`✅ Оновлення завершено:`);
+    console.warn(`👤 Користувачів: ${updatedMembers}`);
+    console.warn(`👥 Груп: ${updatedGroups}`);
+    console.warn(`❌ Помилок: ${errors}`);
+    console.warn(
+      `📝 Загалом оброблено: ${
+        membersWithExpiredPhotos.length + groupsWithExpiredPhotos.length
+      }`
+    );
+
+    return {
+      updatedMembers,
+      updatedGroups,
+      errors,
+      total: membersWithExpiredPhotos.length + groupsWithExpiredPhotos.length,
+    };
+  } catch (error) {
+    console.warn("❌ Помилка при оновленні застарілих фото:", error);
+    throw error;
+  }
+};
 
 export const getUserPhotoUrl = async (
   bot: any,
   userId: string
 ): Promise<string | undefined> => {
   try {
-    let userInfo: any = null;
     const telegram = bot.telegram as Telegram;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+    if (!botToken) {
+      console.warn("❌ TELEGRAM_BOT_TOKEN не знайдено");
+      return undefined;
+    }
+
     try {
-      userInfo = await telegram.getChat(parseInt(userId));
+      const userInfo = await telegram.getChat(parseInt(userId));
       if (userInfo && userInfo.photo) {
         const file = await telegram.getFile(userInfo.photo.big_file_id);
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
-        if (botToken && file && file.file_path)
+        if (file && file.file_path)
           return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
       }
     } catch (userError) {
       console.warn(
-        `Не вдалося отримати інформацію про користувача ${userId}:`,
+        `Не вдалося отримати інформацію про користувача ${userId} через getChat:`,
         userError
       );
     }
 
-    const userPhotos = await telegram.getUserProfilePhotos(parseInt(userId));
-
-    if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
-      const photo = userPhotos.photos[0][0];
-      const file = await telegram.getFile(photo.file_id);
-      const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
-      if (botToken && file && file.file_path)
-        return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+    try {
+      const userPhotos = await telegram.getUserProfilePhotos(parseInt(userId));
+      if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
+        const photo = userPhotos.photos[0][0];
+        const file = await telegram.getFile(photo.file_id);
+        if (file && file.file_path) {
+          return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+        }
+      }
+    } catch (photosError) {
+      console.warn(
+        `Не вдалося отримати фото профілю для ${userId} через getUserProfilePhotos:`,
+        photosError
+      );
     }
 
     return undefined;
