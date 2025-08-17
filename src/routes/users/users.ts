@@ -10,6 +10,7 @@ import {
   updateUserMembersAndGroups,
   getUserMembersAndGroups,
 } from "./users.helper";
+import pushTokensRouter from "./push-tokens";
 
 dotenv.config();
 const router = Router();
@@ -245,5 +246,7 @@ router.get("/me/full", async (req: Request, res: Response) => {
     return;
   }
 });
+
+router.use("/push-tokens", pushTokensRouter);
 
 export default router;

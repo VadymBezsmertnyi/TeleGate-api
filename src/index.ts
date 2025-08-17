@@ -17,6 +17,9 @@ import messageTemplatesRouter from "./routes/message-templates/message-templates
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
 
+// firebase
+import { initializeFirebase } from "./helpers/firebase.helper";
+
 const app = express();
 
 dotenv.config();
@@ -56,6 +59,13 @@ app.use("/api/bot-send-messages", botSendMessagesRouter);
 app.use("/api/message-templates", messageTemplatesRouter);
 
 startBotTelegram();
+
+// Initialize Firebase
+try {
+  initializeFirebase();
+} catch (error) {
+  console.warn("Failed to initialize Firebase:", error);
+}
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
