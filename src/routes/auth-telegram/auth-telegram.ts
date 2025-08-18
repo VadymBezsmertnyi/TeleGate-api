@@ -53,7 +53,6 @@ router.get("/login", async (req: Request, res: Response) => {
     const redirectUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/auth-telegram/redirect`;
-
     if (!botId) return res.status(500).json({ error: "Bot ID not configured" });
 
     const validOriginDomain = originDomain || req.get("host") || "localhost";
@@ -89,11 +88,9 @@ router.get("/redirect", async (req: Request, res: Response) => {
   try {
     const { id, username, first_name, last_name, photo_url, auth_date, hash } =
       req.query;
-
     const url = req.url || "";
     const fragmentMatch =
       url.match(/#tgAuthResult=([^&]+)/) || url.match(/#([^&]+)/);
-
     if (fragmentMatch) {
       try {
         const encodedData = fragmentMatch[1];
@@ -140,24 +137,19 @@ router.get("/redirect", async (req: Request, res: Response) => {
           const userAgent = req.get("User-Agent") || "";
           const isMobile =
             userAgent.includes("Expo") || userAgent.includes("TeleGate");
-
-          if (isMobile) {
+          if (isMobile)
             res.redirect(
               `telegate://auth-error?error=auth_denied&reason=user_cancelled`
             );
-          } else {
-            res.send(TELEGRAM_CLOSE_PAGE_ERROR_HTML);
-          }
+          else res.send(TELEGRAM_CLOSE_PAGE_ERROR_HTML);
           return;
         }
 
         const authData = JSON.parse(decodedData);
         const telegramId = parseInt(authData.id);
         const token = `token_${telegramId}_${Date.now()}`;
-
         let user = await UserModel.findOne({ telegramId }).lean();
-
-        if (user) {
+        if (user)
           await UserModel.findByIdAndUpdate(user._id, {
             username: authData.username || user.username,
             firstName: authData.first_name || user.firstName,
@@ -167,7 +159,7 @@ router.get("/redirect", async (req: Request, res: Response) => {
             isActive: true,
             updatedAt: new Date(),
           });
-        } else {
+        else {
           const _id = new mongoose.Types.ObjectId();
           await UserModel.create({
             _id,
