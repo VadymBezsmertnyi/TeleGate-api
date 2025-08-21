@@ -7,7 +7,11 @@ export const RevenueCatSubscriberAttributeSchema = z.object({
 
 export const RevenueCatSubscriberAttributesSchema = z
   .object({
+    $apnsTokens: RevenueCatSubscriberAttributeSchema.optional(),
+    $deviceVersion: RevenueCatSubscriberAttributeSchema.optional(),
     $displayName: RevenueCatSubscriberAttributeSchema.optional(),
+    $idfv: RevenueCatSubscriberAttributeSchema.optional(),
+    $mediaSource: RevenueCatSubscriberAttributeSchema.optional(),
     $email: RevenueCatSubscriberAttributeSchema.optional(),
     $phoneNumber: RevenueCatSubscriberAttributeSchema.optional(),
   })
@@ -62,10 +66,21 @@ export const RevenueCatWebhookPayloadSchema = z.object({
 });
 
 export const RevenueCatSubscriberSchema = z.object({
-  app_user_id: z.string(),
-  aliases: z.array(z.string()),
-  original_app_user_id: z.string(),
-  subscriber_attributes: RevenueCatSubscriberAttributesSchema,
   entitlements: z.record(z.any()),
+  first_seen: z.string(),
+  last_seen: z.string(),
+  management_url: z.string().nullable(),
+  non_subscriptions: z.record(z.any()),
+  original_app_user_id: z.string(),
+  original_application_version: z.string().nullable(),
+  original_purchase_date: z.string().nullable(),
+  other_purchases: z.record(z.any()),
+  subscriber_attributes: RevenueCatSubscriberAttributesSchema,
   subscriptions: z.record(z.any()),
+});
+
+export const RevenueCatSubscriptionResponseSchema = z.object({
+  request_date: z.string(),
+  request_date_ms: z.number(),
+  subscriber: RevenueCatSubscriberSchema,
 });

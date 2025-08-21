@@ -5,7 +5,8 @@ const router = Router();
 
 router.get("/subscribers", async (req: Request, res: Response) => {
   try {
-    const response = await revenuecatClient.get("/subscribers");
+    const response = await revenuecatClient.get("/subscribers/886363509");
+    console.log("Отримано підписників з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні підписників з RevenueCat:", error);

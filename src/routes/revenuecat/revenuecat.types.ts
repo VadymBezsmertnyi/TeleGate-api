@@ -4,7 +4,11 @@ export interface RevenueCatSubscriberAttribute {
 }
 
 export interface RevenueCatSubscriberAttributes {
+  $apnsTokens?: RevenueCatSubscriberAttribute;
+  $deviceVersion?: RevenueCatSubscriberAttribute;
   $displayName?: RevenueCatSubscriberAttribute;
+  $idfv?: RevenueCatSubscriberAttribute;
+  $mediaSource?: RevenueCatSubscriberAttribute;
   $email?: RevenueCatSubscriberAttribute;
   $phoneNumber?: RevenueCatSubscriberAttribute;
   [key: string]: RevenueCatSubscriberAttribute | undefined;
@@ -58,10 +62,21 @@ export interface RevenueCatWebhookPayload {
 }
 
 export interface RevenueCatSubscriber {
-  app_user_id: string;
-  aliases: string[];
-  original_app_user_id: string;
-  subscriber_attributes: RevenueCatSubscriberAttributes;
   entitlements: Record<string, any>;
+  first_seen: string;
+  last_seen: string;
+  management_url: string | null;
+  non_subscriptions: Record<string, any>;
+  original_app_user_id: string;
+  original_application_version: string | null;
+  original_purchase_date: string | null;
+  other_purchases: Record<string, any>;
+  subscriber_attributes: RevenueCatSubscriberAttributes;
   subscriptions: Record<string, any>;
+}
+
+export interface RevenueCatSubscriptionResponse {
+  request_date: string;
+  request_date_ms: number;
+  subscriber: RevenueCatSubscriber;
 }
