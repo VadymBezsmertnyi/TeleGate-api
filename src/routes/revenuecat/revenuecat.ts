@@ -74,12 +74,14 @@ router.delete(
           last_seen_country: customer.last_seen_country,
         })),
       });
-    } catch (error) {
+    } catch (error: any) {
       console.warn(
         "Помилка при видаленні анонімних користувачів з RevenueCat:",
         error
       );
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res
+        .status(500)
+        .json({ error: `Internal Server Error: ${error?.message}` });
     }
   }
 );
