@@ -9,7 +9,6 @@ import {
   groupResponseSchema,
 } from "./groups.schemas";
 import {
-  getAuthenticatedUser,
   buildGroupsQuery,
   buildSortQuery,
   transformGroupToPublic,
@@ -17,6 +16,7 @@ import {
   getGroupsWithMemberCount,
 } from "./groups.helper";
 import { ERROR_CODES } from "./groups.constants";
+import { getAuthenticatedUser } from "../../helpers/auth";
 
 const router = Router();
 

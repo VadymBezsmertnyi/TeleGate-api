@@ -7,11 +7,11 @@ import {
   memberResponseSchema,
 } from "./members.schemas";
 import {
-  getAuthenticatedUser,
   buildMembersQuery,
   buildSortQuery,
   getOwnerGroups,
 } from "./members.helper";
+import { getAuthenticatedUser } from "../../helpers/auth";
 
 const router = Router();
 

@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 import { sendMessageSchema } from "./bot-send-messages.schemas";
 import { sendMessageToUser } from "./bot-send-messages.helper";
-import { getAuthenticatedUser } from "../groups/groups.helper";
+import { getAuthenticatedUser } from "../../helpers/auth";
 
 dotenv.config();
 const router = Router();

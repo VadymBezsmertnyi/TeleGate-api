@@ -14,7 +14,7 @@ import {
   getTemplates,
   getTemplateStats,
 } from "./message-templates.helper";
-import { getAuthenticatedUser } from "../groups/groups.helper";
+import { getAuthenticatedUser } from "../../helpers/auth";
 
 dotenv.config();
 const router = Router();
