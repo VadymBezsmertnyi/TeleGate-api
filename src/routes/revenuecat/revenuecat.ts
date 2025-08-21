@@ -6,7 +6,7 @@ import {
 
 const router = Router();
 
-router.get("/subscribers/:projectId", async (req: Request, res: Response) => {
+router.get("/customers/:projectId", async (req: Request, res: Response) => {
   const { projectId } = req.params;
   if (!projectId)
     return res.status(400).json({ error: "Project ID is required" });
@@ -15,10 +15,10 @@ router.get("/subscribers/:projectId", async (req: Request, res: Response) => {
     const response = await revenuecatReadOnlyClientV2.get(
       `/projects/${projectId}/customers`
     );
-    console.log("Отримано підписників з RevenueCat:", response.data);
+    console.log("Отримано клієнтів з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
-    console.warn("Помилка при отриманні підписників з RevenueCat:", error);
+    console.warn("Помилка при отриманні клієнтів з RevenueCat:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

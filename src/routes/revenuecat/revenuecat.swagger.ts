@@ -1,9 +1,9 @@
 /**
  * @swagger
- * /revenuecat/subscribers/{projectId}:
+ * /revenuecat/customers/{projectId}:
  *   get:
- *     summary: Отримання підписників RevenueCat
- *     description: Отримує список всіх підписників з конкретного проекту RevenueCat
+ *     summary: Отримання клієнтів RevenueCat
+ *     description: Отримує список всіх клієнтів з конкретного проекту RevenueCat (включаючи анонімних та зареєстрованих користувачів)
  *     tags: [RevenueCat]
  *     parameters:
  *       - in: path
@@ -15,7 +15,7 @@
  *         example: "proje27c8296"
  *     responses:
  *       200:
- *         description: Список підписників успішно отримано
+ *         description: Список клієнтів успішно отримано
  *         content:
  *           application/json:
  *             schema:
