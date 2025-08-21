@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { SUBSCRIPTION_TYPES_ENUM } from "./users.constants";
 
 const userSM = new Schema({
   _id: { type: Schema.Types.ObjectId, required: true },
@@ -9,6 +10,12 @@ const userSM = new Schema({
   photoUrl: { type: String, default: null },
   lastActivityAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
+  subscriptionType: {
+    type: String,
+    enum: SUBSCRIPTION_TYPES_ENUM,
+    default: "free",
+  },
+  subscriptionExpiresAt: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   members: [{ type: Schema.Types.ObjectId, ref: "Member" }],
