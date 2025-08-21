@@ -16,6 +16,7 @@ const userSM = new Schema({
     default: "free",
   },
   subscriptionExpiresAt: { type: Number, default: null },
+  isSuper: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   members: [{ type: Schema.Types.ObjectId, ref: "Member" }],

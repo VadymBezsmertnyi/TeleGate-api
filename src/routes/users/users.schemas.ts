@@ -12,6 +12,7 @@ export const userSchema = z.object({
   isActive: z.boolean().default(true),
   subscriptionType: z.enum(SUBSCRIPTION_TYPES_ENUM).default("free"),
   subscriptionExpiresAt: z.number().nullable().default(null),
+  isSuper: z.boolean().default(false),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -24,6 +25,7 @@ export const userPublicSchema = z.object({
   photo_url: z.string().nullable().optional(),
   subscription_type: z.enum(SUBSCRIPTION_TYPES_ENUM).optional(),
   subscription_expires_at: z.number().nullable().optional(),
+  is_super: z.boolean().optional(),
 });
 
 export const createUserSchema = z.object({
@@ -34,4 +36,5 @@ export const createUserSchema = z.object({
   photoUrl: z.string().optional(),
   subscriptionType: z.enum(SUBSCRIPTION_TYPES_ENUM).optional(),
   subscriptionExpiresAt: z.number().nullable().optional(),
+  isSuper: z.boolean().optional(),
 });
