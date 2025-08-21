@@ -5,6 +5,7 @@ import {
   getCustomerSubscriptions,
   getProjectOfferings,
   getOfferingPackages,
+  getProjectProducts,
 } from "./revenuecat.client";
 import { getAuthenticatedUser } from "../../helpers/auth";
 
@@ -100,13 +101,39 @@ router.get(
 
     const { projectId, offeringId } = req.params;
     if (!projectId || !offeringId)
-      return res.status(400).json({ error: "Project ID and Offering ID are required" });
+      return res
+        .status(400)
+        .json({ error: "Project ID and Offering ID are required" });
 
     try {
       const response = await getOfferingPackages(projectId, offeringId);
       return res.status(200).json(response.data);
     } catch (error) {
       console.warn("Помилка при отриманні пакетів офера з RevenueCat:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+router.get(
+  "/projects/:projectId/products",
+  async (req: Request, res: Response) => {
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({ error: "Authentication required" });
+
+    const { projectId } = req.params;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    try {
+      const response = await getProjectProducts(projectId);
+      return res.status(200).json(response.data);
+    } catch (error) {
+      console.warn(
+        "Помилка при отриманні продуктів проекту з RevenueCat:",
+        error
+      );
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }

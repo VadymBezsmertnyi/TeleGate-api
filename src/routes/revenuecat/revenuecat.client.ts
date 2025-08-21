@@ -48,10 +48,17 @@ export const getProjectOfferings = async (projectId: string) => {
   return revenuecatReadOnlyClientV2.get(`/projects/${projectId}/offerings`);
 };
 
-export const getOfferingPackages = async (projectId: string, offeringId: string) => {
+export const getOfferingPackages = async (
+  projectId: string,
+  offeringId: string
+) => {
   return revenuecatReadOnlyClientV2.get(
     `/projects/${projectId}/offerings/${offeringId}/packages`
   );
+};
+
+export const getProjectProducts = async (projectId: string) => {
+  return revenuecatReadOnlyClientV2.get(`/projects/${projectId}/products`);
 };
 
 export { revenuecatClientV1, revenuecatReadOnlyClientV2 };

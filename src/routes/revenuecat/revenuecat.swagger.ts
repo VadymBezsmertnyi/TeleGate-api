@@ -336,6 +336,95 @@
 
 /**
  * @swagger
+ * /revenuecat/projects/{projectId}/products:
+ *   get:
+ *     summary: Отримання продуктів проекту RevenueCat
+ *     description: Отримує список всіх продуктів у конкретному проекті RevenueCat
+ *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID проекту RevenueCat
+ *         example: "proje27c8296"
+ *     responses:
+ *       200:
+ *         description: Список продуктів проекту успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID продукту
+ *                       identifier:
+ *                         type: string
+ *                         description: Ідентифікатор продукту
+ *                       display_name:
+ *                         type: string
+ *                         description: Відображувана назва продукту
+ *                       description:
+ *                         type: string
+ *                         description: Опис продукту
+ *                       product_type:
+ *                         type: string
+ *                         description: Тип продукту (subscription, non_subscription, etc.)
+ *                       store:
+ *                         type: string
+ *                         description: Магазин (APP_STORE, PLAY_STORE, etc.)
+ *                       price:
+ *                         type: number
+ *                         description: Ціна продукту
+ *                       currency_code:
+ *                         type: string
+ *                         description: Код валюти
+ *                       subscription_period:
+ *                         type: string
+ *                         description: Період підписки (для subscription продуктів)
+ *                       subscription_group:
+ *                         type: string
+ *                         description: Група підписки
+ *                       is_family_shareable:
+ *                         type: boolean
+ *                         description: Чи можна ділитися з сім'єю
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Project ID не вказано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Проект не знайдений
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
  * /revenuecat/customers/anonymous/{projectId}:
  *   delete:
  *     summary: Видалення анонімних користувачів RevenueCat
