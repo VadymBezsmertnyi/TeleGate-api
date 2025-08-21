@@ -3,7 +3,7 @@ import {
   revenuecatReadOnlyClientV2,
   deleteCustomer,
   getCustomerSubscriptions,
-  getProjectSubscriptions,
+  getProjectOfferings,
 } from "./revenuecat.client";
 import { getAuthenticatedUser } from "../../helpers/auth";
 
@@ -70,7 +70,7 @@ router.get(
 );
 
 router.get(
-  "/projects/:projectId/subscriptions",
+  "/projects/:projectId/offerings",
   async (req: Request, res: Response) => {
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
@@ -81,13 +81,10 @@ router.get(
       return res.status(400).json({ error: "Project ID is required" });
 
     try {
-      const response = await getProjectSubscriptions(projectId);
+      const response = await getProjectOfferings(projectId);
       return res.status(200).json(response.data);
     } catch (error) {
-      console.warn(
-        "Помилка при отриманні підписок проекту з RevenueCat:",
-        error
-      );
+      console.warn("Помилка при отриманні офірів проекту з RevenueCat:", error);
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }

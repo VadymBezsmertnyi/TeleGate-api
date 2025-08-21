@@ -157,10 +157,10 @@
 
 /**
  * @swagger
- * /revenuecat/projects/{projectId}/subscriptions:
+ * /revenuecat/projects/{projectId}/offerings:
  *   get:
- *     summary: Отримання всіх підписок проекту RevenueCat
- *     description: Отримує список всіх підписок у конкретному проекті RevenueCat
+ *     summary: Отримання офірів проекту RevenueCat
+ *     description: Отримує список всіх офірів (offerings) у конкретному проекті RevenueCat
  *     tags: [RevenueCat]
  *     security:
  *       - BearerAuth: []
@@ -174,49 +174,46 @@
  *         example: "proje27c8296"
  *     responses:
  *       200:
- *         description: Список всіх підписок проекту успішно отримано
+ *         description: Список всіх офірів проекту успішно отримано
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 subscriptions:
+ *                 offerings:
  *                   type: array
  *                   items:
  *                     type: object
  *                     properties:
  *                       id:
  *                         type: string
- *                         description: ID підписки
- *                       customer_id:
+ *                         description: ID офера
+ *                       identifier:
  *                         type: string
- *                         description: ID клієнта
- *                       product_id:
+ *                         description: Ідентифікатор офера
+ *                       description:
  *                         type: string
- *                         description: ID продукту
- *                       store:
- *                         type: string
- *                         description: Магазин (APP_STORE, PLAY_STORE, etc.)
- *                       purchase_date:
- *                         type: string
- *                         format: date-time
- *                         description: Дата покупки
- *                       expires_date:
- *                         type: string
- *                         format: date-time
- *                         description: Дата закінчення
- *                       is_active:
- *                         type: boolean
- *                         description: Чи активна підписка
- *                       revenue:
- *                         type: number
- *                         description: Доход з підписки
- *                 total_count:
- *                   type: number
- *                   description: Загальна кількість підписок
- *                 active_count:
- *                   type: number
- *                   description: Кількість активних підписок
+ *                         description: Опис офера
+ *                       metadata:
+ *                         type: object
+ *                         description: Метадані офера
+ *                       packages:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               description: ID пакета
+ *                             identifier:
+ *                               type: string
+ *                               description: Ідентифікатор пакета
+ *                             platform_product_identifier:
+ *                               type: string
+ *                               description: Ідентифікатор продукту на платформі
+ *                 current_offering_id:
+ *                   type: string
+ *                   description: ID поточного офера
  *       401:
  *         description: Неавторизований запит
  *         content:
