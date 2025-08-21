@@ -15,7 +15,6 @@ router.get("/customers/:projectId", async (req: Request, res: Response) => {
     const response = await revenuecatReadOnlyClientV2.get(
       `/projects/${projectId}/customers`
     );
-    console.log("Отримано клієнтів з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні клієнтів з RevenueCat:", error);
@@ -26,7 +25,6 @@ router.get("/customers/:projectId", async (req: Request, res: Response) => {
 router.get("/projects", async (req: Request, res: Response) => {
   try {
     const response = await revenuecatReadOnlyClientV2.get("/projects");
-    console.log("Отримано проекти з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні проектів з RevenueCat:", error);
@@ -98,8 +96,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid authorization token" });
 
     const webhookData = req.body;
-
-    console.log("Received RevenueCat webhook:", webhookData);
 
     return res.status(200).json({
       success: true,
