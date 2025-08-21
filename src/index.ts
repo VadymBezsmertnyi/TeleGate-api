@@ -56,7 +56,15 @@ app.get("/", (req, res) => {
 });
 
 // Swagger UI
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+);
 
 app.listen(PORT, () => {
   const isProduction = process.env.NODE_ENV === "production";
