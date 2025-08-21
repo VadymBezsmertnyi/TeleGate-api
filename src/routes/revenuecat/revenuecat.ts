@@ -3,9 +3,15 @@ import { revenuecatReadOnlyClientV2 } from "./revenuecat.client";
 
 const router = Router();
 
-router.get("/subscribers", async (req: Request, res: Response) => {
+router.get("/subscribers/:projectId", async (req: Request, res: Response) => {
+  const { projectId } = req.params;
+  if (!projectId)
+    return res.status(400).json({ error: "Project ID is required" });
+
   try {
-    const response = await revenuecatReadOnlyClientV2.get("/subscribers");
+    const response = await revenuecatReadOnlyClientV2.get(
+      `/projects/${projectId}/customers`
+    );
     console.log("Отримано підписників з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
