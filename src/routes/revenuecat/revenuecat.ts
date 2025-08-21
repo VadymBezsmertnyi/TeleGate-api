@@ -3,10 +3,15 @@ import {
   revenuecatReadOnlyClientV2,
   deleteCustomer,
 } from "./revenuecat.client";
+import { getAuthenticatedUser } from "../../helpers/auth";
 
 const router = Router();
 
 router.get("/customers/:projectId", async (req: Request, res: Response) => {
+  const authenticatedUser = await getAuthenticatedUser(req);
+  if (!authenticatedUser)
+    return res.status(401).json({ error: "Authentication required" });
+
   const { projectId } = req.params;
   if (!projectId)
     return res.status(400).json({ error: "Project ID is required" });
@@ -23,6 +28,10 @@ router.get("/customers/:projectId", async (req: Request, res: Response) => {
 });
 
 router.get("/projects", async (req: Request, res: Response) => {
+  const authenticatedUser = await getAuthenticatedUser(req);
+  if (!authenticatedUser)
+    return res.status(401).json({ error: "Authentication required" });
+
   try {
     const response = await revenuecatReadOnlyClientV2.get("/projects");
     return res.status(200).json(response.data);
@@ -35,6 +44,10 @@ router.get("/projects", async (req: Request, res: Response) => {
 router.delete(
   "/customers/anonymous/:projectId",
   async (req: Request, res: Response) => {
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({ error: "Authentication required" });
+
     try {
       const { projectId } = req.params;
       if (!projectId)

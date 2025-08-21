@@ -5,6 +5,8 @@
  *     summary: Отримання клієнтів RevenueCat
  *     description: Отримує список всіх клієнтів з конкретного проекту RevenueCat (включаючи анонімних та зареєстрованих користувачів)
  *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: projectId
@@ -20,6 +22,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/RevenueCatCustomersResponse'
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       400:
  *         description: Project ID не вказано
  *         content:
@@ -41,6 +49,8 @@
  *     summary: Отримання проектів RevenueCat
  *     description: Отримує список всіх проектів RevenueCat
  *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Список проектів успішно отримано
@@ -48,6 +58,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/RevenueCatProjectsResponse'
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Внутрішня помилка сервера
  *         content:
@@ -63,6 +79,8 @@
  *     summary: Видалення анонімних користувачів RevenueCat
  *     description: Видаляє всіх анонімних користувачів (з ID що містять "RCAnonymousID") з конкретного проекту
  *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: projectId
@@ -103,6 +121,12 @@
  *                       last_seen_country:
  *                         type: string
  *                         example: "UA"
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       400:
  *         description: Project ID не вказано
  *         content:
