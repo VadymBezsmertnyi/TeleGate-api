@@ -35,10 +35,17 @@ export const deleteCustomer = async (projectId: string, customerId: string) => {
   );
 };
 
-export const getCustomerSubscriptions = async (projectId: string, customerId: string) => {
+export const getCustomerSubscriptions = async (
+  projectId: string,
+  customerId: string
+) => {
   return revenuecatReadOnlyClientV2.get(
     `/projects/${projectId}/customers/${customerId}/subscriptions`
   );
+};
+
+export const getProjectSubscriptions = async (projectId: string) => {
+  return revenuecatReadOnlyClientV2.get(`/projects/${projectId}/subscriptions`);
 };
 
 export { revenuecatClientV1, revenuecatReadOnlyClientV2 };

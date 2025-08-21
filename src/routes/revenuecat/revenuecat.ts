@@ -3,6 +3,7 @@ import {
   revenuecatReadOnlyClientV2,
   deleteCustomer,
   getCustomerSubscriptions,
+  getProjectSubscriptions,
 } from "./revenuecat.client";
 import { getAuthenticatedUser } from "../../helpers/auth";
 
@@ -42,23 +43,55 @@ router.get("/projects", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/customers/:projectId/:customerId/subscriptions", async (req: Request, res: Response) => {
-  const authenticatedUser = await getAuthenticatedUser(req);
-  if (!authenticatedUser)
-    return res.status(401).json({ error: "Authentication required" });
+router.get(
+  "/customers/:projectId/:customerId/subscriptions",
+  async (req: Request, res: Response) => {
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({ error: "Authentication required" });
 
-  const { projectId, customerId } = req.params;
-  if (!projectId || !customerId)
-    return res.status(400).json({ error: "Project ID and Customer ID are required" });
+    const { projectId, customerId } = req.params;
+    if (!projectId || !customerId)
+      return res
+        .status(400)
+        .json({ error: "Project ID and Customer ID are required" });
 
-  try {
-    const response = await getCustomerSubscriptions(projectId, customerId);
-    return res.status(200).json(response.data);
-  } catch (error) {
-    console.warn("Помилка при отриманні підписок клієнта з RevenueCat:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    try {
+      const response = await getCustomerSubscriptions(projectId, customerId);
+      return res.status(200).json(response.data);
+    } catch (error) {
+      console.warn(
+        "Помилка при отриманні підписок клієнта з RevenueCat:",
+        error
+      );
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
   }
-});
+);
+
+router.get(
+  "/projects/:projectId/subscriptions",
+  async (req: Request, res: Response) => {
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({ error: "Authentication required" });
+
+    const { projectId } = req.params;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    try {
+      const response = await getProjectSubscriptions(projectId);
+      return res.status(200).json(response.data);
+    } catch (error) {
+      console.warn(
+        "Помилка при отриманні підписок проекту з RevenueCat:",
+        error
+      );
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
 
 router.delete(
   "/customers/anonymous/:projectId",
