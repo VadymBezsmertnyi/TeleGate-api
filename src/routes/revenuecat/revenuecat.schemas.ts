@@ -31,7 +31,7 @@ export const RevenueCatEventSchema = z.object({
   expiration_at_ms: z.number(),
   id: z.string(),
   is_family_share: z.boolean().nullable(),
-  metadata: z.record(z.any()).nullable(),
+  metadata: z.record(z.string(), z.any()).nullable(),
   offer_code: z.string().nullable(),
   original_app_user_id: z.string(),
   original_transaction_id: z.string().nullable(),
@@ -104,17 +104,17 @@ export const RevenueCatCustomersResponseSchema = RevenueCatListResponseSchema(
 );
 
 export const RevenueCatSubscriberSchema = z.object({
-  entitlements: z.record(z.any()),
+  entitlements: z.record(z.string(), z.any()),
   first_seen: z.string(),
   last_seen: z.string(),
   management_url: z.string().nullable(),
-  non_subscriptions: z.record(z.any()),
+  non_subscriptions: z.record(z.string(), z.any()),
   original_app_user_id: z.string(),
   original_application_version: z.string().nullable(),
   original_purchase_date: z.string().nullable(),
-  other_purchases: z.record(z.any()),
+  other_purchases: z.record(z.string(), z.any()),
   subscriber_attributes: RevenueCatSubscriberAttributesSchema,
-  subscriptions: z.record(z.any()),
+  subscriptions: z.record(z.string(), z.any()),
 });
 
 export const RevenueCatSubscriptionResponseSchema = z.object({
