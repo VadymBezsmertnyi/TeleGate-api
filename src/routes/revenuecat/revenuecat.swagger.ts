@@ -242,6 +242,100 @@
 
 /**
  * @swagger
+ * /revenuecat/projects/{projectId}/offerings/{offeringId}/packages:
+ *   get:
+ *     summary: Отримання пакетів офера RevenueCat
+ *     description: Отримує список всіх пакетів конкретного офера в проекті RevenueCat
+ *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID проекту RevenueCat
+ *         example: "proje27c8296"
+ *       - in: path
+ *         name: offeringId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID офера RevenueCat
+ *         example: "offering_123"
+ *     responses:
+ *       200:
+ *         description: Список пакетів офера успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 packages:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID пакета
+ *                       identifier:
+ *                         type: string
+ *                         description: Ідентифікатор пакета
+ *                       platform_product_identifier:
+ *                         type: string
+ *                         description: Ідентифікатор продукту на платформі
+ *                       store_product:
+ *                         type: object
+ *                         description: Інформація про продукт в магазині
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: ID продукту в магазині
+ *                           title:
+ *                             type: string
+ *                             description: Назва продукту
+ *                           description:
+ *                             type: string
+ *                             description: Опис продукту
+ *                           price:
+ *                             type: number
+ *                             description: Ціна продукту
+ *                           currency_code:
+ *                             type: string
+ *                             description: Код валюти
+ *                           subscription_period:
+ *                             type: string
+ *                             description: Період підписки
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Project ID або Offering ID не вказано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Офер не знайдений
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
  * /revenuecat/customers/anonymous/{projectId}:
  *   delete:
  *     summary: Видалення анонімних користувачів RevenueCat
