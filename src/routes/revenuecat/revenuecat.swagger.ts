@@ -1,0 +1,163 @@
+/**
+ * @swagger
+ * /revenuecat/subscribers/{projectId}:
+ *   get:
+ *     summary: Отримання підписників RevenueCat
+ *     description: Отримує список всіх підписників з конкретного проекту RevenueCat
+ *     tags: [RevenueCat]
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID проекту RevenueCat
+ *         example: "proje27c8296"
+ *     responses:
+ *       200:
+ *         description: Список підписників успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RevenueCatCustomersResponse'
+ *       400:
+ *         description: Project ID не вказано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
+ * /revenuecat/projects:
+ *   get:
+ *     summary: Отримання проектів RevenueCat
+ *     description: Отримує список всіх проектів RevenueCat
+ *     tags: [RevenueCat]
+ *     responses:
+ *       200:
+ *         description: Список проектів успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RevenueCatProjectsResponse'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
+ * /revenuecat/customers/anonymous/{projectId}:
+ *   delete:
+ *     summary: Видалення анонімних користувачів RevenueCat
+ *     description: Видаляє всіх анонімних користувачів (з ID що містять "RCAnonymousID") з конкретного проекту
+ *     tags: [RevenueCat]
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID проекту RevenueCat
+ *         example: "proje27c8296"
+ *     responses:
+ *       200:
+ *         description: Анонімні користувачі успішно видалені
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Successfully deleted 3 anonymous customers"
+ *                 deletedCount:
+ *                   type: number
+ *                   description: Кількість видалених користувачів
+ *                   example: 3
+ *                 deletedCustomers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "$RCAnonymousID:b492d2dbc9d84548b4cf7b2336542e6d"
+ *                       last_seen_at:
+ *                         type: number
+ *                         example: 1755666598613
+ *                       last_seen_country:
+ *                         type: string
+ *                         example: "UA"
+ *       400:
+ *         description: Project ID не вказано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
+ * /revenuecat/webhook:
+ *   post:
+ *     summary: Webhook RevenueCat
+ *     description: Обробляє webhook події від RevenueCat (покупки, підписки, скасування тощо)
+ *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RevenueCatWebhookPayload'
+ *     responses:
+ *       200:
+ *         description: Webhook успішно оброблено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Webhook received successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/RevenueCatWebhookPayload'
+ *       401:
+ *         description: Неавторизований запит або невірний токен
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
