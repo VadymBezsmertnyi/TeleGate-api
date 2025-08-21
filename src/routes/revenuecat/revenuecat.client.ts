@@ -29,4 +29,10 @@ const revenuecatReadOnlyClientV2 = createRevenueCatClient(
   true
 );
 
+export const deleteCustomer = async (projectId: string, customerId: string) => {
+  return revenuecatClientV1.delete(
+    `/projects/${projectId}/customers/${customerId}`
+  );
+};
+
 export { revenuecatClientV1, revenuecatReadOnlyClientV2 };

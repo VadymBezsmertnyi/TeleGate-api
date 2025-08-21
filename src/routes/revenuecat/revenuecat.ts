@@ -1,5 +1,8 @@
 import { Router, Request, Response } from "express";
-import { revenuecatReadOnlyClientV2 } from "./revenuecat.client";
+import {
+  revenuecatReadOnlyClientV2,
+  deleteCustomer,
+} from "./revenuecat.client";
 
 const router = Router();
 
@@ -30,6 +33,56 @@ router.get("/projects", async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+router.delete(
+  "/customers/anonymous/:projectId",
+  async (req: Request, res: Response) => {
+    try {
+      const { projectId } = req.params;
+      if (!projectId)
+        return res.status(400).json({ error: "Project ID is required" });
+
+      const customersResponse = await revenuecatReadOnlyClientV2.get(
+        `/projects/${projectId}/customers`
+      );
+      const customers = customersResponse.data.items || [];
+      const anonymousCustomers = customers.filter(
+        (customer: any) => customer.id && customer.id.includes("RCAnonymousID")
+      );
+      if (anonymousCustomers.length === 0)
+        return res.status(200).json({
+          message: "No anonymous customers found",
+          deletedCount: 0,
+        });
+
+      const deletePromises = anonymousCustomers.map((customer: any) =>
+        deleteCustomer(projectId, customer.id)
+      );
+      await Promise.all(deletePromises);
+
+      console.warn(
+        `Видалено ${anonymousCustomers.length} анонімних користувачів з RevenueCat`
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully deleted ${anonymousCustomers.length} anonymous customers`,
+        deletedCount: anonymousCustomers.length,
+        deletedCustomers: anonymousCustomers.map((customer: any) => ({
+          id: customer.id,
+          last_seen_at: customer.last_seen_at,
+          last_seen_country: customer.last_seen_country,
+        })),
+      });
+    } catch (error) {
+      console.warn(
+        "Помилка при видаленні анонімних користувачів з RevenueCat:",
+        error
+      );
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
 
 router.post("/webhook", async (req: Request, res: Response) => {
   try {
