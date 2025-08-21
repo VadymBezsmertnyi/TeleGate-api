@@ -1,15 +1,26 @@
 import { Router, Request, Response } from "express";
-import revenuecatClient from "./revenuecat.client";
+import { revenuecatReadOnlyClientV2 } from "./revenuecat.client";
 
 const router = Router();
 
 router.get("/subscribers", async (req: Request, res: Response) => {
   try {
-    const response = await revenuecatClient.get("/subscribers/886363509");
+    const response = await revenuecatReadOnlyClientV2.get("/subscribers");
     console.log("Отримано підписників з RevenueCat:", response.data);
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні підписників з RevenueCat:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/projects", async (req: Request, res: Response) => {
+  try {
+    const response = await revenuecatReadOnlyClientV2.get("/projects");
+    console.log("Отримано проекти з RevenueCat:", response.data);
+    return res.status(200).json(response.data);
+  } catch (error) {
+    console.warn("Помилка при отриманні проектів з RevenueCat:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
