@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import {
   revenuecatReadOnlyClientV2,
   deleteCustomer,
+  getCustomerSubscriptions,
 } from "./revenuecat.client";
 import { getAuthenticatedUser } from "../../helpers/auth";
 
@@ -37,6 +38,24 @@ router.get("/projects", async (req: Request, res: Response) => {
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні проектів з RevenueCat:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/customers/:projectId/:customerId/subscriptions", async (req: Request, res: Response) => {
+  const authenticatedUser = await getAuthenticatedUser(req);
+  if (!authenticatedUser)
+    return res.status(401).json({ error: "Authentication required" });
+
+  const { projectId, customerId } = req.params;
+  if (!projectId || !customerId)
+    return res.status(400).json({ error: "Project ID and Customer ID are required" });
+
+  try {
+    const response = await getCustomerSubscriptions(projectId, customerId);
+    return res.status(200).json(response.data);
+  } catch (error) {
+    console.warn("Помилка при отриманні підписок клієнта з RevenueCat:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

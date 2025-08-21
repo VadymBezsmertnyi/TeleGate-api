@@ -74,6 +74,89 @@
 
 /**
  * @swagger
+ * /revenuecat/customers/{projectId}/{customerId}/subscriptions:
+ *   get:
+ *     summary: Отримання підписок клієнта RevenueCat
+ *     description: Отримує список всіх підписок конкретного клієнта з проекту RevenueCat
+ *     tags: [RevenueCat]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID проекту RevenueCat
+ *         example: "proje27c8296"
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID клієнта RevenueCat
+ *         example: "886363509"
+ *     responses:
+ *       200:
+ *         description: Список підписок клієнта успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 subscriptions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID підписки
+ *                       product_id:
+ *                         type: string
+ *                         description: ID продукту
+ *                       store:
+ *                         type: string
+ *                         description: Магазин (APP_STORE, PLAY_STORE, etc.)
+ *                       purchase_date:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Дата покупки
+ *                       expires_date:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Дата закінчення
+ *                       is_active:
+ *                         type: boolean
+ *                         description: Чи активна підписка
+ *       401:
+ *         description: Неавторизований запит
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Project ID або Customer ID не вказано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Клієнт не знайдений
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
+/**
+ * @swagger
  * /revenuecat/customers/anonymous/{projectId}:
  *   delete:
  *     summary: Видалення анонімних користувачів RevenueCat
