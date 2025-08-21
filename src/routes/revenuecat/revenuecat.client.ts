@@ -10,7 +10,7 @@ const revenuecatClient = axios.create({
   baseURL: "https://api.revenuecat.com/v1",
   headers: {
     "X-Platform": "ios",
-    "Authorization": `Bearer ${REVENUECAT_API_KEY}`,
+    Authorization: `Bearer ${REVENUECAT_API_KEY}`,
     "Content-Type": "application/json",
   },
 });
