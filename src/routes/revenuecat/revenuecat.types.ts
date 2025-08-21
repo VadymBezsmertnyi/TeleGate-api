@@ -61,6 +61,39 @@ export interface RevenueCatWebhookPayload {
   event: RevenueCatEvent;
 }
 
+export interface RevenueCatProject {
+  created_at: number;
+  id: string;
+  name: string;
+  object: "project";
+}
+
+export interface RevenueCatCustomer {
+  experiment: string | null;
+  first_seen_at: number;
+  id: string;
+  last_seen_app_version: string;
+  last_seen_at: number;
+  last_seen_country: string;
+  last_seen_platform: "iOS" | "android";
+  last_seen_platform_version: string;
+  object: "customer";
+  project_id: string;
+}
+
+export interface RevenueCatListResponse<T> {
+  items: T[];
+  next_page: string | null;
+  object: "list";
+  url: string;
+}
+
+export interface RevenueCatProjectsResponse
+  extends RevenueCatListResponse<RevenueCatProject> {}
+
+export interface RevenueCatCustomersResponse
+  extends RevenueCatListResponse<RevenueCatCustomer> {}
+
 export interface RevenueCatSubscriber {
   entitlements: Record<string, any>;
   first_seen: string;

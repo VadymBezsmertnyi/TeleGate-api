@@ -65,6 +65,44 @@ export const RevenueCatWebhookPayloadSchema = z.object({
   event: RevenueCatEventSchema,
 });
 
+export const RevenueCatProjectSchema = z.object({
+  created_at: z.number(),
+  id: z.string(),
+  name: z.string(),
+  object: z.literal("project"),
+});
+
+export const RevenueCatCustomerSchema = z.object({
+  experiment: z.string().nullable(),
+  first_seen_at: z.number(),
+  id: z.string(),
+  last_seen_app_version: z.string(),
+  last_seen_at: z.number(),
+  last_seen_country: z.string(),
+  last_seen_platform: z.enum(["iOS", "android"]),
+  last_seen_platform_version: z.string(),
+  object: z.literal("customer"),
+  project_id: z.string(),
+});
+
+export const RevenueCatListResponseSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T
+) =>
+  z.object({
+    items: z.array(itemSchema),
+    next_page: z.string().nullable(),
+    object: z.literal("list"),
+    url: z.string(),
+  });
+
+export const RevenueCatProjectsResponseSchema = RevenueCatListResponseSchema(
+  RevenueCatProjectSchema
+);
+
+export const RevenueCatCustomersResponseSchema = RevenueCatListResponseSchema(
+  RevenueCatCustomerSchema
+);
+
 export const RevenueCatSubscriberSchema = z.object({
   entitlements: z.record(z.any()),
   first_seen: z.string(),
