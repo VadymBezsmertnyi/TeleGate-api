@@ -1,5 +1,61 @@
 /**
  * @swagger
+ * /revenuecat/user-subscriptions:
+ *   get:
+ *     summary: Отримати підписки користувачів з RevenueCat
+ *     description: |
+ *       Отримує всі підписки користувачів з RevenueCat, які існують в системі.
+ *
+ *       Логіка роботи:
+ *       1. Отримує всі проекти з RevenueCat
+ *       2. Для кожного проекту отримує всіх клієнтів
+ *       3. Фільтрує анонімних користувачів (RCAnonymousID)
+ *       4. Шукає користувача в базі даних за telegramId
+ *       5. Якщо користувач знайдений, отримує його підписки
+ *       6. Повертає зібрані дані
+ *     tags:
+ *       - RevenueCat
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Успішно отримано підписки користувачів
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RevenueCatUserSubscriptionsResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 - projectId: "proj_123456"
+ *                   projectName: "TeleGate App"
+ *                   customerId: "123456789"
+ *                   telegramId: 123456789
+ *                   subscriptions:
+ *                     subscriptions:
+ *                       - id: "sub_123456"
+ *                         product_id: "premium_monthly"
+ *                         purchase_date: "2024-01-01T00:00:00Z"
+ *                         expires_date: "2024-02-01T00:00:00Z"
+ *                         unsubscribe_detected_at: null
+ *               totalUsers: 1
+ *       401:
+ *         description: Необхідна авторизація
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Authentication required"
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Internal Server Error"
+ *
  * /revenuecat/customers/{projectId}:
  *   get:
  *     summary: Отримання клієнтів RevenueCat

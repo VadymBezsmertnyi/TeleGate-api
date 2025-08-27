@@ -227,4 +227,84 @@ router.post("/webhook", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/user-subscriptions", async (req: Request, res: Response) => {
+  const authenticatedUser = await getAuthenticatedUser(req);
+  if (!authenticatedUser)
+    return res.status(401).json({ error: "Authentication required" });
+
+  try {
+    const projectsResponse =
+      await revenuecatReadOnlyClientV2.get<RevenueCatProjectsResponse>(
+        "/projects"
+      );
+    const projects = projectsResponse.data.items || [];
+
+    const allUserSubscriptions: Array<{
+      projectId: string;
+      projectName: string;
+      customerId: string;
+      telegramId: number;
+      subscriptions: any;
+    }> = [];
+
+    for (const project of projects) {
+      try {
+        const customersResponse =
+          await revenuecatReadOnlyClientV2.get<RevenueCatCustomersResponse>(
+            `/projects/${project.id}/customers`
+          );
+        const customers = customersResponse.data.items || [];
+
+        for (const customer of customers) {
+          if (customer.id && !customer.id.includes("RCAnonymousID")) {
+            const UserModel = (await import("../../routes/users/users.model"))
+              .default;
+            const user = await UserModel.findOne({
+              telegramId: parseInt(customer.id),
+            }).lean();
+
+            if (user) {
+              try {
+                const subscriptionsResponse = await getCustomerSubscriptions(
+                  project.id,
+                  customer.id
+                );
+                allUserSubscriptions.push({
+                  projectId: project.id,
+                  projectName: project.name,
+                  customerId: customer.id,
+                  telegramId: parseInt(customer.id),
+                  subscriptions: subscriptionsResponse.data,
+                });
+              } catch (subscriptionError) {
+                console.warn(
+                  `Помилка при отриманні підписок для користувача ${customer.id}:`,
+                  subscriptionError
+                );
+              }
+            }
+          }
+        }
+      } catch (projectError) {
+        console.warn(
+          `Помилка при отриманні клієнтів для проекту ${project.id}:`,
+          projectError
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: allUserSubscriptions,
+      totalUsers: allUserSubscriptions.length,
+    });
+  } catch (error) {
+    console.warn(
+      "Помилка при отриманні підписок користувачів з RevenueCat:",
+      error
+    );
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 export default router;

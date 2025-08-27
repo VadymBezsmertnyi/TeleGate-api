@@ -408,6 +408,95 @@ const options = {
           },
           required: ["items", "next_page", "object", "url"],
         },
+        RevenueCatSubscription: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "ID підписки",
+            },
+            product_id: {
+              type: "string",
+              description: "ID продукту",
+            },
+            purchase_date: {
+              type: "string",
+              format: "date-time",
+              description: "Дата покупки",
+            },
+            expires_date: {
+              type: "string",
+              format: "date-time",
+              description: "Дата закінчення",
+            },
+            unsubscribe_detected_at: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              description: "Дата виявлення відписки",
+            },
+          },
+        },
+        RevenueCatUserSubscription: {
+          type: "object",
+          properties: {
+            projectId: {
+              type: "string",
+              description: "ID проекту RevenueCat",
+            },
+            projectName: {
+              type: "string",
+              description: "Назва проекту RevenueCat",
+            },
+            customerId: {
+              type: "string",
+              description: "ID клієнта в RevenueCat",
+            },
+            telegramId: {
+              type: "number",
+              description: "Telegram ID користувача",
+            },
+            subscriptions: {
+              type: "object",
+              properties: {
+                subscriptions: {
+                  type: "array",
+                  items: {
+                    $ref: "#/components/schemas/RevenueCatSubscription",
+                  },
+                },
+              },
+            },
+          },
+          required: [
+            "projectId",
+            "projectName",
+            "customerId",
+            "telegramId",
+            "subscriptions",
+          ],
+        },
+        RevenueCatUserSubscriptionsResponse: {
+          type: "object",
+          properties: {
+            success: {
+              type: "boolean",
+              description: "Статус успішності запиту",
+            },
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/RevenueCatUserSubscription",
+              },
+              description: "Масив підписок користувачів",
+            },
+            totalUsers: {
+              type: "number",
+              description: "Загальна кількість користувачів з підписками",
+            },
+          },
+          required: ["success", "data", "totalUsers"],
+        },
       },
     },
   },
