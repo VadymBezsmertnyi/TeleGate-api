@@ -8,6 +8,10 @@ import {
   getProjectProducts,
 } from "./revenuecat.client";
 import { getAuthenticatedUser } from "../../helpers/auth";
+import {
+  RevenueCatCustomersResponse,
+  RevenueCatProjectsResponse,
+} from "./revenuecat.types";
 
 const router = Router();
 
@@ -21,9 +25,10 @@ router.get("/customers/:projectId", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Project ID is required" });
 
   try {
-    const response = await revenuecatReadOnlyClientV2.get(
-      `/projects/${projectId}/customers`
-    );
+    const response =
+      await revenuecatReadOnlyClientV2.get<RevenueCatCustomersResponse>(
+        `/projects/${projectId}/customers`
+      );
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні клієнтів з RevenueCat:", error);
@@ -37,7 +42,10 @@ router.get("/projects", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Authentication required" });
 
   try {
-    const response = await revenuecatReadOnlyClientV2.get("/projects");
+    const response =
+      await revenuecatReadOnlyClientV2.get<RevenueCatProjectsResponse>(
+        "/projects"
+      );
     return res.status(200).json(response.data);
   } catch (error) {
     console.warn("Помилка при отриманні проектів з RevenueCat:", error);
