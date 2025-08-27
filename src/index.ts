@@ -87,21 +87,29 @@ app.use("/api/bot-send-messages", botSendMessagesRouter);
 app.use("/api/message-templates", messageTemplatesRouter);
 app.use("/api/revenuecat", revenuecatRouter);
 
-startBotTelegram();
+const startHelps = () => {
+  try {
+    startBotTelegram(); // Start bot telegram
+    updateAllExpiredPhotos(); // Initial photo cache update
+    cache.flushAll(); // Initial cache flush
+  } catch (error) {
+    console.warn("❌ Failed to start bot telegram:", error);
+  }
+};
 
-// Initialize Firebase
 try {
-  initializeFirebase();
+  initializeFirebase(); // Initialize Firebase
 } catch (error) {
   console.warn("❌ Failed to initialize Firebase:", error);
 }
+
+startHelps(); // Start bot and initial tasks
 
 cron.schedule("*/5 * * * *", () => {
   cache.flushAll();
   console.warn("🗑️ NodeCache flushed (cron 5min)");
 });
 
-updateAllExpiredPhotos();
 cron.schedule("0 2 * * *", async () => {
   try {
     await updateAllExpiredPhotos();
