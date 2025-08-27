@@ -12,6 +12,7 @@ import {
   RevenueCatCustomersResponse,
   RevenueCatProjectsResponse,
 } from "./revenuecat.types";
+import { updateUserSubscriptionsFromRevenueCat } from "./revenuecat.helper";
 
 const router = Router();
 
@@ -303,6 +304,21 @@ router.get("/user-subscriptions", async (req: Request, res: Response) => {
       "Помилка при отриманні підписок користувачів з RevenueCat:",
       error
     );
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/update-subscriptions", async (req: Request, res: Response) => {
+  const authenticatedUser = await getAuthenticatedUser(req);
+  if (!authenticatedUser)
+    return res.status(401).json({ error: "Authentication required" });
+
+  try {
+    const result = await updateUserSubscriptionsFromRevenueCat();
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.warn("Помилка при оновленні підписок користувачів:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

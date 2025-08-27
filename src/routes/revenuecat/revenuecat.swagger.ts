@@ -56,6 +56,60 @@
  *             example:
  *               error: "Internal Server Error"
  *
+ * /revenuecat/update-subscriptions:
+ *   post:
+ *     summary: Оновити підписки користувачів з RevenueCat
+ *     description: |
+ *       Оновлює статус підписок користувачів в базі даних на основі даних з RevenueCat.
+ *
+ *       Функціональність:
+ *       - Отримує всі проекти з RevenueCat
+ *       - Для кожного проекту отримує всіх клієнтів
+ *       - Фільтрує анонімних користувачів
+ *       - Шукає користувача в базі даних за telegramId
+ *       - Оновлює subscriptionType та subscriptionExpiresAt
+ *       - Визначає тип підписки за product_id (pro/ultimate/free)
+ *     tags:
+ *       - RevenueCat
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Успішно оновлено підписки користувачів
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 totalUsersProcessed:
+ *                   type: number
+ *                   description: Загальна кількість оброблених користувачів
+ *                 totalUsersUpdated:
+ *                   type: number
+ *                   description: Кількість користувачів, яких було оновлено
+ *             example:
+ *               success: true
+ *               totalUsersProcessed: 150
+ *               totalUsersUpdated: 45
+ *       401:
+ *         description: Необхідна авторизація
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Authentication required"
+ *       500:
+ *         description: Внутрішня помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Internal Server Error"
+ *
  * /revenuecat/customers/{projectId}:
  *   get:
  *     summary: Отримання клієнтів RevenueCat
