@@ -28,6 +28,7 @@ import { initializeFirebase } from "./helpers/firebase.helper";
 
 // swagger
 import { specs } from "./config/swagger";
+import { updateUserSubscriptionsFromRevenueCat } from "./routes/revenuecat/revenuecat.helper";
 
 const app = express();
 
@@ -91,6 +92,7 @@ const startHelps = () => {
   try {
     startBotTelegram(); // Start bot telegram
     updateAllExpiredPhotos(); // Initial photo cache update
+    updateUserSubscriptionsFromRevenueCat(); // Initial subscription update
     cache.flushAll(); // Initial cache flush
   } catch (error) {
     console.warn("❌ Failed to start bot telegram:", error);
@@ -115,5 +117,14 @@ cron.schedule("0 2 * * *", async () => {
     await updateAllExpiredPhotos();
   } catch (error) {
     console.warn("❌ Помилка автоматичного оновлення фото (cron):", error);
+  }
+});
+
+cron.schedule("0 6 * * *", async () => {
+  try {
+    const result = await updateUserSubscriptionsFromRevenueCat();
+    console.warn("✅ Оновлення підписок з RevenueCat завершено:", result);
+  } catch (error) {
+    console.warn("❌ Помилка автоматичного оновлення підписок (cron):", error);
   }
 });
