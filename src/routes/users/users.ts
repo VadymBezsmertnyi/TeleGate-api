@@ -81,6 +81,7 @@ router.get("/me", async (req: Request, res: Response) => {
       first_name: user.firstName,
       last_name: user.lastName,
       photo_url: user.photoUrl,
+      subscription_type: user.subscriptionType,
     };
 
     const resultCheckZod = userPublicSchema.safeParse(userData);
@@ -112,6 +113,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       first_name: user.firstName,
       last_name: user.lastName,
       photo_url: user.photoUrl,
+      subscription_type: user.subscriptionType,
     };
     const resultCheckZod = userPublicSchema.safeParse(userData);
     if (!resultCheckZod.success)
@@ -148,6 +150,7 @@ router.get("/", async (req: Request, res: Response) => {
       first_name: user.firstName,
       last_name: user.lastName,
       photo_url: user.photoUrl,
+      subscription_type: user.subscriptionType,
     }));
 
     const totalCount = await UserModel.countDocuments({ isActive: true });
