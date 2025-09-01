@@ -345,22 +345,26 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     const memberCount = group.members ? group.members.length : 0;
-    
-    const subscriptionsCount = group.groupSubscriptions ? group.groupSubscriptions.length : 0;
-    
-    const [usersWithSubscriptionCount, usersWithExpiredSubscriptionCount] = await Promise.all([
-      MemberSubscriptionModel.countDocuments({
-        group: group._id,
-        endDate: { $gt: new Date() }
-      }),
-      MemberSubscriptionModel.countDocuments({
-        group: group._id,
-        endDate: { $lte: new Date() }
-      })
-    ]);
-    
-    const usersWithoutSubscriptionCount = Math.max(0, memberCount - usersWithSubscriptionCount - usersWithExpiredSubscriptionCount);
-    
+    const subscriptionsCount = group.groupSubscriptions
+      ? group.groupSubscriptions.length
+      : 0;
+    const [usersWithSubscriptionCount, usersWithExpiredSubscriptionCount] =
+      await Promise.all([
+        MemberSubscriptionModel.countDocuments({
+          group: group._id,
+          endDate: { $gt: new Date() },
+        }),
+        MemberSubscriptionModel.countDocuments({
+          group: group._id,
+          endDate: { $lte: new Date() },
+        }),
+      ]);
+    const usersWithoutSubscriptionCount = Math.max(
+      0,
+      memberCount -
+        usersWithSubscriptionCount -
+        usersWithExpiredSubscriptionCount
+    );
     const transformedGroup = transformGroupToPublic(
       group,
       memberCount,
