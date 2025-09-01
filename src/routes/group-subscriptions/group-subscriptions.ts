@@ -25,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, memberIds, groupId, userId } = query;
+    const { page, limit, order, groupId, userId } = query;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -36,10 +36,6 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const filter: any = {};
-    if (memberIds && memberIds.length > 0)
-      filter.members = {
-        $in: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
-      };
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
     if (userId) filter.user = new mongoose.Types.ObjectId(userId);
 
@@ -68,7 +64,7 @@ router.get("/", async (req: Request, res: Response) => {
       currency: sub.currency,
       type: sub.type,
       duration: sub.duration,
-      memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
+      memberSubscriptionIds: [],
       groupId: sub.group?._id?.toString(),
       userId: sub.user?._id?.toString(),
       createdAt: sub.createdAt,
@@ -146,7 +142,6 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const [subscriptions, total] = await Promise.all([
       GroupSubscriptionModel.find(filter)
-        .populate("members", "firstName lastName username")
         .populate("user", "firstName lastName username")
         .sort(sort)
         .skip(skip)
@@ -162,8 +157,9 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
       description: sub.description,
       price: sub.price,
       currency: sub.currency,
-      durationDays: sub.durationDays,
-      memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
+      type: sub.type,
+      duration: sub.duration,
+      memberSubscriptionIds: [],
       groupId: sub.group?.toString(),
       userId: sub.user?._id?.toString(),
       createdAt: sub.createdAt,
@@ -216,7 +212,6 @@ router.get("/:id", async (req: Request, res: Response) => {
       });
 
     const subscription = await GroupSubscriptionModel.findById(_id)
-      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -237,8 +232,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       currency: subscription.currency,
       type: subscription.type,
       duration: subscription.duration,
-      memberIds:
-        subscription.members?.map((member: any) => member._id.toString()) || [],
+      memberSubscriptionIds: [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
@@ -295,7 +289,6 @@ router.post("/", async (req: Request, res: Response) => {
       currency,
       type,
       duration,
-      memberIds,
       groupId,
       userId,
     } = validationResult.data;
@@ -307,7 +300,6 @@ router.post("/", async (req: Request, res: Response) => {
       currency,
       type: type || "monthly",
       duration: duration || 1,
-      members: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
       group: new mongoose.Types.ObjectId(groupId),
       user: userId
         ? new mongoose.Types.ObjectId(userId)
@@ -332,10 +324,6 @@ router.post("/", async (req: Request, res: Response) => {
       currency: populatedSubscription.currency,
       type: populatedSubscription.type,
       duration: populatedSubscription.duration,
-      memberIds:
-        populatedSubscription.members?.map((member: any) =>
-          member._id.toString()
-        ) || [],
       groupId: populatedSubscription.group?._id?.toString(),
       userId: populatedSubscription.user?._id?.toString(),
       createdAt: populatedSubscription.createdAt,
@@ -437,8 +425,6 @@ router.put("/:id", async (req: Request, res: Response) => {
       currency: subscription.currency,
       type: subscription.type,
       duration: subscription.duration,
-      memberIds:
-        subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,

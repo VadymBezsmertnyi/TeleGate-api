@@ -9,7 +9,7 @@ export const groupSubscriptionSchema = z.object({
   currency: z.string(),
   type: z.enum(SUBSCRIPTION_TYPES_ENUM),
   duration: z.number(),
-  members: z.array(z.any()),
+  memberSubscriptions: z.array(z.any()),
   group: z.any(),
   user: z.any(),
   createdAt: z.date(),
@@ -24,7 +24,7 @@ export const groupSubscriptionPublicSchema = z.object({
   currency: z.string(),
   type: z.enum(SUBSCRIPTION_TYPES_ENUM),
   duration: z.number(),
-  memberIds: z.array(z.string()),
+  memberSubscriptionIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string(),
   createdAt: z.date(),
@@ -38,7 +38,6 @@ export const createGroupSubscriptionSchema = z.object({
   currency: z.string().min(1),
   type: z.enum(SUBSCRIPTION_TYPES_ENUM).optional(),
   duration: z.number().int().min(1).optional(),
-  memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string().optional(),
 });
@@ -54,7 +53,6 @@ export const groupSubscriptionsQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   order: z.enum(["asc", "desc"]).default("desc"),
-  memberIds: z.array(z.string()).optional(),
   groupId: z.string().optional(),
   userId: z.string().optional(),
 });

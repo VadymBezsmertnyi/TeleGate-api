@@ -14,7 +14,9 @@ const groupSubscriptionSM = new Schema(
       default: "monthly",
     },
     duration: { type: Number, required: true, default: 1 },
-    members: [{ type: Schema.Types.ObjectId, ref: "Member", required: true }],
+    memberSubscriptions: [
+      { type: Schema.Types.ObjectId, ref: "MemberSubscription" },
+    ],
     group: { type: Schema.Types.ObjectId, ref: "Group", required: true },
     user: { type: Schema.Types.ObjectId, ref: "users", required: true },
     isDeleted: { type: Boolean, default: false },
