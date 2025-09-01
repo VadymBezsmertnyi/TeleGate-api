@@ -493,7 +493,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
           code: "UNAUTHORIZED",
           message: "Authentication required",
         },
-      };
+      });
 
     const subscription = await GroupSubscriptionModel.findByIdAndDelete(
       _id
