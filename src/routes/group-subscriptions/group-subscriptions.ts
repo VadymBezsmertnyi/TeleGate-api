@@ -309,7 +309,6 @@ router.post("/", async (req: Request, res: Response) => {
     const populatedSubscription = await GroupSubscriptionModel.findById(
       subscription._id
     )
-      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -404,7 +403,6 @@ router.put("/:id", async (req: Request, res: Response) => {
       updateData,
       { new: true }
     )
-      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
