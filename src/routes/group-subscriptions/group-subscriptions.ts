@@ -229,13 +229,12 @@ router.get("/:id", async (req: Request, res: Response) => {
       });
 
     const transformedSubscription = {
-      id: subscription._id.toString(),
+      _id: subscription._id.toString(),
+      title: subscription.title,
+      description: subscription.description,
       price: subscription.price,
       currency: subscription.currency,
       durationDays: subscription.durationDays,
-      startedAt: subscription.startedAt,
-      expiresAt: subscription.expiresAt,
-      canceledAt: subscription.canceledAt,
       memberIds:
         subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
@@ -287,19 +286,15 @@ router.post("/", async (req: Request, res: Response) => {
         },
       });
 
-    const { price, currency, durationDays, memberIds, groupId, userId } =
+    const { title, description, price, currency, durationDays, memberIds, groupId, userId } =
       validationResult.data;
-    const startedAt = new Date();
-    const expiresAt = new Date(
-      startedAt.getTime() + durationDays * 24 * 60 * 60 * 1000
-    );
 
     const subscription = await GroupSubscriptionModel.create({
+      title,
+      description: description || "",
       price,
       currency,
       durationDays,
-      startedAt,
-      expiresAt,
       members: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
       group: new mongoose.Types.ObjectId(groupId),
       user: userId
@@ -319,12 +314,11 @@ router.post("/", async (req: Request, res: Response) => {
 
     const transformedSubscription = {
       _id: populatedSubscription._id.toString(),
+      title: populatedSubscription.title,
+      description: populatedSubscription.description,
       price: populatedSubscription.price,
       currency: populatedSubscription.currency,
       durationDays: populatedSubscription.durationDays,
-      startedAt: populatedSubscription.startedAt,
-      expiresAt: populatedSubscription.expiresAt,
-      canceledAt: populatedSubscription.canceledAt,
       memberIds:
         populatedSubscription.members?.map((member: any) =>
           member._id.toString()
@@ -408,10 +402,6 @@ router.put("/:id", async (req: Request, res: Response) => {
       updateData.members = validationResult.data.memberIds.map(
         (id) => new mongoose.Types.ObjectId(id)
       );
-    if (validationResult.data.expiresAt)
-      updateData.expiresAt = new Date(validationResult.data.expiresAt);
-    if (validationResult.data.canceledAt)
-      updateData.canceledAt = new Date(validationResult.data.canceledAt);
 
     delete updateData.memberIds;
 
@@ -435,12 +425,11 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const transformedSubscription = {
       _id: subscription._id.toString(),
+      title: subscription.title,
+      description: subscription.description,
       price: subscription.price,
       currency: subscription.currency,
       durationDays: subscription.durationDays,
-      startedAt: subscription.startedAt,
-      expiresAt: subscription.expiresAt,
-      canceledAt: subscription.canceledAt,
       memberIds:
         subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
