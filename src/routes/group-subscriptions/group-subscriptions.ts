@@ -25,7 +25,8 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, memberIds, groupId, userId, activeOnly } = query;
+    const { page, limit, order, memberIds, groupId, userId, activeOnly } =
+      query;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -36,7 +37,10 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const filter: any = {};
-    if (memberIds && memberIds.length > 0) filter.members = { $in: memberIds.map(id => new mongoose.Types.ObjectId(id)) };
+    if (memberIds && memberIds.length > 0)
+      filter.members = {
+        $in: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
+      };
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
     if (userId) filter.user = new mongoose.Types.ObjectId(userId);
     if (activeOnly) {
@@ -243,7 +247,8 @@ router.get("/:id", async (req: Request, res: Response) => {
       startedAt: subscription.startedAt,
       expiresAt: subscription.expiresAt,
       canceledAt: subscription.canceledAt,
-      memberIds: subscription.members?.map((member: any) => member._id.toString()) || [],
+      memberIds:
+        subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
@@ -306,7 +311,7 @@ router.post("/", async (req: Request, res: Response) => {
       durationDays,
       startedAt,
       expiresAt,
-      members: memberIds.map(id => new mongoose.Types.ObjectId(id)),
+      members: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
       group: new mongoose.Types.ObjectId(groupId),
       user: userId
         ? new mongoose.Types.ObjectId(userId)
@@ -329,9 +334,12 @@ router.post("/", async (req: Request, res: Response) => {
       currency: populatedSubscription.currency,
       durationDays: populatedSubscription.durationDays,
       startedAt: populatedSubscription.startedAt,
-      expiresAt: populatedSubscription.expiredAt,
+      expiresAt: populatedSubscription.expiresAt,
       canceledAt: populatedSubscription.canceledAt,
-      memberIds: populatedSubscription.members?.map((member: any) => member._id.toString()) || [],
+      memberIds:
+        populatedSubscription.members?.map((member: any) =>
+          member._id.toString()
+        ) || [],
       groupId: populatedSubscription.group?._id?.toString(),
       userId: populatedSubscription.user?._id?.toString(),
       createdAt: populatedSubscription.createdAt,
@@ -406,15 +414,17 @@ router.put("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const updateData = { ...validationResult.data, updatedAt: new Date() };
+    const updateData: any = { ...validationResult.data, updatedAt: new Date() };
+    if (validationResult.data.memberIds)
+      updateData.members = validationResult.data.memberIds.map(
+        (id) => new mongoose.Types.ObjectId(id)
+      );
     if (validationResult.data.expiresAt)
-      updateData.expiresAt = new Date(
-        validationResult.data.expiresAt
-      ).toUTCString();
+      updateData.expiresAt = new Date(validationResult.data.expiresAt);
     if (validationResult.data.canceledAt)
-      updateData.canceledAt = new Date(
-        validationResult.data.canceledAt
-      ).toUTCString();
+      updateData.canceledAt = new Date(validationResult.data.canceledAt);
+
+    delete updateData.memberIds;
 
     const subscription = await GroupSubscriptionModel.findByIdAndUpdate(
       _id,
@@ -442,7 +452,8 @@ router.put("/:id", async (req: Request, res: Response) => {
       startedAt: subscription.startedAt,
       expiresAt: subscription.expiresAt,
       canceledAt: subscription.canceledAt,
-      memberIds: subscription.members?.map((member: any) => member._id.toString()) || [],
+      memberIds:
+        subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
