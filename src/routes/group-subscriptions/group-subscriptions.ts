@@ -25,8 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, memberIds, groupId, userId, activeOnly } =
-      query;
+    const { page, limit, order, memberIds, groupId, userId } = query;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -43,10 +42,6 @@ router.get("/", async (req: Request, res: Response) => {
       };
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
     if (userId) filter.user = new mongoose.Types.ObjectId(userId);
-    if (activeOnly) {
-      filter.$or = [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }];
-      filter.canceledAt = null;
-    }
 
     const sort = { createdAt: order === "asc" ? 1 : -1 } as {
       [key: string]: SortOrder;
@@ -67,12 +62,11 @@ router.get("/", async (req: Request, res: Response) => {
     const pages = Math.ceil(total / limit);
     const transformedSubscriptions = subscriptions.map((sub: any) => ({
       _id: sub._id.toString(),
+      title: sub.title,
+      description: sub.description,
       price: sub.price,
       currency: sub.currency,
       durationDays: sub.durationDays,
-      startedAt: sub.startedAt,
-      expiresAt: sub.expiresAt,
-      canceledAt: sub.canceledAt,
       memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
       groupId: sub.group?._id?.toString(),
       userId: sub.user?._id?.toString(),
@@ -142,12 +136,8 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, activeOnly } = query;
+    const { page, limit, order } = query;
     const filter: any = { group: new mongoose.Types.ObjectId(groupId) };
-    if (activeOnly) {
-      filter.$or = [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }];
-      filter.canceledAt = null;
-    }
 
     const sort = { createdAt: order === "asc" ? 1 : -1 } as {
       [key: string]: SortOrder;
@@ -167,12 +157,11 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
     const pages = Math.ceil(total / limit);
     const transformedSubscriptions = subscriptions.map((sub: any) => ({
       _id: sub._id.toString(),
+      title: sub.title,
+      description: sub.description,
       price: sub.price,
       currency: sub.currency,
       durationDays: sub.durationDays,
-      startedAt: sub.startedAt,
-      expiresAt: sub.expiresAt,
-      canceledAt: sub.canceledAt,
       memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
       groupId: sub.group?.toString(),
       userId: sub.user?._id?.toString(),

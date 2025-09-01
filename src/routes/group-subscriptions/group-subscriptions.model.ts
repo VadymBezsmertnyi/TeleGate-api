@@ -2,12 +2,11 @@ import { Schema, model } from "mongoose";
 
 const groupSubscriptionSM = new Schema(
   {
+    title: { type: String, required: true },
+    description: { type: String, default: "" },
     price: { type: Number, required: true },
     currency: { type: String, required: true },
-    durationDays: { type: Number, required: true },
-    startedAt: { type: Date, required: true },
-    expiresAt: { type: Date, default: null },
-    canceledAt: { type: Date, default: null },
+    durationDays: { type: Number, required: true, default: 30 },
     members: [{ type: Schema.Types.ObjectId, ref: "Member", required: true }],
     group: { type: Schema.Types.ObjectId, ref: "Group", required: true },
     user: { type: Schema.Types.ObjectId, ref: "users", required: true },
@@ -25,8 +24,6 @@ const groupSubscriptionSM = new Schema(
 groupSubscriptionSM.index({ members: 1, group: 1 });
 groupSubscriptionSM.index({ group: 1 });
 groupSubscriptionSM.index({ user: 1 });
-groupSubscriptionSM.index({ expiresAt: 1 });
-groupSubscriptionSM.index({ canceledAt: 1 });
 
 const GroupSubscriptionModel = model("GroupSubscription", groupSubscriptionSM);
 

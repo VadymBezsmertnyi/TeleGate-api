@@ -2,27 +2,25 @@ import { z } from "zod";
 
 export const groupSubscriptionSchema = z.object({
   _id: z.any(),
+  title: z.string(),
+  description: z.string(),
   price: z.number(),
   currency: z.string(),
   durationDays: z.number(),
-  startedAt: z.date(),
-  expiresAt: z.date().nullable().optional(),
-  canceledAt: z.date().nullable().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
   members: z.array(z.any()),
   group: z.any(),
   user: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export const groupSubscriptionPublicSchema = z.object({
   _id: z.string(),
+  title: z.string(),
+  description: z.string(),
   price: z.number(),
-  currency: z.string(),
+  currency: z.number(),
   durationDays: z.number(),
-  startedAt: z.date(),
-  expiresAt: z.date().nullable().optional(),
-  canceledAt: z.date().nullable().optional(),
   memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string(),
@@ -31,21 +29,20 @@ export const groupSubscriptionPublicSchema = z.object({
 });
 
 export const createGroupSubscriptionSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
   price: z.number().positive(),
   currency: z.string().min(1),
-  durationDays: z.number().int().min(1),
+  durationDays: z.number().int().min(1).default(30),
   memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string().optional(),
 });
 
 export const updateGroupSubscriptionSchema = z.object({
-  price: z.number().positive().optional(),
-  currency: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
   durationDays: z.number().int().min(1).optional(),
-  memberIds: z.array(z.string()).optional(),
-  expiresAt: z.string().datetime().optional(),
-  canceledAt: z.string().datetime().optional(),
 });
 
 export const groupSubscriptionsQuerySchema = z.object({
@@ -55,7 +52,6 @@ export const groupSubscriptionsQuerySchema = z.object({
   memberIds: z.array(z.string()).optional(),
   groupId: z.string().optional(),
   userId: z.string().optional(),
-  activeOnly: z.coerce.boolean().optional(),
 });
 
 export const groupSubscriptionParamsSchema = z.object({
