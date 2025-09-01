@@ -423,6 +423,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       currency: subscription.currency,
       type: subscription.type,
       duration: subscription.duration,
+      memberSubscriptionIds: [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
