@@ -36,7 +36,7 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const filter: any = {};
-    if (memberId) filter.member = new mongoose.Types.ObjectId(memberId);
+    if (memberId) filter.members = { $in: [new mongoose.Types.ObjectId(memberId)] };
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
     if (userId) filter.user = new mongoose.Types.ObjectId(userId);
     if (activeOnly) {
@@ -50,7 +50,7 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const [subscriptions, total] = await Promise.all([
       GroupSubscriptionModel.find(filter)
-        .populate("member", "firstName lastName username")
+        .populate("members", "firstName lastName username")
         .populate("group", "title")
         .populate("user", "firstName lastName username")
         .sort(sort)
@@ -62,14 +62,14 @@ router.get("/", async (req: Request, res: Response) => {
 
     const pages = Math.ceil(total / limit);
     const transformedSubscriptions = subscriptions.map((sub: any) => ({
-      id: sub._id.toString(),
+      _id: sub._id.toString(),
       price: sub.price,
       currency: sub.currency,
       durationDays: sub.durationDays,
       startedAt: sub.startedAt,
       expiresAt: sub.expiresAt,
       canceledAt: sub.canceledAt,
-      memberId: sub.member?._id?.toString(),
+      memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
       groupId: sub.group?._id?.toString(),
       userId: sub.user?._id?.toString(),
       createdAt: sub.createdAt,
@@ -151,7 +151,7 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const [subscriptions, total] = await Promise.all([
       GroupSubscriptionModel.find(filter)
-        .populate("member", "firstName lastName username")
+        .populate("members", "firstName lastName username")
         .populate("user", "firstName lastName username")
         .sort(sort)
         .skip(skip)
@@ -162,14 +162,14 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
 
     const pages = Math.ceil(total / limit);
     const transformedSubscriptions = subscriptions.map((sub: any) => ({
-      id: sub._id.toString(),
+      _id: sub._id.toString(),
       price: sub.price,
       currency: sub.currency,
       durationDays: sub.durationDays,
       startedAt: sub.startedAt,
       expiresAt: sub.expiresAt,
       canceledAt: sub.canceledAt,
-      memberId: sub.member?._id?.toString(),
+      memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
       groupId: sub.group?.toString(),
       userId: sub.user?._id?.toString(),
       createdAt: sub.createdAt,
@@ -222,7 +222,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       });
 
     const subscription = await GroupSubscriptionModel.findById(id)
-      .populate("member", "firstName lastName username")
+      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -243,7 +243,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       startedAt: subscription.startedAt,
       expiresAt: subscription.expiresAt,
       canceledAt: subscription.canceledAt,
-      memberId: subscription.member?._id?.toString(),
+      memberIds: subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
@@ -293,7 +293,7 @@ router.post("/", async (req: Request, res: Response) => {
         },
       });
 
-    const { price, currency, durationDays, memberId, groupId, userId } =
+    const { price, currency, durationDays, memberIds, groupId, userId } =
       validationResult.data;
     const startedAt = new Date();
     const expiresAt = new Date(
@@ -306,7 +306,7 @@ router.post("/", async (req: Request, res: Response) => {
       durationDays,
       startedAt,
       expiresAt,
-      member: new mongoose.Types.ObjectId(memberId),
+      members: memberIds.map(id => new mongoose.Types.ObjectId(id)),
       group: new mongoose.Types.ObjectId(groupId),
       user: userId
         ? new mongoose.Types.ObjectId(userId)

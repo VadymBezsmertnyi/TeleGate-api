@@ -10,20 +10,20 @@ export const groupSubscriptionSchema = z.object({
   canceledAt: z.date().nullable().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  member: z.any(),
+  members: z.array(z.any()),
   group: z.any(),
   user: z.any(),
 });
 
 export const groupSubscriptionPublicSchema = z.object({
-  id: z.string(),
+  _id: z.string(),
   price: z.number(),
   currency: z.string(),
   durationDays: z.number(),
   startedAt: z.date(),
   expiresAt: z.date().nullable().optional(),
   canceledAt: z.date().nullable().optional(),
-  memberId: z.string(),
+  memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string(),
   createdAt: z.date(),
@@ -34,7 +34,7 @@ export const createGroupSubscriptionSchema = z.object({
   price: z.number().positive(),
   currency: z.string().min(1),
   durationDays: z.number().int().min(1),
-  memberId: z.string(),
+  memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string().optional(),
 });
@@ -43,6 +43,7 @@ export const updateGroupSubscriptionSchema = z.object({
   price: z.number().positive().optional(),
   currency: z.string().min(1).optional(),
   durationDays: z.number().int().min(1).optional(),
+  memberIds: z.array(z.string()).optional(),
   expiresAt: z.string().datetime().optional(),
   canceledAt: z.string().datetime().optional(),
 });
