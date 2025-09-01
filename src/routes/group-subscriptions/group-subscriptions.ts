@@ -25,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, memberId, groupId, userId, activeOnly } = query;
+    const { page, limit, order, memberIds, groupId, userId, activeOnly } = query;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -36,7 +36,7 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const filter: any = {};
-    if (memberId) filter.members = { $in: [new mongoose.Types.ObjectId(memberId)] };
+    if (memberIds && memberIds.length > 0) filter.members = { $in: memberIds.map(id => new mongoose.Types.ObjectId(id)) };
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
     if (userId) filter.user = new mongoose.Types.ObjectId(userId);
     if (activeOnly) {
@@ -387,7 +387,7 @@ router.put("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { id } = paramsValidation.data;
+    const { _id } = paramsValidation.data;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -417,7 +417,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       ).toUTCString();
 
     const subscription = await GroupSubscriptionModel.findByIdAndUpdate(
-      id,
+      _id,
       updateData,
       { new: true }
     )
@@ -485,7 +485,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { id } = paramsValidation.data;
+    const { _id } = paramsValidation.data;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -493,10 +493,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
           code: "UNAUTHORIZED",
           message: "Authentication required",
         },
-      });
+      };
 
     const subscription = await GroupSubscriptionModel.findByIdAndDelete(
-      id
+      _id
     ).lean();
     if (!subscription)
       return res.status(404).json({

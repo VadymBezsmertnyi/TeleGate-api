@@ -52,7 +52,7 @@ export const groupSubscriptionsQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   order: z.enum(["asc", "desc"]).default("desc"),
-  memberId: z.string().optional(),
+  memberIds: z.array(z.string()).optional(),
   groupId: z.string().optional(),
   userId: z.string().optional(),
   activeOnly: z.coerce.boolean().optional(),
