@@ -59,7 +59,7 @@ export const groupSubscriptionsQuerySchema = z.object({
 });
 
 export const groupSubscriptionParamsSchema = z.object({
-  id: z.string(),
+  _id: z.string(),
 });
 
 export const groupSubscriptionsResponseSchema = z.object({
