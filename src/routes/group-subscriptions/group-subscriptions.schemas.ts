@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SUBSCRIPTION_TYPES_ENUM } from "./group-subscriptions.constants";
 
 export const groupSubscriptionSchema = z.object({
   _id: z.any(),
@@ -6,7 +7,8 @@ export const groupSubscriptionSchema = z.object({
   description: z.string(),
   price: z.number(),
   currency: z.string(),
-  durationDays: z.number(),
+  type: z.enum(SUBSCRIPTION_TYPES_ENUM),
+  duration: z.number(),
   members: z.array(z.any()),
   group: z.any(),
   user: z.any(),
@@ -19,8 +21,9 @@ export const groupSubscriptionPublicSchema = z.object({
   title: z.string(),
   description: z.string(),
   price: z.number(),
-  currency: z.number(),
-  durationDays: z.number(),
+  currency: z.string(),
+  type: z.enum(SUBSCRIPTION_TYPES_ENUM),
+  duration: z.number(),
   memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string(),
@@ -33,7 +36,8 @@ export const createGroupSubscriptionSchema = z.object({
   description: z.string().optional(),
   price: z.number().positive(),
   currency: z.string().min(1),
-  durationDays: z.number().int().min(1).default(30),
+  type: z.enum(SUBSCRIPTION_TYPES_ENUM).optional(),
+  duration: z.number().int().min(1).optional(),
   memberIds: z.array(z.string()),
   groupId: z.string(),
   userId: z.string().optional(),
@@ -42,7 +46,8 @@ export const createGroupSubscriptionSchema = z.object({
 export const updateGroupSubscriptionSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
-  durationDays: z.number().int().min(1).optional(),
+  type: z.enum(SUBSCRIPTION_TYPES_ENUM).optional(),
+  duration: z.number().int().min(1).optional(),
 });
 
 export const groupSubscriptionsQuerySchema = z.object({

@@ -66,7 +66,8 @@ router.get("/", async (req: Request, res: Response) => {
       description: sub.description,
       price: sub.price,
       currency: sub.currency,
-      durationDays: sub.durationDays,
+      type: sub.type,
+      duration: sub.duration,
       memberIds: sub.members?.map((member: any) => member._id.toString()) || [],
       groupId: sub.group?._id?.toString(),
       userId: sub.user?._id?.toString(),
@@ -234,7 +235,8 @@ router.get("/:id", async (req: Request, res: Response) => {
       description: subscription.description,
       price: subscription.price,
       currency: subscription.currency,
-      durationDays: subscription.durationDays,
+      type: subscription.type,
+      duration: subscription.duration,
       memberIds:
         subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
@@ -286,15 +288,25 @@ router.post("/", async (req: Request, res: Response) => {
         },
       });
 
-    const { title, description, price, currency, durationDays, memberIds, groupId, userId } =
-      validationResult.data;
+    const {
+      title,
+      description,
+      price,
+      currency,
+      type,
+      duration,
+      memberIds,
+      groupId,
+      userId,
+    } = validationResult.data;
 
     const subscription = await GroupSubscriptionModel.create({
       title,
       description: description || "",
       price,
       currency,
-      durationDays,
+      type: type || "monthly",
+      duration: duration || 1,
       members: memberIds.map((id) => new mongoose.Types.ObjectId(id)),
       group: new mongoose.Types.ObjectId(groupId),
       user: userId
@@ -318,7 +330,8 @@ router.post("/", async (req: Request, res: Response) => {
       description: populatedSubscription.description,
       price: populatedSubscription.price,
       currency: populatedSubscription.currency,
-      durationDays: populatedSubscription.durationDays,
+      type: populatedSubscription.type,
+      duration: populatedSubscription.duration,
       memberIds:
         populatedSubscription.members?.map((member: any) =>
           member._id.toString()
@@ -397,14 +410,7 @@ router.put("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const updateData: any = { ...validationResult.data, updatedAt: new Date() };
-    if (validationResult.data.memberIds)
-      updateData.members = validationResult.data.memberIds.map(
-        (id) => new mongoose.Types.ObjectId(id)
-      );
-
-    delete updateData.memberIds;
-
+    const updateData = { ...validationResult.data, updatedAt: new Date() };
     const subscription = await GroupSubscriptionModel.findByIdAndUpdate(
       _id,
       updateData,
@@ -429,7 +435,8 @@ router.put("/:id", async (req: Request, res: Response) => {
       description: subscription.description,
       price: subscription.price,
       currency: subscription.currency,
-      durationDays: subscription.durationDays,
+      type: subscription.type,
+      duration: subscription.duration,
       memberIds:
         subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
