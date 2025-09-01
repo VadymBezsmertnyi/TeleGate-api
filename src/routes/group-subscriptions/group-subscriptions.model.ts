@@ -21,10 +21,6 @@ const groupSubscriptionSM = new Schema(
   }
 );
 
-groupSubscriptionSM.index({ members: 1, group: 1 });
-groupSubscriptionSM.index({ group: 1 });
-groupSubscriptionSM.index({ user: 1 });
-
 const GroupSubscriptionModel = model("GroupSubscription", groupSubscriptionSM);
 
 export default GroupSubscriptionModel;
