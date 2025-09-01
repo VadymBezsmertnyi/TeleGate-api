@@ -211,7 +211,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { id } = paramsValidation.data;
+    const { _id } = paramsValidation.data;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -221,7 +221,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const subscription = await GroupSubscriptionModel.findById(id)
+    const subscription = await GroupSubscriptionModel.findById(_id)
       .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
