@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { SUBSCRIPTION_TYPES_ENUM } from "./group-subscriptions.constants";
 
 const groupSubscriptionSM = new Schema(
   {
@@ -6,7 +7,12 @@ const groupSubscriptionSM = new Schema(
     description: { type: String, default: "" },
     price: { type: Number, required: true },
     currency: { type: String, required: true },
-    durationDays: { type: Number, required: true, default: 30 },
+    type: {
+      type: String,
+      enum: SUBSCRIPTION_TYPES_ENUM,
+      required: true,
+    },
+    duration: { type: Number, required: true },
     members: [{ type: Schema.Types.ObjectId, ref: "Member", required: true }],
     group: { type: Schema.Types.ObjectId, ref: "Group", required: true },
     user: { type: Schema.Types.ObjectId, ref: "users", required: true },
