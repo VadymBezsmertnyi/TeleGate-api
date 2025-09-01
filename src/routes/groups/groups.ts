@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import MemberModel from "../members/members.model";
+import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
 import {
   groupsQuerySchema,
   groupParamsSchema,
@@ -96,7 +97,7 @@ router.get("/", async (req: Request, res: Response) => {
         .lean(),
       GroupModel.countDocuments(filter),
     ]);
-    const transformedGroups = getGroupsWithMemberCount(groups);
+    const transformedGroups = await getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
     const response = {
       data: transformedGroups,
@@ -241,7 +242,7 @@ router.get("/owner", async (req: Request, res: Response) => {
       GroupModel.countDocuments(filter),
     ]);
 
-    const transformedGroups = getGroupsWithMemberCount(groups);
+    const transformedGroups = await getGroupsWithMemberCount(groups);
     const pages = Math.ceil(total / limit);
 
     const response = {
@@ -280,7 +281,7 @@ router.get("/test", async (req: Request, res: Response) => {
     const groups = await GroupModel.find({})
       .populate("addedBy", "firstName lastName username")
       .lean();
-    const transformedGroups = getGroupsWithMemberCount(groups);
+    const transformedGroups = await getGroupsWithMemberCount(groups);
 
     return res.json({
       success: true,
@@ -344,7 +345,30 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     const memberCount = group.members ? group.members.length : 0;
-    const transformedGroup = transformGroupToPublic(group, memberCount);
+    
+    const subscriptionsCount = group.groupSubscriptions ? group.groupSubscriptions.length : 0;
+    
+    const [usersWithSubscriptionCount, usersWithExpiredSubscriptionCount] = await Promise.all([
+      MemberSubscriptionModel.countDocuments({
+        group: group._id,
+        endDate: { $gt: new Date() }
+      }),
+      MemberSubscriptionModel.countDocuments({
+        group: group._id,
+        endDate: { $lte: new Date() }
+      })
+    ]);
+    
+    const usersWithoutSubscriptionCount = Math.max(0, memberCount - usersWithSubscriptionCount - usersWithExpiredSubscriptionCount);
+    
+    const transformedGroup = transformGroupToPublic(
+      group,
+      memberCount,
+      subscriptionsCount,
+      usersWithSubscriptionCount,
+      usersWithExpiredSubscriptionCount,
+      usersWithoutSubscriptionCount
+    );
     const response = {
       data: transformedGroup,
     };
