@@ -11,7 +11,7 @@ import {
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import GroupModel from "../groups/group.model";
 import { Chat, ChatMember, User } from "telegraf/typings/core/types/typegram";
-import MemberModel from "../members/member.model";
+import MemberModel from "../members/members.model";
 
 dotenv.config();
 

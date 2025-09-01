@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import GroupModel from "../groups/group.model";
-import MemberModel from "./member.model";
+import MemberModel from "./members.model";
 import { MembersQueryT } from "./members.types";
 
 export const buildMembersQuery = (query: MembersQueryT) => {

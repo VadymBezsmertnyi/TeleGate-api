@@ -1,5 +1,5 @@
 import UserModel from "./users.model";
-import MemberModel from "../members/member.model";
+import MemberModel from "../members/members.model";
 
 export const linkUserWithMembersAndGroups = async (
   telegramId: number,

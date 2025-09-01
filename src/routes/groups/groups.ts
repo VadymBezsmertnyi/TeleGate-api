@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
-import MemberModel from "../members/member.model";
+import MemberModel from "../members/members.model";
 import {
   groupsQuerySchema,
   groupParamsSchema,

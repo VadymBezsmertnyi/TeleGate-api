@@ -1,5 +1,5 @@
 import { Telegraf } from "telegraf";
-import MemberModel from "../members/member.model";
+import MemberModel from "../members/members.model";
 import { SendMessageResultI } from "./bot-send-messages.types";
 import { ChatFromGetChat } from "telegraf/typings/core/types/typegram";
 

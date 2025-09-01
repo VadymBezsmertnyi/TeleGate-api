@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import MemberModel from "./member.model";
+import MemberModel from "./members.model";
 import {
   membersQuerySchema,
   memberParamsSchema,

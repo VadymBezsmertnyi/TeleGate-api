@@ -1,5 +1,5 @@
 import GroupModel from "../groups/group.model";
-import MemberModel from "../members/member.model";
+import MemberModel from "../members/members.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 import { Telegraf, Telegram } from "telegraf";
