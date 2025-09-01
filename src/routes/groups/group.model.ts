@@ -39,6 +39,9 @@ const groupSM = new Schema(
     users: [{ type: Schema.Types.ObjectId, ref: "users" }],
     members: [{ type: Schema.Types.ObjectId, ref: "Member" }],
     forumTopics: [{ type: Schema.Types.ObjectId, ref: "ForumTopic" }],
+    groupSubscriptions: [
+      { type: Schema.Types.ObjectId, ref: "GroupSubscription" },
+    ],
   },
   {
     timestamps: true,
