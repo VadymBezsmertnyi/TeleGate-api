@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import UserModel from "../users/users.model";
+import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
 import { GroupsQueryT, GroupsFilterI, SortQueryI } from "./groups.types";
 
 export const buildGroupsQuery = (query: GroupsQueryT): GroupsFilterI => {
@@ -60,7 +61,11 @@ export const buildSortQuery = (sortBy: string, order: string): SortQueryI => {
 
 export const transformGroupToPublic = (
   group: any,
-  membersCount: number = 0
+  membersCount: number = 0,
+  subscriptionsCount: number = 0,
+  usersWithSubscriptionCount: number = 0,
+  usersWithExpiredSubscriptionCount: number = 0,
+  usersWithoutSubscriptionCount: number = 0
 ) => ({
   id: group._id.toString(),
   tgChatId: group.tgChatId,
@@ -73,6 +78,10 @@ export const transformGroupToPublic = (
   acceptedGiftTypes: group.acceptedGiftTypes,
   botStatus: group.botStatus,
   membersCount,
+  subscriptionsCount,
+  usersWithSubscriptionCount,
+  usersWithExpiredSubscriptionCount,
+  usersWithoutSubscriptionCount,
   addedBy: group.addedBy
     ? {
         id: group.addedBy._id.toString(),
@@ -104,9 +113,59 @@ export const getOwnerGroups = async (
   return groups.map((group) => group._id);
 };
 
-export const getGroupsWithMemberCount = (groups: any[]) => {
+export const getGroupsWithMemberCount = async (groups: any[]) => {
+  if (groups.length === 0) return [];
+  
+  const groupIds = groups.map(group => group._id);
+  
+  const [activeSubscriptions, expiredSubscriptions] = await Promise.all([
+    MemberSubscriptionModel.aggregate([
+      {
+        $match: {
+          group: { $in: groupIds },
+          endDate: { $gt: new Date() }
+        }
+      },
+      {
+        $group: {
+          _id: "$group",
+          count: { $sum: 1 }
+        }
+      }
+    ]),
+    MemberSubscriptionModel.aggregate([
+      {
+        $match: {
+          group: { $in: groupIds },
+          endDate: { $lte: new Date() }
+        }
+      },
+      {
+        $group: {
+          _id: "$group",
+          count: { $sum: 1 }
+        }
+      }
+    ])
+  ]);
+  
+  const activeSubsMap = new Map(activeSubscriptions.map(item => [item._id.toString(), item.count]));
+  const expiredSubsMap = new Map(expiredSubscriptions.map(item => [item._id.toString(), item.count]));
+  
   return groups.map((group) => {
     const memberCount = group.members ? group.members.length : 0;
-    return transformGroupToPublic(group, memberCount);
+    const subscriptionsCount = group.groupSubscriptions ? group.groupSubscriptions.length : 0;
+    const usersWithSubscriptionCount = activeSubsMap.get(group._id.toString()) || 0;
+    const usersWithExpiredSubscriptionCount = expiredSubsMap.get(group._id.toString()) || 0;
+    const usersWithoutSubscriptionCount = Math.max(0, memberCount - usersWithSubscriptionCount - usersWithExpiredSubscriptionCount);
+    
+    return transformGroupToPublic(
+      group,
+      memberCount,
+      subscriptionsCount,
+      usersWithSubscriptionCount,
+      usersWithExpiredSubscriptionCount,
+      usersWithoutSubscriptionCount
+    );
   });
 };
