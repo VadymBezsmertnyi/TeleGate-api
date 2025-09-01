@@ -48,6 +48,10 @@ export const groupPublicSchema = z.object({
     .optional(),
   botStatus: z.enum(GROUPS_CONSTANTS.BOT_STATUS_VALUES).nullable(),
   membersCount: z.number(),
+  subscriptionsCount: z.number(),
+  usersWithSubscriptionCount: z.number(),
+  usersWithExpiredSubscriptionCount: z.number(),
+  usersWithoutSubscriptionCount: z.number(),
   addedBy: z
     .object({
       id: z.string(),
