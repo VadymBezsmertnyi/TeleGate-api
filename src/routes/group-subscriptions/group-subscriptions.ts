@@ -316,7 +316,7 @@ router.post("/", async (req: Request, res: Response) => {
     const populatedSubscription = await GroupSubscriptionModel.findById(
       subscription._id
     )
-      .populate("member", "firstName lastName username")
+      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -324,14 +324,14 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Failed to create subscription" });
 
     const transformedSubscription = {
-      id: populatedSubscription._id.toString(),
+      _id: populatedSubscription._id.toString(),
       price: populatedSubscription.price,
       currency: populatedSubscription.currency,
       durationDays: populatedSubscription.durationDays,
       startedAt: populatedSubscription.startedAt,
-      expiresAt: populatedSubscription.expiresAt,
+      expiresAt: populatedSubscription.expiredAt,
       canceledAt: populatedSubscription.canceledAt,
-      memberId: populatedSubscription.member?._id?.toString(),
+      memberIds: populatedSubscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: populatedSubscription.group?._id?.toString(),
       userId: populatedSubscription.user?._id?.toString(),
       createdAt: populatedSubscription.createdAt,
@@ -361,7 +361,7 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(409).json({
         error: {
           code: "DUPLICATE_SUBSCRIPTION",
-          message: "Subscription already exists for this member and group",
+          message: "Subscription already exists for these members and group",
         },
       });
 
@@ -421,7 +421,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       updateData,
       { new: true }
     )
-      .populate("member", "firstName lastName username")
+      .populate("members", "firstName lastName username")
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -435,14 +435,14 @@ router.put("/:id", async (req: Request, res: Response) => {
       });
 
     const transformedSubscription = {
-      id: subscription._id.toString(),
+      _id: subscription._id.toString(),
       price: subscription.price,
       currency: subscription.currency,
       durationDays: subscription.durationDays,
       startedAt: subscription.startedAt,
       expiresAt: subscription.expiresAt,
       canceledAt: subscription.canceledAt,
-      memberId: subscription.member?._id?.toString(),
+      memberIds: subscription.members?.map((member: any) => member._id.toString()) || [],
       groupId: subscription.group?._id?.toString(),
       userId: subscription.user?._id?.toString(),
       createdAt: subscription.createdAt,
