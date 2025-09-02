@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const memberSchema = z.object({
   _id: z.any(),
-  telegramUsername: z.string(),
+  telegramUsername: z.string().optional(),
   tgUserId: z.string(),
   isBot: z.boolean(),
   firstName: z.string(),
@@ -21,7 +21,7 @@ export const memberSchema = z.object({
 
 export const memberPublicSchema = z.object({
   id: z.string(),
-  telegramUsername: z.string(),
+  telegramUsername: z.string().optional(),
   tgUserId: z.string(),
   isBot: z.boolean(),
   firstName: z.string(),
@@ -40,7 +40,7 @@ export const memberPublicSchema = z.object({
 
 export const memberWithSubscriptionSchema = z.object({
   _id: z.any(),
-  telegramUsername: z.string(),
+  telegramUsername: z.string().optional(),
   tgUserId: z.string(),
   isBot: z.boolean(),
   firstName: z.string(),
