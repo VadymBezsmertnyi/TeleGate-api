@@ -141,6 +141,7 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
 
         return {
           _id: member._id,
+          telegramUsername: member.telegramUsername,
           tgUserId: member.tgUserId,
           isBot: member.isBot,
           firstName: member.firstName,
