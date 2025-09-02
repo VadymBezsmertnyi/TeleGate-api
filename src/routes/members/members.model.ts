@@ -14,9 +14,21 @@ const memberSM = new Schema(
     photoUrl: { type: String },
     hasPrivateForwards: { type: Boolean, default: false },
     privacySettings: {
-      profilePhotos: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' },
-      lastSeen: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' },
-      forwards: { type: String, enum: ['everybody', 'contacts', 'nobody'], default: 'contacts' }
+      profilePhotos: {
+        type: String,
+        enum: ["everybody", "contacts", "nobody"],
+        default: "contacts",
+      },
+      lastSeen: {
+        type: String,
+        enum: ["everybody", "contacts", "nobody"],
+        default: "contacts",
+      },
+      forwards: {
+        type: String,
+        enum: ["everybody", "contacts", "nobody"],
+        default: "contacts",
+      },
     },
     user: { type: Schema.Types.ObjectId, ref: "users" },
     groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
