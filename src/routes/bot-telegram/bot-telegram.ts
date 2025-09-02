@@ -293,7 +293,6 @@ const startBotTelegram = async () => {
 
       const memberData: MemberDataI = {
         tgUserId: from.id.toString(),
-        telegramUsername: from.username,
         isBot: from.is_bot,
         firstName: from.first_name,
         lastName: from.last_name,
@@ -332,6 +331,7 @@ const startBotTelegram = async () => {
 
             const botMemberData: MemberDataI = {
               tgUserId: newMember.id.toString(),
+              telegramUsername: newMember.username,
               isBot: newMember.is_bot,
               firstName: newMember.first_name,
               lastName: newMember.last_name,
@@ -374,6 +374,7 @@ const startBotTelegram = async () => {
 
             const newMemberData: MemberDataI = {
               tgUserId: newMember.id.toString(),
+              telegramUsername: newMember.username,
               isBot: newMember.is_bot,
               firstName: newMember.first_name,
               lastName: newMember.last_name,
@@ -412,6 +413,7 @@ const startBotTelegram = async () => {
 
         const leftMemberData: MemberDataI = {
           tgUserId: leftMember.id.toString(),
+          telegramUsername: leftMember.username,
           isBot: leftMember.is_bot,
           firstName: leftMember.first_name,
           lastName: leftMember.last_name,
