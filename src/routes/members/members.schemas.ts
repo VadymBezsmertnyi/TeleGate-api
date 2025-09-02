@@ -135,6 +135,10 @@ export const memberWithSubscriptionResponseSchema = z.object({
   data: memberWithSubscriptionSchema,
 });
 
+export const memberWithSubscriptionByIdQuerySchema = z.object({
+  groupId: z.string(),
+});
+
 export const memberResponseSchema = z.object({
   data: memberSchema,
 });

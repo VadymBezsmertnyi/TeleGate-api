@@ -8,6 +8,7 @@ import {
   membersWithSubscriptionsResponseSchema,
   memberResponseSchema,
   memberWithSubscriptionResponseSchema,
+  memberWithSubscriptionByIdQuerySchema,
 } from "./members.schemas";
 import {
   buildMembersQuery,
@@ -202,6 +203,18 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
 router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const queryValidation = memberWithSubscriptionByIdQuerySchema.safeParse(
+      req.query
+    );
+    if (!queryValidation.success)
+      return res.status(405).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid query parameters",
+        },
+      });
+
+    const { groupId } = queryValidation.data;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -211,12 +224,15 @@ router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const member = await MemberModel.findById(id).lean();
+    const member = await MemberModel.findOne({
+      _id: id,
+      groups: groupId,
+    }).lean();
     if (!member)
       return res.status(404).json({
         error: {
           code: "NOT_FOUND",
-          message: "Member not found",
+          message: "Member not found in this group",
         },
       });
 
