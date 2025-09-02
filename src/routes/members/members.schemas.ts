@@ -50,13 +50,13 @@ export const memberWithSubscriptionSchema = z.object({
   photoUrl: z.string().nullable().optional(),
   user: z.any().nullable().optional(),
   groups: z.array(z.any()).optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.union([z.date(), z.string()]),
+  updatedAt: z.union([z.date(), z.string()]),
   subscription: z.object({
     _id: z.any(),
-    startDate: z.date(),
-    purchaseDate: z.date(),
-    endDate: z.date(),
+    startDate: z.union([z.date(), z.string()]),
+    purchaseDate: z.union([z.date(), z.string()]),
+    endDate: z.union([z.date(), z.string()]),
     groupSubscription: z.object({
       _id: z.any(),
       title: z.string(),

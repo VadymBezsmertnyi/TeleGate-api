@@ -140,7 +140,21 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
           .lean();
 
         return {
-          ...member,
+          _id: member._id,
+          tgUserId: member.tgUserId,
+          isBot: member.isBot,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          username: member.username,
+          languageCode: member.languageCode,
+          canJoinGroups: member.canJoinGroups,
+          canReadAllGroupMessages: member.canReadAllGroupMessages,
+          supportsInlineQueries: member.supportsInlineQueries,
+          photoUrl: member.photoUrl,
+          user: member.user,
+          groups: member.groups,
+          createdAt: member.createdAt,
+          updatedAt: member.updatedAt,
           subscription: subscription
             ? {
                 _id: subscription._id,
