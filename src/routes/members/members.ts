@@ -86,7 +86,9 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.get("/with-subscriptions", async (req: Request, res: Response) => {
   try {
-    const queryValidation = membersWithSubscriptionsQuerySchema.safeParse(req.query);
+    const queryValidation = membersWithSubscriptionsQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(405).json({
         error: {
@@ -120,11 +122,7 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     const [members, total] = await Promise.all([
-      MemberModel.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      MemberModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
       MemberModel.countDocuments(filter),
     ]);
 
