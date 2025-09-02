@@ -25,7 +25,8 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const query = queryValidation.data;
-    const { page, limit, order, memberId, groupId, groupSubscriptionId } = query;
+    const { page, limit, order, memberId, groupId, groupSubscriptionId } =
+      query;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -38,7 +39,10 @@ router.get("/", async (req: Request, res: Response) => {
     const filter: any = {};
     if (memberId) filter.member = new mongoose.Types.ObjectId(memberId);
     if (groupId) filter.group = new mongoose.Types.ObjectId(groupId);
-    if (groupSubscriptionId) filter.groupSubscription = new mongoose.Types.ObjectId(groupSubscriptionId);
+    if (groupSubscriptionId)
+      filter.groupSubscription = new mongoose.Types.ObjectId(
+        groupSubscriptionId
+      );
 
     const sort = { createdAt: order === "asc" ? 1 : -1 } as {
       [key: string]: SortOrder;
@@ -79,7 +83,8 @@ router.get("/", async (req: Request, res: Response) => {
       },
     };
 
-    const responseValidation = memberSubscriptionsResponseSchema.safeParse(response);
+    const responseValidation =
+      memberSubscriptionsResponseSchema.safeParse(response);
     if (!responseValidation.success)
       return res.status(405).json({
         error: {
@@ -102,7 +107,9 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = memberSubscriptionParamsSchema.safeParse(req.params);
+    const paramsValidation = memberSubscriptionParamsSchema.safeParse(
+      req.params
+    );
     if (!paramsValidation.success)
       return res.status(405).json({
         error: {
@@ -190,8 +197,14 @@ router.post("/", async (req: Request, res: Response) => {
         },
       });
 
-    const { startDate, purchaseDate, endDate, memberId, groupId, groupSubscriptionId } =
-      validationResult.data;
+    const {
+      startDate,
+      purchaseDate,
+      endDate,
+      memberId,
+      groupId,
+      groupSubscriptionId,
+    } = validationResult.data;
 
     const subscription = await MemberSubscriptionModel.create({
       startDate,
@@ -210,7 +223,9 @@ router.post("/", async (req: Request, res: Response) => {
       .populate("groupSubscription", "title price currency type duration")
       .lean();
     if (!populatedSubscription)
-      return res.status(400).json({ error: "Failed to create member subscription" });
+      return res
+        .status(400)
+        .json({ error: "Failed to create member subscription" });
 
     const transformedSubscription = {
       _id: populatedSubscription._id.toString(),
@@ -219,7 +234,8 @@ router.post("/", async (req: Request, res: Response) => {
       endDate: populatedSubscription.endDate,
       memberId: populatedSubscription.member?._id?.toString(),
       groupId: populatedSubscription.group?._id?.toString(),
-      groupSubscriptionId: populatedSubscription.groupSubscription?._id?.toString(),
+      groupSubscriptionId:
+        populatedSubscription.groupSubscription?._id?.toString(),
       createdAt: populatedSubscription.createdAt,
       updatedAt: populatedSubscription.updatedAt,
     };
@@ -249,7 +265,9 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = memberSubscriptionParamsSchema.safeParse(req.params);
+    const paramsValidation = memberSubscriptionParamsSchema.safeParse(
+      req.params
+    );
     if (!paramsValidation.success)
       return res.status(405).json({
         error: {
@@ -279,11 +297,17 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const updateData: any = { ...validationResult.data, updatedAt: new Date() };
     if (validationResult.data.memberId)
-      updateData.member = new mongoose.Types.ObjectId(validationResult.data.memberId);
+      updateData.member = new mongoose.Types.ObjectId(
+        validationResult.data.memberId
+      );
     if (validationResult.data.groupId)
-      updateData.group = new mongoose.Types.ObjectId(validationResult.data.groupId);
+      updateData.group = new mongoose.Types.ObjectId(
+        validationResult.data.groupId
+      );
     if (validationResult.data.groupSubscriptionId)
-      updateData.groupSubscription = new mongoose.Types.ObjectId(validationResult.data.groupSubscriptionId);
+      updateData.groupSubscription = new mongoose.Types.ObjectId(
+        validationResult.data.groupSubscriptionId
+      );
 
     delete updateData.memberId;
     delete updateData.groupId;
@@ -344,7 +368,9 @@ router.put("/:id", async (req: Request, res: Response) => {
 
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = memberSubscriptionParamsSchema.safeParse(req.params);
+    const paramsValidation = memberSubscriptionParamsSchema.safeParse(
+      req.params
+    );
     if (!paramsValidation.success)
       return res.status(405).json({
         error: {
@@ -363,7 +389,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const subscription = await MemberSubscriptionModel.findByIdAndDelete(_id).lean();
+    const subscription = await MemberSubscriptionModel.findByIdAndDelete(
+      _id
+    ).lean();
     if (!subscription)
       return res.status(404).json({
         error: {
