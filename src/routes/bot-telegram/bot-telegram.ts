@@ -232,6 +232,7 @@ const startBotTelegram = async () => {
 
         const memberData: MemberDataI = {
           tgUserId: newChatMember.user.id.toString(),
+          telegramUsername: newChatMember.user.username,
           isBot: newChatMember.user.is_bot,
           firstName: newChatMember.user.first_name,
           lastName: newChatMember.user.last_name,

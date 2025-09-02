@@ -164,6 +164,9 @@ export const createOrUpdateMember = async (memberData: MemberDataI) => {
         existingMember.privacySettings.forwards =
           memberData.privacySettings.forwards;
     }
+    
+    if (memberData.telegramUsername && memberData.telegramUsername !== existingMember.telegramUsername)
+      existingMember.telegramUsername = memberData.telegramUsername;
 
     await existingMember.save();
     return existingMember;
@@ -171,6 +174,7 @@ export const createOrUpdateMember = async (memberData: MemberDataI) => {
 
   const newMember = new MemberModel({
     tgUserId: memberData.tgUserId,
+    telegramUsername: memberData.telegramUsername || memberData.username,
     isBot: memberData.isBot,
     firstName: memberData.firstName,
     lastName: memberData.lastName,

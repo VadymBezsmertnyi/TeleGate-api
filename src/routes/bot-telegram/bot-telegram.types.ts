@@ -93,6 +93,7 @@ export interface GroupDataI {
 
 export interface MemberDataI {
   tgUserId: string;
+  telegramUsername?: string;
   isBot: boolean;
   firstName: string;
   lastName?: string;
