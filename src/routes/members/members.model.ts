@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 
 const memberSM = new Schema(
   {
+    telegramUsername: { type: String, required: true, unique: true },
     tgUserId: { type: String, required: true, unique: true },
     isBot: { type: Boolean, required: true },
     firstName: { type: String, required: true },
