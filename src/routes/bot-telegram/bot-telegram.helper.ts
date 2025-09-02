@@ -26,15 +26,32 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
     for (const member of membersWithExpiredPhotos) {
       try {
         const newPhotoUrl = await getUserPhotoUrl(bot, member.tgUserId);
-        if (newPhotoUrl) {
-          await MemberModel.updateOne(
-            { _id: member._id },
-            { photoUrl: newPhotoUrl }
+        let updateData: any = {};
+        if (newPhotoUrl) updateData.photoUrl = newPhotoUrl;
+
+        try {
+          const userInfo = await telegram.getChat(parseInt(member.tgUserId));
+          if (
+            userInfo &&
+            "username" in userInfo &&
+            userInfo.username &&
+            userInfo.username !== member.telegramUsername
+          ) {
+            updateData.telegramUsername = userInfo.username;
+          }
+        } catch (usernameError) {
+          console.warn(
+            `⚠️ Не вдалося отримати username для ${member.tgUserId}:`,
+            usernameError
           );
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await MemberModel.updateOne({ _id: member._id }, updateData);
           updatedMembers++;
         } else {
           console.warn(
-            `⚠️ Не вдалося отримати нове фото для ${member.tgUserId} (${member.firstName})`
+            `⚠️ Немає даних для оновлення для ${member.tgUserId} (${member.firstName})`
           );
         }
       } catch (error) {
@@ -72,7 +89,7 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
     }
 
     console.warn(`✅ Оновлення завершено:`);
-    console.warn(`👤 Користувачів: ${updatedMembers}`);
+    console.warn(`👤 Користувачів (фото та username): ${updatedMembers}`);
     console.warn(`👥 Груп: ${updatedGroups}`);
     console.warn(`❌ Помилок: ${errors}`);
     console.warn(
@@ -151,6 +168,11 @@ export const createOrUpdateMember = async (memberData: MemberDataI) => {
   if (existingMember) {
     if (memberData.photoUrl && memberData.photoUrl !== existingMember.photoUrl)
       existingMember.photoUrl = memberData.photoUrl;
+    if (
+      memberData.telegramUsername &&
+      memberData.telegramUsername !== existingMember.telegramUsername
+    )
+      existingMember.telegramUsername = memberData.telegramUsername;
     if (memberData.hasPrivateForwards !== undefined)
       existingMember.hasPrivateForwards = memberData.hasPrivateForwards;
     if (memberData.privacySettings && existingMember.privacySettings) {
@@ -171,6 +193,7 @@ export const createOrUpdateMember = async (memberData: MemberDataI) => {
 
   const newMember = new MemberModel({
     tgUserId: memberData.tgUserId,
+    telegramUsername: memberData.telegramUsername,
     isBot: memberData.isBot,
     firstName: memberData.firstName,
     lastName: memberData.lastName,
