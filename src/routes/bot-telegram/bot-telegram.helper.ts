@@ -27,8 +27,10 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
       try {
         const newPhotoUrl = await getUserPhotoUrl(bot, member.tgUserId);
         if (newPhotoUrl) {
-          member.photoUrl = newPhotoUrl;
-          await member.save();
+          await MemberModel.updateOne(
+            { _id: member._id },
+            { photoUrl: newPhotoUrl }
+          );
           updatedMembers++;
         } else {
           console.warn(
