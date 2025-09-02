@@ -131,6 +131,10 @@ export const membersWithSubscriptionsResponseSchema = z.object({
   }),
 });
 
+export const memberWithSubscriptionResponseSchema = z.object({
+  data: memberWithSubscriptionSchema,
+});
+
 export const memberResponseSchema = z.object({
   data: memberSchema,
 });

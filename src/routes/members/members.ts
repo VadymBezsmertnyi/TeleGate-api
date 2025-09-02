@@ -7,6 +7,7 @@ import {
   membersResponseSchema,
   membersWithSubscriptionsResponseSchema,
   memberResponseSchema,
+  memberWithSubscriptionResponseSchema,
 } from "./members.schemas";
 import {
   buildMembersQuery,
@@ -193,6 +194,72 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
       error: {
         code: "INTERNAL_ERROR",
         message: "Failed to fetch members with subscriptions",
+      },
+    });
+  }
+});
+
+router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const authenticatedUser = await getAuthenticatedUser(req);
+    if (!authenticatedUser)
+      return res.status(401).json({
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Authentication required",
+        },
+      });
+
+    const member = await MemberModel.findById(id).lean();
+    if (!member)
+      return res.status(404).json({
+        error: {
+          code: "NOT_FOUND",
+          message: "Member not found",
+        },
+      });
+
+    const subscription = await MemberSubscriptionModel.findOne({
+      member: member._id,
+    })
+      .populate("groupSubscription", "title price currency type duration")
+      .lean();
+
+    const memberWithSubscription = {
+      ...member,
+      subscription: subscription
+        ? {
+            _id: subscription._id,
+            startDate: subscription.startDate,
+            purchaseDate: subscription.purchaseDate,
+            endDate: subscription.endDate,
+            groupSubscription: subscription.groupSubscription,
+          }
+        : null,
+    };
+
+    const response = {
+      data: memberWithSubscription,
+    };
+
+    const responseValidation =
+      memberWithSubscriptionResponseSchema.safeParse(response);
+    if (!responseValidation.success)
+      return res.status(405).json({
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Data validation failed",
+        },
+      });
+
+    return res.json(responseValidation.data);
+  } catch (error) {
+    console.warn("Error fetching member with subscription:", error);
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to fetch member with subscription",
       },
     });
   }
