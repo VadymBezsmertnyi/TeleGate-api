@@ -131,7 +131,13 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
         {
           $group: {
             _id: "$group",
-            count: { $sum: 1 },
+            uniqueMembers: { $addToSet: "$member" },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: { $size: "$uniqueMembers" },
           },
         },
       ]),
@@ -145,7 +151,13 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
         {
           $group: {
             _id: "$group",
-            count: { $sum: 1 },
+            uniqueMembers: { $addToSet: "$member" },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: { $size: "$uniqueMembers" },
           },
         },
       ]),

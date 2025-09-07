@@ -348,21 +348,25 @@ router.get("/:id", async (req: Request, res: Response) => {
     const memberCount = group.members ? group.members.length : 0;
     const [
       subscriptionsCount,
-      usersWithSubscriptionCount,
-      usersWithExpiredSubscriptionCount,
+      usersWithActiveSubscriptions,
+      usersWithExpiredSubscriptions,
     ] = await Promise.all([
       GroupSubscriptionModel.countDocuments({
         group: group._id,
       }),
-      MemberSubscriptionModel.countDocuments({
+      MemberSubscriptionModel.distinct("member", {
         group: group._id,
         endDate: { $gt: new Date() },
       }),
-      MemberSubscriptionModel.countDocuments({
+      MemberSubscriptionModel.distinct("member", {
         group: group._id,
         endDate: { $lte: new Date() },
       }),
     ]);
+
+    const usersWithSubscriptionCount = usersWithActiveSubscriptions.length;
+    const usersWithExpiredSubscriptionCount =
+      usersWithExpiredSubscriptions.length;
     const usersWithoutSubscriptionCount = Math.max(
       0,
       memberCount -
