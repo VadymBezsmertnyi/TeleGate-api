@@ -63,14 +63,14 @@ router.get("/", async (req: Request, res: Response) => {
     const pages = Math.ceil(total / limit);
     const transformedSubscriptions = subscriptions.map((sub: any) => ({
       _id: sub._id.toString(),
-      startDate: sub.startDate,
-      purchaseDate: sub.purchaseDate,
-      endDate: sub.endDate,
+      startDate: sub.startDate.toISOString(),
+      purchaseDate: sub.purchaseDate.toISOString(),
+      endDate: sub.endDate.toISOString(),
       memberId: sub.member?._id?.toString(),
       groupId: sub.group?._id?.toString(),
       groupSubscriptionId: sub.groupSubscription?._id?.toString(),
-      createdAt: sub.createdAt,
-      updatedAt: sub.updatedAt,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
     }));
 
     const response = {
@@ -144,14 +144,14 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     const transformedSubscription = {
       _id: subscription._id.toString(),
-      startDate: subscription.startDate,
-      purchaseDate: subscription.purchaseDate,
-      endDate: subscription.endDate,
+      startDate: subscription.startDate.toISOString(),
+      purchaseDate: subscription.purchaseDate.toISOString(),
+      endDate: subscription.endDate.toISOString(),
       memberId: subscription.member?._id?.toString(),
       groupId: subscription.group?._id?.toString(),
       groupSubscriptionId: subscription.groupSubscription?._id?.toString(),
-      createdAt: subscription.createdAt,
-      updatedAt: subscription.updatedAt,
+      createdAt: subscription.createdAt.toISOString(),
+      updatedAt: subscription.updatedAt.toISOString(),
     };
 
     const responseValidation = memberSubscriptionResponseSchema.safeParse({
@@ -229,15 +229,15 @@ router.post("/", async (req: Request, res: Response) => {
 
     const transformedSubscription = {
       _id: populatedSubscription._id.toString(),
-      startDate: populatedSubscription.startDate,
-      purchaseDate: populatedSubscription.purchaseDate,
-      endDate: populatedSubscription.endDate,
+      startDate: populatedSubscription.startDate.toISOString(),
+      purchaseDate: populatedSubscription.purchaseDate.toISOString(),
+      endDate: populatedSubscription.endDate.toISOString(),
       memberId: populatedSubscription.member?._id?.toString(),
       groupId: populatedSubscription.group?._id?.toString(),
       groupSubscriptionId:
         populatedSubscription.groupSubscription?._id?.toString(),
-      createdAt: populatedSubscription.createdAt,
-      updatedAt: populatedSubscription.updatedAt,
+      createdAt: populatedSubscription.createdAt.toISOString(),
+      updatedAt: populatedSubscription.updatedAt.toISOString(),
     };
 
     const responseValidation = memberSubscriptionResponseSchema.safeParse({
@@ -333,14 +333,14 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const transformedSubscription = {
       _id: subscription._id.toString(),
-      startDate: subscription.startDate,
-      purchaseDate: subscription.purchaseDate,
-      endDate: subscription.endDate,
+      startDate: subscription.startDate.toISOString(),
+      purchaseDate: subscription.purchaseDate.toISOString(),
+      endDate: subscription.endDate.toISOString(),
       memberId: subscription.member?._id?.toString(),
       groupId: subscription.group?._id?.toString(),
       groupSubscriptionId: subscription.groupSubscription?._id?.toString(),
-      createdAt: subscription.createdAt,
-      updatedAt: subscription.updatedAt,
+      createdAt: subscription.createdAt.toISOString(),
+      updatedAt: subscription.updatedAt.toISOString(),
     };
 
     const responseValidation = memberSubscriptionResponseSchema.safeParse({

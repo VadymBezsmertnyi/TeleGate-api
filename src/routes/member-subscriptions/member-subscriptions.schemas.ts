@@ -25,18 +25,27 @@ export const memberSubscriptionPublicSchema = z.object({
 });
 
 export const createMemberSubscriptionSchema = z.object({
-  startDate: z.date(),
-  purchaseDate: z.date(),
-  endDate: z.date(),
+  startDate: z.string().transform((val) => new Date(val)),
+  purchaseDate: z.string().transform((val) => new Date(val)),
+  endDate: z.string().transform((val) => new Date(val)),
   memberId: z.string(),
   groupId: z.string(),
   groupSubscriptionId: z.string(),
 });
 
 export const updateMemberSubscriptionSchema = z.object({
-  startDate: z.date().optional(),
-  purchaseDate: z.date().optional(),
-  endDate: z.date().optional(),
+  startDate: z
+    .string()
+    .transform((val) => new Date(val))
+    .optional(),
+  purchaseDate: z
+    .string()
+    .transform((val) => new Date(val))
+    .optional(),
+  endDate: z
+    .string()
+    .transform((val) => new Date(val))
+    .optional(),
   memberId: z.string().optional(),
   groupId: z.string().optional(),
   groupSubscriptionId: z.string().optional(),
