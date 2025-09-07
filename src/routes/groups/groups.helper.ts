@@ -4,6 +4,7 @@ import UserModel from "../users/users.model";
 import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
 import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
 import { GroupsQueryT, GroupsFilterI, SortQueryI } from "./groups.types";
+import MemberModel from "../members/members.model";
 
 export const buildGroupsQuery = (query: GroupsQueryT): GroupsFilterI => {
   const { search, status, createdFrom, createdTo, activity } = query;
@@ -119,6 +120,34 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
 
   const groupIds = groups.map((group) => group._id);
 
+  // Get member counts excluding bots for each group
+  const memberCounts = await MemberModel.aggregate([
+    {
+      $match: {
+        groups: { $in: groupIds },
+        isBot: false,
+      },
+    },
+    {
+      $unwind: "$groups",
+    },
+    {
+      $match: {
+        groups: { $in: groupIds },
+      },
+    },
+    {
+      $group: {
+        _id: "$groups",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const memberCountsMap = new Map(
+    memberCounts.map((item) => [item._id.toString(), item.count])
+  );
+
   const [activeSubscriptions, expiredSubscriptions, groupSubscriptions] =
     await Promise.all([
       MemberSubscriptionModel.aggregate([
@@ -126,6 +155,19 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
           $match: {
             group: { $in: groupIds },
             endDate: { $gt: new Date() },
+          },
+        },
+        {
+          $lookup: {
+            from: "members",
+            localField: "member",
+            foreignField: "_id",
+            as: "memberInfo",
+          },
+        },
+        {
+          $match: {
+            "memberInfo.isBot": false,
           },
         },
         {
@@ -146,6 +188,19 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
           $match: {
             group: { $in: groupIds },
             endDate: { $lte: new Date() },
+          },
+        },
+        {
+          $lookup: {
+            from: "members",
+            localField: "member",
+            foreignField: "_id",
+            as: "memberInfo",
+          },
+        },
+        {
+          $match: {
+            "memberInfo.isBot": false,
           },
         },
         {
@@ -187,7 +242,7 @@ export const getGroupsWithMemberCount = async (groups: any[]) => {
   );
 
   return groups.map((group) => {
-    const memberCount = group.members ? group.members.length : 0;
+    const memberCount = memberCountsMap.get(group._id.toString()) || 0;
     const subscriptionsCount = groupSubsMap.get(group._id.toString()) || 0;
     const usersWithSubscriptionCount =
       activeSubsMap.get(group._id.toString()) || 0;

@@ -345,7 +345,15 @@ router.get("/:id", async (req: Request, res: Response) => {
         });
     }
 
-    const memberCount = group.members ? group.members.length : 0;
+    // Get all members excluding bots
+    const allMembers = await MemberModel.find({
+      groups: group._id,
+      isBot: false,
+    }).lean();
+
+    const memberCount = allMembers.length;
+    const memberIds = allMembers.map((member) => member._id);
+
     const [
       subscriptionsCount,
       usersWithActiveSubscriptions,
@@ -356,10 +364,12 @@ router.get("/:id", async (req: Request, res: Response) => {
       }),
       MemberSubscriptionModel.distinct("member", {
         group: group._id,
+        member: { $in: memberIds },
         endDate: { $gt: new Date() },
       }),
       MemberSubscriptionModel.distinct("member", {
         group: group._id,
+        member: { $in: memberIds },
         endDate: { $lte: new Date() },
       }),
     ]);
