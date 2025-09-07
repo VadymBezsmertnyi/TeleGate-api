@@ -132,12 +132,16 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
 
     const membersWithSubscriptions = await Promise.all(
       members.map(async (member) => {
-        const subscription = await MemberSubscriptionModel.findOne({
+        const activeSubscriptions = await MemberSubscriptionModel.find({
           member: member._id,
           group: groupId,
+          endDate: { $gt: new Date() },
         })
           .populate("groupSubscription", "title price currency type duration")
+          .sort({ endDate: 1 })
           .lean();
+
+        const latestSubscription = activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
 
         return {
           _id: member._id,
@@ -156,15 +160,23 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
           groups: member.groups,
           createdAt: member.createdAt,
           updatedAt: member.updatedAt,
-          subscription: subscription
+          subscription: latestSubscription
             ? {
-                _id: subscription._id,
-                startDate: subscription.startDate,
-                purchaseDate: subscription.purchaseDate,
-                endDate: subscription.endDate,
-                groupSubscription: subscription.groupSubscription,
+                _id: latestSubscription._id,
+                startDate: latestSubscription.startDate,
+                purchaseDate: latestSubscription.purchaseDate,
+                endDate: latestSubscription.endDate,
+                groupSubscription: latestSubscription.groupSubscription,
               }
             : null,
+          activeSubscriptionsCount: activeSubscriptions.length,
+          activeSubscriptions: activeSubscriptions.map(sub => ({
+            _id: sub._id,
+            startDate: sub.startDate,
+            purchaseDate: sub.purchaseDate,
+            endDate: sub.endDate,
+            groupSubscription: sub.groupSubscription,
+          })),
         };
       })
     );
@@ -237,23 +249,51 @@ router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const subscription = await MemberSubscriptionModel.findOne({
+    const activeSubscriptions = await MemberSubscriptionModel.find({
       member: member._id,
+      group: groupId,
+      endDate: { $gt: new Date() },
     })
       .populate("groupSubscription", "title price currency type duration")
+      .sort({ endDate: 1 })
       .lean();
+
+    const allSubscriptions = await MemberSubscriptionModel.find({
+      member: member._id,
+      group: groupId,
+    })
+      .populate("groupSubscription", "title price currency type duration")
+      .sort({ endDate: -1 })
+      .lean();
+
+    const latestSubscription = activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
 
     const memberWithSubscription = {
       ...member,
-      subscription: subscription
+      subscription: latestSubscription
         ? {
-            _id: subscription._id,
-            startDate: subscription.startDate,
-            purchaseDate: subscription.purchaseDate,
-            endDate: subscription.endDate,
-            groupSubscription: subscription.groupSubscription,
+            _id: latestSubscription._id,
+            startDate: latestSubscription.startDate,
+            purchaseDate: latestSubscription.purchaseDate,
+            endDate: latestSubscription.endDate,
+            groupSubscription: latestSubscription.groupSubscription,
           }
         : null,
+      activeSubscriptionsCount: activeSubscriptions.length,
+      activeSubscriptions: activeSubscriptions.map(sub => ({
+        _id: sub._id,
+        startDate: sub.startDate,
+        purchaseDate: sub.purchaseDate,
+        endDate: sub.endDate,
+        groupSubscription: sub.groupSubscription,
+      })),
+      allSubscriptions: allSubscriptions.map(sub => ({
+        _id: sub._id,
+        startDate: sub.startDate,
+        purchaseDate: sub.purchaseDate,
+        endDate: sub.endDate,
+        groupSubscription: sub.groupSubscription,
+      })),
     };
 
     const response = {
