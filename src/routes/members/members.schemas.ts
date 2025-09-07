@@ -17,6 +17,9 @@ export const memberSchema = z.object({
   groups: z.array(z.any()).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
+  activeSubscriptionsCount: z.number().optional(),
+  groupsCount: z.number().optional(),
+  subscriptionDelaysCount: z.number().optional(),
 });
 
 export const memberPublicSchema = z.object({

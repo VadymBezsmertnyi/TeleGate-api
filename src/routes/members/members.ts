@@ -380,9 +380,34 @@ router.get("/owner", async (req: Request, res: Response) => {
       MemberModel.countDocuments(filter),
     ]);
 
+    const membersWithStats = await Promise.all(
+      members.map(async (member) => {
+        const activeSubscriptionsCount =
+          await MemberSubscriptionModel.countDocuments({
+            member: member._id,
+            endDate: { $gt: new Date() },
+          });
+
+        const groupsCount = member.groups ? member.groups.length : 0;
+
+        const subscriptionDelaysCount =
+          await MemberSubscriptionModel.countDocuments({
+            member: member._id,
+            endDate: { $lt: new Date() },
+          });
+
+        return {
+          ...member,
+          activeSubscriptionsCount,
+          groupsCount,
+          subscriptionDelaysCount,
+        };
+      })
+    );
+
     const pages = Math.ceil(total / limit);
     const response = {
-      data: members,
+      data: membersWithStats,
       meta: {
         page,
         limit,
