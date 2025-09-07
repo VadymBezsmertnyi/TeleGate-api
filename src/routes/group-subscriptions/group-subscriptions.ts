@@ -59,9 +59,9 @@ router.get("/", async (req: Request, res: Response) => {
 
     const transformedSubscriptions = await Promise.all(
       subscriptions.map(async (sub: any) => {
-        const memberSubscriptionIds = await MemberSubscriptionModel.find({
+        const uniqueMemberIds = await MemberSubscriptionModel.find({
           groupSubscription: sub._id,
-        }).distinct("_id");
+        }).distinct("member");
 
         return {
           _id: sub._id.toString(),
@@ -71,9 +71,7 @@ router.get("/", async (req: Request, res: Response) => {
           currency: sub.currency,
           type: sub.type,
           duration: sub.duration,
-          memberSubscriptionIds: memberSubscriptionIds.map((id) =>
-            id.toString()
-          ),
+          memberSubscriptionIds: uniqueMemberIds.map((id) => id.toString()),
           groupId: sub.group?._id?.toString(),
           userId: sub.user?._id?.toString(),
           createdAt: sub.createdAt,
@@ -165,9 +163,9 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
 
     const transformedSubscriptions = await Promise.all(
       subscriptions.map(async (sub: any) => {
-        const memberSubscriptionIds = await MemberSubscriptionModel.find({
+        const uniqueMemberIds = await MemberSubscriptionModel.find({
           groupSubscription: sub._id,
-        }).distinct("_id");
+        }).distinct("member");
 
         return {
           _id: sub._id.toString(),
@@ -177,9 +175,7 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
           currency: sub.currency,
           type: sub.type,
           duration: sub.duration,
-          memberSubscriptionIds: memberSubscriptionIds.map((id) =>
-            id.toString()
-          ),
+          memberSubscriptionIds: uniqueMemberIds.map((id) => id.toString()),
           groupId: sub.group?.toString(),
           userId: sub.user?._id?.toString(),
           createdAt: sub.createdAt,
