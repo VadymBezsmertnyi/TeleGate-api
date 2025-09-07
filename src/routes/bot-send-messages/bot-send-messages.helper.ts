@@ -185,12 +185,36 @@ export const sendMessageToUser = async (
       };
 
     const bot = new Telegraf(botToken);
-    const memberAccess = (await bot.telegram.getChat(
-      member.tgUserId
-    )) as ChatFromGetChat & {
-      has_private_forwards?: boolean;
-    };
-    if (memberAccess.has_private_forwards && member.username)
+
+    let memberAccess:
+      | (ChatFromGetChat & { has_private_forwards?: boolean })
+      | null = null;
+    try {
+      memberAccess = (await bot.telegram.getChat(
+        member.tgUserId
+      )) as ChatFromGetChat & {
+        has_private_forwards?: boolean;
+      };
+    } catch (getChatError) {
+      console.warn(
+        "Cannot access user chat, will try to send in group:",
+        getChatError
+      );
+      if (member.username)
+        return await sendMessageToUserInGroup(
+          member.username,
+          message,
+          botToken,
+          tgChatId
+        );
+
+      return {
+        success: false,
+        error: "Cannot send message: user has private settings and no username",
+      };
+    }
+
+    if (memberAccess?.has_private_forwards && member.username)
       return await sendMessageToUserInGroup(
         member.username,
         message,
@@ -198,18 +222,35 @@ export const sendMessageToUser = async (
         tgChatId
       );
 
-    const sentMessage = await bot.telegram.sendMessage(userId, message);
-    return {
-      success: true,
-      data: {
-        messageId: sentMessage.message_id,
-        sentAt: new Date(),
-      },
-    };
+    try {
+      const sentMessage = await bot.telegram.sendMessage(userId, message);
+      return {
+        success: true,
+        data: {
+          messageId: sentMessage.message_id,
+          sentAt: new Date(),
+        },
+      };
+    } catch (sendError) {
+      console.warn(
+        "Cannot send direct message, trying to send in group:",
+        sendError
+      );
+      if (member.username)
+        return await sendMessageToUserInGroup(
+          member.username,
+          message,
+          botToken,
+          tgChatId
+        );
+
+      return {
+        success: false,
+        error: "Cannot send message: user has private settings and no username",
+      };
+    }
   } catch (error) {
     console.error("Error in sendMessageToUser:", error);
-
-    // Обробка специфічних помилок Telegram
     if (error instanceof Error) {
       if (error.message.includes("Forbidden")) {
         return {
@@ -217,12 +258,21 @@ export const sendMessageToUser = async (
           error: "User has blocked the bot or left the group",
         };
       }
-      if (error.message.includes("Bad Request")) {
+      if (
+        error.message.includes("Bad Request") &&
+        error.message.includes("chat not found")
+      )
+        return {
+          success: false,
+          error:
+            "Cannot access user: user has private settings. Please ensure user has a username to send messages in group.",
+        };
+
+      if (error.message.includes("Bad Request"))
         return {
           success: false,
           error: "Invalid user ID or message format",
         };
-      }
     }
 
     return {
