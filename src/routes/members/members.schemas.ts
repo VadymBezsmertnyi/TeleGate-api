@@ -72,6 +72,43 @@ export const memberWithSubscriptionSchema = z.object({
     })
     .nullable()
     .optional(),
+  activeSubscriptionsCount: z.number().optional(),
+  activeSubscriptions: z
+    .array(
+      z.object({
+        _id: z.any(),
+        startDate: z.union([z.date(), z.string()]),
+        purchaseDate: z.union([z.date(), z.string()]),
+        endDate: z.union([z.date(), z.string()]),
+        groupSubscription: z.object({
+          _id: z.any(),
+          title: z.string(),
+          price: z.number(),
+          currency: z.string(),
+          type: z.string(),
+          duration: z.number(),
+        }),
+      })
+    )
+    .optional(),
+  allSubscriptions: z
+    .array(
+      z.object({
+        _id: z.any(),
+        startDate: z.union([z.date(), z.string()]),
+        purchaseDate: z.union([z.date(), z.string()]),
+        endDate: z.union([z.date(), z.string()]),
+        groupSubscription: z.object({
+          _id: z.any(),
+          title: z.string(),
+          price: z.number(),
+          currency: z.string(),
+          type: z.string(),
+          duration: z.number(),
+        }),
+      })
+    )
+    .optional(),
 });
 
 export const membersQuerySchema = z.object({

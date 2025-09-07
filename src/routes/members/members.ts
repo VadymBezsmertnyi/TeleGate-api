@@ -141,7 +141,8 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
           .sort({ endDate: 1 })
           .lean();
 
-        const latestSubscription = activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
+        const latestSubscription =
+          activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
 
         return {
           _id: member._id,
@@ -170,7 +171,7 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
               }
             : null,
           activeSubscriptionsCount: activeSubscriptions.length,
-          activeSubscriptions: activeSubscriptions.map(sub => ({
+          activeSubscriptions: activeSubscriptions.map((sub) => ({
             _id: sub._id,
             startDate: sub.startDate,
             purchaseDate: sub.purchaseDate,
@@ -266,7 +267,8 @@ router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
       .sort({ endDate: -1 })
       .lean();
 
-    const latestSubscription = activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
+    const latestSubscription =
+      activeSubscriptions.length > 0 ? activeSubscriptions[0] : null;
 
     const memberWithSubscription = {
       ...member,
@@ -280,14 +282,14 @@ router.get("/with-subscriptions/:id", async (req: Request, res: Response) => {
           }
         : null,
       activeSubscriptionsCount: activeSubscriptions.length,
-      activeSubscriptions: activeSubscriptions.map(sub => ({
+      activeSubscriptions: activeSubscriptions.map((sub) => ({
         _id: sub._id,
         startDate: sub.startDate,
         purchaseDate: sub.purchaseDate,
         endDate: sub.endDate,
         groupSubscription: sub.groupSubscription,
       })),
-      allSubscriptions: allSubscriptions.map(sub => ({
+      allSubscriptions: allSubscriptions.map((sub) => ({
         _id: sub._id,
         startDate: sub.startDate,
         purchaseDate: sub.purchaseDate,
