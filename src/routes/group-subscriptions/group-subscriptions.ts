@@ -319,6 +319,7 @@ router.post("/", async (req: Request, res: Response) => {
       currency: populatedSubscription.currency,
       type: populatedSubscription.type,
       duration: populatedSubscription.duration,
+      memberSubscriptionIds: [],
       groupId: populatedSubscription.group?._id?.toString(),
       userId: populatedSubscription.user?._id?.toString(),
       createdAt: populatedSubscription.createdAt,
