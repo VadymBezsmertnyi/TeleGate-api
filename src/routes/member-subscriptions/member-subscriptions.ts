@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import mongoose, { SortOrder } from "mongoose";
 import MemberSubscriptionModel from "./member-subscriptions.model";
+import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
 import {
   memberSubscriptionsQuerySchema,
   memberSubscriptionParamsSchema,
@@ -197,18 +198,55 @@ router.post("/", async (req: Request, res: Response) => {
         },
       });
 
-    const {
-      startDate,
-      purchaseDate,
-      endDate,
-      memberId,
-      groupId,
-      groupSubscriptionId,
-    } = validationResult.data;
+    const { memberId, groupId, groupSubscriptionId } = validationResult.data;
+
+    const groupSubscription = await GroupSubscriptionModel.findById(
+      groupSubscriptionId
+    );
+    if (!groupSubscription)
+      return res.status(404).json({
+        error: {
+          code: "NOT_FOUND",
+          message: "Group subscription not found",
+        },
+      });
+
+    const lastSubscription = await MemberSubscriptionModel.findOne({
+      member: new mongoose.Types.ObjectId(memberId),
+      group: new mongoose.Types.ObjectId(groupId),
+    })
+      .sort({ endDate: -1 })
+      .lean();
+
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    if (lastSubscription && lastSubscription.endDate >= now)
+      startDate = lastSubscription.endDate;
+    else startDate = now;
+
+    endDate = new Date(startDate);
+    switch (groupSubscription.type) {
+      case "daily":
+        endDate.setDate(endDate.getDate() + groupSubscription.duration);
+        break;
+      case "weekly":
+        endDate.setDate(endDate.getDate() + groupSubscription.duration * 7);
+        break;
+      case "monthly":
+        endDate.setMonth(endDate.getMonth() + groupSubscription.duration);
+        break;
+      case "yearly":
+        endDate.setFullYear(endDate.getFullYear() + groupSubscription.duration);
+        break;
+      default:
+        endDate.setDate(endDate.getDate() + groupSubscription.duration);
+    }
 
     const subscription = await MemberSubscriptionModel.create({
       startDate,
-      purchaseDate,
+      purchaseDate: now,
       endDate,
       member: new mongoose.Types.ObjectId(memberId),
       group: new mongoose.Types.ObjectId(groupId),

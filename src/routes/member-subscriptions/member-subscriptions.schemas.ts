@@ -25,9 +25,6 @@ export const memberSubscriptionPublicSchema = z.object({
 });
 
 export const createMemberSubscriptionSchema = z.object({
-  startDate: z.string().transform((val) => new Date(val)),
-  purchaseDate: z.string().transform((val) => new Date(val)),
-  endDate: z.string().transform((val) => new Date(val)),
   memberId: z.string(),
   groupId: z.string(),
   groupSubscriptionId: z.string(),
