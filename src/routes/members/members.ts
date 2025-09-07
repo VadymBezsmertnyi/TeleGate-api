@@ -390,17 +390,32 @@ router.get("/owner", async (req: Request, res: Response) => {
 
         const groupsCount = member.groups ? member.groups.length : 0;
 
-        const subscriptionDelaysCount =
-          await MemberSubscriptionModel.countDocuments({
-            member: member._id,
-            endDate: { $lt: new Date() },
-          });
+        const allSubscriptions = await MemberSubscriptionModel.find({
+          member: member._id,
+        })
+          .sort({ startDate: 1 })
+          .lean();
+
+        let subscriptionDelaysDays = 0;
+
+        if (allSubscriptions.length > 0) {
+          for (let i = 0; i < allSubscriptions.length - 1; i++) {
+            const currentEnd = new Date(allSubscriptions[i].endDate);
+            const nextStart = new Date(allSubscriptions[i + 1].startDate);
+
+            if (nextStart > currentEnd) {
+              const diffTime = nextStart.getTime() - currentEnd.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              subscriptionDelaysDays += diffDays;
+            }
+          }
+        }
 
         return {
           ...member,
           activeSubscriptionsCount,
           groupsCount,
-          subscriptionDelaysCount,
+          subscriptionDelaysDays,
         };
       })
     );

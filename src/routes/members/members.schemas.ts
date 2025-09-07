@@ -19,7 +19,7 @@ export const memberSchema = z.object({
   updatedAt: z.date(),
   activeSubscriptionsCount: z.number().optional(),
   groupsCount: z.number().optional(),
-  subscriptionDelaysCount: z.number().optional(),
+  subscriptionDelaysDays: z.number().optional(),
 });
 
 export const memberPublicSchema = z.object({
