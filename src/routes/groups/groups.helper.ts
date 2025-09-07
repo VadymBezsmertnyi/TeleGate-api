@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import UserModel from "../users/users.model";
 import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
+import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
 import { GroupsQueryT, GroupsFilterI, SortQueryI } from "./groups.types";
 
 export const buildGroupsQuery = (query: GroupsQueryT): GroupsFilterI => {
@@ -115,50 +116,78 @@ export const getOwnerGroups = async (
 
 export const getGroupsWithMemberCount = async (groups: any[]) => {
   if (groups.length === 0) return [];
-  
-  const groupIds = groups.map(group => group._id);
-  
-  const [activeSubscriptions, expiredSubscriptions] = await Promise.all([
-    MemberSubscriptionModel.aggregate([
-      {
-        $match: {
-          group: { $in: groupIds },
-          endDate: { $gt: new Date() }
-        }
-      },
-      {
-        $group: {
-          _id: "$group",
-          count: { $sum: 1 }
-        }
-      }
-    ]),
-    MemberSubscriptionModel.aggregate([
-      {
-        $match: {
-          group: { $in: groupIds },
-          endDate: { $lte: new Date() }
-        }
-      },
-      {
-        $group: {
-          _id: "$group",
-          count: { $sum: 1 }
-        }
-      }
-    ])
-  ]);
-  
-  const activeSubsMap = new Map(activeSubscriptions.map(item => [item._id.toString(), item.count]));
-  const expiredSubsMap = new Map(expiredSubscriptions.map(item => [item._id.toString(), item.count]));
-  
+
+  const groupIds = groups.map((group) => group._id);
+
+  const [activeSubscriptions, expiredSubscriptions, groupSubscriptions] =
+    await Promise.all([
+      MemberSubscriptionModel.aggregate([
+        {
+          $match: {
+            group: { $in: groupIds },
+            endDate: { $gt: new Date() },
+          },
+        },
+        {
+          $group: {
+            _id: "$group",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      MemberSubscriptionModel.aggregate([
+        {
+          $match: {
+            group: { $in: groupIds },
+            endDate: { $lte: new Date() },
+          },
+        },
+        {
+          $group: {
+            _id: "$group",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      GroupSubscriptionModel.aggregate([
+        {
+          $match: {
+            group: { $in: groupIds },
+          },
+        },
+        {
+          $group: {
+            _id: "$group",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+  const activeSubsMap = new Map(
+    activeSubscriptions.map((item) => [item._id.toString(), item.count])
+  );
+  const expiredSubsMap = new Map(
+    expiredSubscriptions.map((item) => [item._id.toString(), item.count])
+  );
+  const groupSubsMap = new Map(
+    groupSubscriptions.map((item) => [item._id.toString(), item.count])
+  );
+
   return groups.map((group) => {
     const memberCount = group.members ? group.members.length : 0;
-    const subscriptionsCount = group.groupSubscriptions ? group.groupSubscriptions.length : 0;
-    const usersWithSubscriptionCount = activeSubsMap.get(group._id.toString()) || 0;
-    const usersWithExpiredSubscriptionCount = expiredSubsMap.get(group._id.toString()) || 0;
-    const usersWithoutSubscriptionCount = Math.max(0, memberCount - usersWithSubscriptionCount - usersWithExpiredSubscriptionCount);
-    
+    const subscriptionsCount = groupSubsMap.get(group._id.toString()) || 0;
+    const usersWithSubscriptionCount =
+      activeSubsMap.get(group._id.toString()) || 0;
+    const usersWithExpiredSubscriptionCount =
+      expiredSubsMap.get(group._id.toString()) || 0;
+    const usersWithoutSubscriptionCount = Math.max(
+      0,
+      memberCount -
+        usersWithSubscriptionCount -
+        usersWithExpiredSubscriptionCount
+    );
+
     return transformGroupToPublic(
       group,
       memberCount,

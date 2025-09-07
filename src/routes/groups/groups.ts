@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import GroupModel from "./group.model";
 import MemberModel from "../members/members.model";
 import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
+import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
 import {
   groupsQuerySchema,
   groupParamsSchema,
@@ -345,20 +346,23 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     const memberCount = group.members ? group.members.length : 0;
-    const subscriptionsCount = group.groupSubscriptions
-      ? group.groupSubscriptions.length
-      : 0;
-    const [usersWithSubscriptionCount, usersWithExpiredSubscriptionCount] =
-      await Promise.all([
-        MemberSubscriptionModel.countDocuments({
-          group: group._id,
-          endDate: { $gt: new Date() },
-        }),
-        MemberSubscriptionModel.countDocuments({
-          group: group._id,
-          endDate: { $lte: new Date() },
-        }),
-      ]);
+    const [
+      subscriptionsCount,
+      usersWithSubscriptionCount,
+      usersWithExpiredSubscriptionCount,
+    ] = await Promise.all([
+      GroupSubscriptionModel.countDocuments({
+        group: group._id,
+      }),
+      MemberSubscriptionModel.countDocuments({
+        group: group._id,
+        endDate: { $gt: new Date() },
+      }),
+      MemberSubscriptionModel.countDocuments({
+        group: group._id,
+        endDate: { $lte: new Date() },
+      }),
+    ]);
     const usersWithoutSubscriptionCount = Math.max(
       0,
       memberCount -
