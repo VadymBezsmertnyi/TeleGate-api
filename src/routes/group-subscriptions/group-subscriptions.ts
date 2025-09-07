@@ -56,20 +56,31 @@ router.get("/", async (req: Request, res: Response) => {
     ]);
 
     const pages = Math.ceil(total / limit);
-    const transformedSubscriptions = subscriptions.map((sub: any) => ({
-      _id: sub._id.toString(),
-      title: sub.title,
-      description: sub.description,
-      price: sub.price,
-      currency: sub.currency,
-      type: sub.type,
-      duration: sub.duration,
-      memberSubscriptionIds: [],
-      groupId: sub.group?._id?.toString(),
-      userId: sub.user?._id?.toString(),
-      createdAt: sub.createdAt,
-      updatedAt: sub.updatedAt,
-    }));
+
+    const transformedSubscriptions = await Promise.all(
+      subscriptions.map(async (sub: any) => {
+        const memberSubscriptionIds = await MemberSubscriptionModel.find({
+          groupSubscription: sub._id,
+        }).distinct("_id");
+
+        return {
+          _id: sub._id.toString(),
+          title: sub.title,
+          description: sub.description,
+          price: sub.price,
+          currency: sub.currency,
+          type: sub.type,
+          duration: sub.duration,
+          memberSubscriptionIds: memberSubscriptionIds.map((id) =>
+            id.toString()
+          ),
+          groupId: sub.group?._id?.toString(),
+          userId: sub.user?._id?.toString(),
+          createdAt: sub.createdAt,
+          updatedAt: sub.updatedAt,
+        };
+      })
+    );
 
     const response = {
       data: transformedSubscriptions,
@@ -151,20 +162,31 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
     ]);
 
     const pages = Math.ceil(total / limit);
-    const transformedSubscriptions = subscriptions.map((sub: any) => ({
-      _id: sub._id.toString(),
-      title: sub.title,
-      description: sub.description,
-      price: sub.price,
-      currency: sub.currency,
-      type: sub.type,
-      duration: sub.duration,
-      memberSubscriptionIds: [],
-      groupId: sub.group?.toString(),
-      userId: sub.user?._id?.toString(),
-      createdAt: sub.createdAt,
-      updatedAt: sub.updatedAt,
-    }));
+
+    const transformedSubscriptions = await Promise.all(
+      subscriptions.map(async (sub: any) => {
+        const memberSubscriptionIds = await MemberSubscriptionModel.find({
+          groupSubscription: sub._id,
+        }).distinct("_id");
+
+        return {
+          _id: sub._id.toString(),
+          title: sub.title,
+          description: sub.description,
+          price: sub.price,
+          currency: sub.currency,
+          type: sub.type,
+          duration: sub.duration,
+          memberSubscriptionIds: memberSubscriptionIds.map((id) =>
+            id.toString()
+          ),
+          groupId: sub.group?.toString(),
+          userId: sub.user?._id?.toString(),
+          createdAt: sub.createdAt,
+          updatedAt: sub.updatedAt,
+        };
+      })
+    );
 
     const response = {
       data: transformedSubscriptions,
