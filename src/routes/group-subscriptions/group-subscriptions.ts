@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import mongoose, { SortOrder } from "mongoose";
 import GroupSubscriptionModel from "./group-subscriptions.model";
+import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
 import {
   groupSubscriptionsQuerySchema,
   createGroupSubscriptionSchema,
@@ -467,9 +468,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const subscription = await GroupSubscriptionModel.findByIdAndDelete(
-      id
-    ).lean();
+    const subscription = await GroupSubscriptionModel.findById(id).lean();
     if (!subscription)
       return res.status(404).json({
         error: {
@@ -478,7 +477,17 @@ router.delete("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    return res.json({ message: "Subscription deleted successfully" });
+    await Promise.all([
+      GroupSubscriptionModel.findByIdAndDelete(id),
+      MemberSubscriptionModel.deleteMany({
+        groupSubscription: new mongoose.Types.ObjectId(id),
+      }),
+    ]);
+
+    return res.json({
+      message:
+        "Subscription and all related member subscriptions deleted successfully",
+    });
   } catch (error) {
     console.warn("Error deleting subscription:", error);
     return res.status(500).json({
