@@ -490,8 +490,77 @@ router.get("/:id", async (req: Request, res: Response) => {
         },
       });
 
+    const activeSubscriptionsCount =
+      await MemberSubscriptionModel.countDocuments({
+        member: member._id,
+        endDate: { $gt: new Date() },
+      });
+    const allSubscriptions = await MemberSubscriptionModel.find({
+      member: member._id,
+    })
+      .sort({ startDate: 1 })
+      .lean();
+
+    let subscriptionDelaysDays = 0;
+
+    if (allSubscriptions.length > 0) {
+      const now = new Date();
+      let lastActiveSubscriptionIndex = -1;
+
+      for (let i = allSubscriptions.length - 1; i >= 0; i--) {
+        if (new Date(allSubscriptions[i].endDate) > now) {
+          lastActiveSubscriptionIndex = i;
+          break;
+        }
+      }
+
+      const subscriptionsToCheck =
+        lastActiveSubscriptionIndex >= 0
+          ? allSubscriptions.slice(0, lastActiveSubscriptionIndex + 1)
+          : allSubscriptions;
+
+      for (let i = 0; i < subscriptionsToCheck.length - 1; i++) {
+        const currentEnd = new Date(subscriptionsToCheck[i].endDate);
+        const nextStart = new Date(subscriptionsToCheck[i + 1].startDate);
+
+        if (nextStart > currentEnd) {
+          const diffTime = nextStart.getTime() - currentEnd.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          subscriptionDelaysDays += diffDays;
+        }
+      }
+    }
+
+    const activeSubscriptions = await MemberSubscriptionModel.find({
+      member: member._id,
+      endDate: { $gt: new Date() },
+    })
+      .populate({
+        path: "groupSubscription",
+        select: "title type duration price currency",
+      })
+      .populate({
+        path: "group",
+        select: "title",
+      })
+      .sort({ endDate: -1 })
+      .lean();
+
+    const memberWithStats = {
+      ...member,
+      activeSubscriptionsCount,
+      subscriptionDelaysDays,
+      activeSubscriptions: activeSubscriptions.map((sub) => ({
+        _id: sub._id,
+        startDate: sub.startDate,
+        endDate: sub.endDate,
+        groupSubscription: sub.groupSubscription,
+        group: sub.group,
+      })),
+    };
+
     const responseValidation = memberResponseSchema.safeParse({
-      data: member,
+      data: memberWithStats,
     });
     if (!responseValidation.success)
       return res.status(405).json({
