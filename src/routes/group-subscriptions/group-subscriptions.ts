@@ -3,7 +3,6 @@ import mongoose, { SortOrder } from "mongoose";
 import GroupSubscriptionModel from "./group-subscriptions.model";
 import {
   groupSubscriptionsQuerySchema,
-  groupSubscriptionParamsSchema,
   createGroupSubscriptionSchema,
   updateGroupSubscriptionSchema,
   groupSubscriptionsResponseSchema,
@@ -190,10 +189,7 @@ router.get("/group/:groupId", async (req: Request, res: Response) => {
 
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = groupSubscriptionParamsSchema.safeParse(
-      req.params
-    );
-    if (!paramsValidation.success)
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
@@ -201,7 +197,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { _id } = paramsValidation.data;
+    const { id } = req.params;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -211,7 +207,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const subscription = await GroupSubscriptionModel.findById(_id)
+    const subscription = await GroupSubscriptionModel.findById(id)
       .populate("group", "title")
       .populate("user", "firstName lastName username")
       .lean();
@@ -367,10 +363,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = groupSubscriptionParamsSchema.safeParse(
-      req.params
-    );
-    if (!paramsValidation.success)
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
@@ -378,7 +371,7 @@ router.put("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { _id } = paramsValidation.data;
+    const { id } = req.params;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -399,7 +392,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const updateData = { ...validationResult.data, updatedAt: new Date() };
     const subscription = await GroupSubscriptionModel.findByIdAndUpdate(
-      _id,
+      id,
       updateData,
       { new: true }
     )
@@ -455,10 +448,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const paramsValidation = groupSubscriptionParamsSchema.safeParse(
-      req.params
-    );
-    if (!paramsValidation.success)
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(405).json({
         error: {
           code: "VALIDATION_ERROR",
@@ -466,7 +456,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
         },
       });
 
-    const { _id } = paramsValidation.data;
+    const { id } = req.params;
     const authenticatedUser = await getAuthenticatedUser(req);
     if (!authenticatedUser)
       return res.status(401).json({
@@ -477,7 +467,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       });
 
     const subscription = await GroupSubscriptionModel.findByIdAndDelete(
-      _id
+      id
     ).lean();
     if (!subscription)
       return res.status(404).json({

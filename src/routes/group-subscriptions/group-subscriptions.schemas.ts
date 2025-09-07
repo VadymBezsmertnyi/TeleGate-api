@@ -57,10 +57,6 @@ export const groupSubscriptionsQuerySchema = z.object({
   userId: z.string().optional(),
 });
 
-export const groupSubscriptionParamsSchema = z.object({
-  _id: z.string(),
-});
-
 export const groupSubscriptionsResponseSchema = z.object({
   data: z.array(groupSubscriptionPublicSchema),
   meta: z.object({
