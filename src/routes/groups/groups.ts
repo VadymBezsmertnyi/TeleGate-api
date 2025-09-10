@@ -45,6 +45,22 @@ router.get("/", async (req: Request, res: Response) => {
       });
 
     const filter = buildGroupsQuery(query);
+    const member = await MemberModel.findOne({
+      tgUserId: authenticatedUser.telegramId.toString(),
+    }).lean();
+
+    if (member) filter.addedBy = member._id;
+    else
+      return res.json({
+        data: [],
+        meta: {
+          page,
+          limit,
+          total: 0,
+          pages: 0,
+        },
+      });
+
     const sort = buildSortQuery(sortBy, order);
     const skip = (page - 1) * limit;
 
