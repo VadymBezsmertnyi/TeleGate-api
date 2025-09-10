@@ -33,7 +33,7 @@ export const groupPublicSchema = z.object({
   tgChatId: z.string(),
   type: z.enum(["private", "group", "supergroup", "channel"]),
   name: z.string().nullable(),
-  description: z.string().nullable(),
+  description: z.string().nullable().default(null),
   photoUrl: z.string().nullable(),
   isForum: z.boolean(),
   allMembersAreAdministrators: z.boolean().nullable().optional(),
@@ -56,8 +56,8 @@ export const groupPublicSchema = z.object({
     .object({
       id: z.string(),
       firstName: z.string(),
-      lastName: z.string().nullable(),
-      username: z.string().nullable(),
+      lastName: z.string().nullable().default(null),
+      username: z.string().nullable().default(null),
     })
     .nullable(),
   createdAt: z.date(),
