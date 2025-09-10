@@ -1,10 +1,8 @@
-import mongoose from "mongoose";
 import GroupModel from "./group.model";
-import UserModel from "../users/users.model";
+import MemberModel from "../members/members.model";
 import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
 import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
 import { GroupsQueryT, GroupsFilterI, SortQueryI } from "./groups.types";
-import MemberModel from "../members/members.model";
 
 export const buildGroupsQuery = (query: GroupsQueryT): GroupsFilterI => {
   const { search, status, createdFrom, createdTo, activity } = query;
@@ -103,13 +101,13 @@ export const getOwnerGroups = async (
   if (!ownerId && !ownerTelegramId) return [];
 
   const filter: any = {};
-  if (ownerId) filter.addedBy = new mongoose.Types.ObjectId(ownerId);
-  if (ownerTelegramId) {
-    const user = await UserModel.findOne({
-      telegramId: ownerTelegramId,
-    }).lean();
-    if (user) filter.addedBy = user._id;
-  }
+  const member = await MemberModel.findOne({
+    $or: [
+      ...(ownerId ? [{ _id: ownerId }] : []),
+      ...(ownerTelegramId ? [{ tgUserId: ownerTelegramId }] : []),
+    ],
+  }).lean();
+  if (member) filter.addedBy = member._id.toString();
 
   const groups = await GroupModel.find(filter).select("_id").lean();
   return groups.map((group) => group._id);
