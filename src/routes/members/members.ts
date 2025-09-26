@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import mongoose from "mongoose";
 import MemberModel from "./members.model";
 import {
   membersQuerySchema,
@@ -110,7 +111,8 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
         },
       });
 
-    const filter: any = { groups: groupId };
+    const filter: any = {};
+    if (groupId) filter.groups = new mongoose.Types.ObjectId(groupId);
     if (search) {
       filter.$or = [
         { firstName: { $regex: search, $options: "i" } },
@@ -132,11 +134,15 @@ router.get("/with-subscriptions", async (req: Request, res: Response) => {
 
     const membersWithSubscriptions = await Promise.all(
       members.map(async (member) => {
-        const activeSubscriptions = await MemberSubscriptionModel.find({
+        const subscriptionFilter: any = {
           member: member._id,
-          group: groupId,
           endDate: { $gt: new Date() },
-        })
+        };
+        if (groupId)
+          subscriptionFilter.group = new mongoose.Types.ObjectId(groupId);
+        const activeSubscriptions = await MemberSubscriptionModel.find(
+          subscriptionFilter
+        )
           .populate("groupSubscription", "title price currency type duration")
           .sort({ endDate: 1 })
           .lean();

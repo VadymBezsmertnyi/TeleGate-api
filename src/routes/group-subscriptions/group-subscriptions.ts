@@ -45,7 +45,6 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const [subscriptions, total] = await Promise.all([
       GroupSubscriptionModel.find(filter)
-        .populate("members", "firstName lastName username")
         .populate("group", "title")
         .populate("user", "firstName lastName username")
         .sort(sort)

@@ -148,7 +148,7 @@ export const membersWithSubscriptionsQuerySchema = z.object({
     .default("createdAt"),
   order: z.enum(["asc", "desc"]).default("desc"),
   search: z.string().optional(),
-  groupId: z.string(),
+  groupId: z.string().optional(),
 });
 
 export const memberParamsSchema = z.object({
