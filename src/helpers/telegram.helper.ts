@@ -44,12 +44,15 @@ export async function getTelegramUserInfo(
 
     return null;
   } catch (error: any) {
-    if (axios.isAxiosError(error))
+    if (axios.isAxiosError(error)) {
       if (
         error.response?.data?.error_code === 400 &&
-        error.response?.data?.description?.includes("chat not found")
-      )
+        (error.response?.data?.description?.includes("chat not found") ||
+          error.response?.data?.description?.includes("user not found"))
+      ) {
         return null;
+      }
+    }
 
     throw error;
   }

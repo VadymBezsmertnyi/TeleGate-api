@@ -3,6 +3,115 @@ import MemberModel from "../members/members.model";
 import { GroupDataI, MemberDataI } from "./bot-telegram.types";
 import UserModel from "../users/users.model";
 import { Telegraf, Telegram } from "telegraf";
+import GroupSubscriptionModel from "../group-subscriptions/group-subscriptions.model";
+import MemberSubscriptionModel from "../member-subscriptions/member-subscriptions.model";
+import PushTokenModel from "../user-push-tokens/push-tokens.model";
+
+const isTelegramUserNotFoundError = (error: any): boolean => {
+  if (!error) return false;
+  const errorMessage = error?.response?.description || error?.message || "";
+  return (
+    (error?.response?.error_code === 400 &&
+      (errorMessage.includes("chat not found") ||
+        errorMessage.includes("user not found"))) ||
+    false
+  );
+};
+
+const isTelegramChatNotFoundError = (error: any): boolean => {
+  if (!error) return false;
+  const errorMessage = error?.response?.description || error?.message || "";
+  return (
+    (error?.response?.error_code === 400 &&
+      errorMessage.includes("chat not found")) ||
+    false
+  );
+};
+
+const deleteMemberWithRelatedData = async (memberId: string) => {
+  try {
+    const member = await MemberModel.findById(memberId);
+    if (!member) return;
+
+    console.warn(
+      `🗑️ Видалення учасника ${member.tgUserId} (${member.firstName}) з бази даних...`
+    );
+
+    await MemberSubscriptionModel.deleteMany({ member: memberId });
+
+    await GroupModel.updateMany(
+      { members: memberId },
+      { $pull: { members: memberId } }
+    );
+
+    if (member.user) {
+      const user = await UserModel.findById(member.user);
+      if (user) {
+        await PushTokenModel.deleteMany({ userId: user._id });
+
+        await UserModel.findByIdAndUpdate(user._id, {
+          $pull: { members: memberId },
+        });
+
+        const remainingMembers = await MemberModel.countDocuments({
+          user: user._id,
+        });
+        if (remainingMembers <= 1) {
+          await UserModel.findByIdAndDelete(user._id);
+          console.warn(
+            `🗑️ Видалено користувача ${user.telegramId} (немає інших пов'язаних members)`
+          );
+        }
+      }
+    }
+
+    await MemberModel.findByIdAndDelete(memberId);
+    console.warn(
+      `✅ Учасника ${member.tgUserId} (${member.firstName}) успішно видалено`
+    );
+  } catch (error) {
+    console.warn(`❌ Помилка видалення учасника ${memberId}:`, error);
+  }
+};
+
+const deleteGroupWithRelatedData = async (groupId: string) => {
+  try {
+    const group = await GroupModel.findById(groupId);
+    if (!group) return;
+
+    console.warn(
+      `🗑️ Видалення групи ${group.tgChatId} (${group.title}) з бази даних...`
+    );
+
+    const groupSubscriptions = await GroupSubscriptionModel.find({
+      group: groupId,
+    });
+    for (const subscription of groupSubscriptions) {
+      await MemberSubscriptionModel.deleteMany({
+        groupSubscription: subscription._id,
+      });
+    }
+
+    await GroupSubscriptionModel.deleteMany({ group: groupId });
+
+    await MemberModel.updateMany(
+      { groups: groupId },
+      { $pull: { groups: groupId } }
+    );
+
+    await UserModel.updateMany(
+      { groups: groupId },
+      { $pull: { groups: groupId } }
+    );
+
+    await GroupModel.findByIdAndDelete(groupId);
+    console.warn(
+      `✅ Групу ${group.tgChatId} (${group.title}) успішно видалено`
+    );
+  } catch (error) {
+    console.warn(`❌ Помилка видалення групи ${groupId}:`, error);
+  }
+};
 
 export const updateAllExpiredPhotos = async (bot?: any) => {
   try {
@@ -19,13 +128,24 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
     let updatedMembers = 0;
     let updatedGroups = 0;
     let errors = 0;
+    let deletedMembers = 0;
     const membersWithExpiredPhotos = await MemberModel.find({
       photoUrl: { $regex: /^https:\/\/api\.telegram\.org/ },
     });
 
     for (const member of membersWithExpiredPhotos) {
       try {
-        const newPhotoUrl = await getUserPhotoUrl(bot, member.tgUserId);
+        let userNotFound = false;
+        let newPhotoUrl: string | undefined;
+
+        try {
+          newPhotoUrl = await getUserPhotoUrl(bot, member.tgUserId);
+        } catch (photoError) {
+          if (isTelegramUserNotFoundError(photoError)) {
+            userNotFound = true;
+          }
+        }
+
         let updateData: any = {};
         if (newPhotoUrl) updateData.photoUrl = newPhotoUrl;
 
@@ -40,10 +160,20 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
             updateData.telegramUsername = userInfo.username;
           }
         } catch (usernameError) {
-          console.warn(
-            `⚠️ Не вдалося отримати username для ${member.tgUserId}:`,
-            usernameError
-          );
+          if (isTelegramUserNotFoundError(usernameError)) {
+            userNotFound = true;
+          } else {
+            console.warn(
+              `⚠️ Не вдалося отримати username для ${member.tgUserId}:`,
+              usernameError
+            );
+          }
+        }
+
+        if (userNotFound) {
+          await deleteMemberWithRelatedData(member._id.toString());
+          deletedMembers++;
+          continue;
         }
 
         if (Object.keys(updateData).length > 0) {
@@ -66,6 +196,7 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
     const groupsWithExpiredPhotos = await GroupModel.find({
       photoUrl: { $regex: /^https:\/\/api\.telegram\.org/ },
     });
+    let deletedGroups = 0;
     for (const group of groupsWithExpiredPhotos) {
       try {
         const chat = await telegram.getChat(group.tgChatId);
@@ -80,17 +211,24 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
           }
         }
       } catch (error) {
-        console.warn(
-          `❌ Помилка оновлення фото групи ${group.tgChatId}:`,
-          error
-        );
-        errors++;
+        if (isTelegramChatNotFoundError(error)) {
+          await deleteGroupWithRelatedData(group._id.toString());
+          deletedGroups++;
+        } else {
+          console.warn(
+            `❌ Помилка оновлення фото групи ${group.tgChatId}:`,
+            error
+          );
+          errors++;
+        }
       }
     }
 
     console.warn(`✅ Оновлення завершено:`);
     console.warn(`👤 Користувачів (фото та username): ${updatedMembers}`);
     console.warn(`👥 Груп: ${updatedGroups}`);
+    console.warn(`🗑️ Видалено учасників: ${deletedMembers}`);
+    console.warn(`🗑️ Видалено груп: ${deletedGroups}`);
     console.warn(`❌ Помилок: ${errors}`);
     console.warn(
       `📝 Загалом оброблено: ${
@@ -101,6 +239,8 @@ export const updateAllExpiredPhotos = async (bot?: any) => {
     return {
       updatedMembers,
       updatedGroups,
+      deletedMembers,
+      deletedGroups,
       errors,
       total: membersWithExpiredPhotos.length + groupsWithExpiredPhotos.length,
     };
@@ -114,50 +254,71 @@ export const getUserPhotoUrl = async (
   bot: any,
   userId: string
 ): Promise<string | undefined> => {
+  const telegram = bot.telegram as Telegram;
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!botToken) {
+    console.warn("❌ TELEGRAM_BOT_TOKEN не знайдено");
+    return undefined;
+  }
+
+  let getChatError: any = null;
+  let getUserProfilePhotosError: any = null;
+
   try {
-    const telegram = bot.telegram as Telegram;
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
-    if (!botToken) {
-      console.warn("❌ TELEGRAM_BOT_TOKEN не знайдено");
-      return undefined;
+    const userInfo = await telegram.getChat(parseInt(userId));
+    if (userInfo && userInfo.photo) {
+      const file = await telegram.getFile(userInfo.photo.big_file_id);
+      if (file && file.file_path)
+        return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
     }
-
-    try {
-      const userInfo = await telegram.getChat(parseInt(userId));
-      if (userInfo && userInfo.photo) {
-        const file = await telegram.getFile(userInfo.photo.big_file_id);
-        if (file && file.file_path)
-          return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
-      }
-    } catch (userError) {
+  } catch (userError) {
+    getChatError = userError;
+    if (isTelegramUserNotFoundError(userError)) {
+      console.warn(
+        `Не вдалося отримати інформацію про користувача ${userId} через getChat:`,
+        userError
+      );
+    } else {
       console.warn(
         `Не вдалося отримати інформацію про користувача ${userId} через getChat:`,
         userError
       );
     }
+  }
 
-    try {
-      const userPhotos = await telegram.getUserProfilePhotos(parseInt(userId));
-      if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
-        const photo = userPhotos.photos[0][0];
-        const file = await telegram.getFile(photo.file_id);
-        if (file && file.file_path) {
-          return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
-        }
+  try {
+    const userPhotos = await telegram.getUserProfilePhotos(parseInt(userId));
+    if (userPhotos.total_count > 0 && userPhotos.photos.length > 0) {
+      const photo = userPhotos.photos[0][0];
+      const file = await telegram.getFile(photo.file_id);
+      if (file && file.file_path) {
+        return `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
       }
-    } catch (photosError) {
+    }
+  } catch (photosError) {
+    getUserProfilePhotosError = photosError;
+    if (isTelegramUserNotFoundError(photosError)) {
+      console.warn(
+        `Не вдалося отримати фото профілю для ${userId} через getUserProfilePhotos:`,
+        photosError
+      );
+    } else {
       console.warn(
         `Не вдалося отримати фото профілю для ${userId} через getUserProfilePhotos:`,
         photosError
       );
     }
-
-    return undefined;
-  } catch (error) {
-    console.warn(`Помилка при отриманні фото користувача ${userId}:`, error);
-    return undefined;
   }
+
+  if (
+    isTelegramUserNotFoundError(getChatError) &&
+    isTelegramUserNotFoundError(getUserProfilePhotosError)
+  ) {
+    throw getChatError || getUserProfilePhotosError;
+  }
+
+  return undefined;
 };
 
 export const createOrUpdateMember = async (memberData: MemberDataI) => {
