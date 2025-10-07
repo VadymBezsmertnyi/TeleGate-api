@@ -361,3 +361,134 @@
  *                   type: string
  *                   example: Failed to fetch exchange info
  */
+
+/**
+ * @swagger
+ * /binance/exchange-info/{symbol}:
+ *   get:
+ *     summary: Отримати інформацію про конкретну торгову пару
+ *     description: Повертає детальну інформацію про конкретну торгову пару на Binance - статус, базовий та котируваний актив, типи ордерів, фільтри, ліміти тощо
+ *     tags: [Coin Diviner AI - Binance]
+ *     parameters:
+ *       - in: path
+ *         name: symbol
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Торгова пара (наприклад, BTCUSDT, ETHUSDT)
+ *         example: BTCUSDT
+ *     responses:
+ *       200:
+ *         description: Інформація про торгову пару успішно отримана
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 symbol:
+ *                   type: string
+ *                   description: Назва торгової пари
+ *                   example: BTCUSDT
+ *                 status:
+ *                   type: string
+ *                   description: Статус торгової пари
+ *                   example: TRADING
+ *                 baseAsset:
+ *                   type: string
+ *                   description: Базовий актив
+ *                   example: BTC
+ *                 baseAssetPrecision:
+ *                   type: number
+ *                   description: Точність базового активу (кількість десяткових знаків)
+ *                   example: 8
+ *                 quoteAsset:
+ *                   type: string
+ *                   description: Котируваний актив
+ *                   example: USDT
+ *                 quoteAssetPrecision:
+ *                   type: number
+ *                   description: Точність котируваного активу
+ *                   example: 8
+ *                 orderTypes:
+ *                   type: array
+ *                   description: Доступні типи ордерів для цієї пари
+ *                   items:
+ *                     type: string
+ *                   example: [LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT]
+ *                 icebergAllowed:
+ *                   type: boolean
+ *                   description: Чи дозволені Iceberg ордери (приховані великі ордери)
+ *                   example: true
+ *                 ocoAllowed:
+ *                   type: boolean
+ *                   description: Чи дозволені OCO ордери (One-Cancels-the-Other)
+ *                   example: true
+ *                 isSpotTradingAllowed:
+ *                   type: boolean
+ *                   description: Чи дозволена спот торгівля
+ *                   example: true
+ *                 isMarginTradingAllowed:
+ *                   type: boolean
+ *                   description: Чи дозволена маржинальна торгівля
+ *                   example: true
+ *                 filters:
+ *                   type: array
+ *                   description: Фільтри та ліміти для торгової пари (мінімальна/максимальна ціна, кількість, нотаріальна вартість тощо)
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       filterType:
+ *                         type: string
+ *                         description: Тип фільтру
+ *                         example: PRICE_FILTER
+ *                       minPrice:
+ *                         type: string
+ *                         description: Мінімальна ціна (для PRICE_FILTER)
+ *                         example: "0.01000000"
+ *                       maxPrice:
+ *                         type: string
+ *                         description: Максимальна ціна (для PRICE_FILTER)
+ *                         example: "1000000.00000000"
+ *                       tickSize:
+ *                         type: string
+ *                         description: Крок зміни ціни (для PRICE_FILTER)
+ *                         example: "0.01000000"
+ *                       minQty:
+ *                         type: string
+ *                         description: Мінімальна кількість (для LOT_SIZE)
+ *                         example: "0.00001000"
+ *                       maxQty:
+ *                         type: string
+ *                         description: Максимальна кількість (для LOT_SIZE)
+ *                         example: "9000.00000000"
+ *                       stepSize:
+ *                         type: string
+ *                         description: Крок зміни кількості (для LOT_SIZE)
+ *                         example: "0.00001000"
+ *                 permissions:
+ *                   type: array
+ *                   description: Дозволи для торгової пари
+ *                   items:
+ *                     type: string
+ *                   example: [SPOT, MARGIN]
+ *       404:
+ *         description: Торгову пару не знайдено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Symbol not found
+ *       500:
+ *         description: Помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch exchange info
+ */
