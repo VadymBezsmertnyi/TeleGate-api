@@ -13,6 +13,7 @@ export const fetchFromPaprika = async (
         ? { Authorization: `Bearer ${process.env.COINPAPRIKA_API_KEY}` }
         : {},
     });
+    console.log("data", data);
     return data;
   } catch (err: any) {
     console.warn(`❌ Paprika error [${endpoint}]:`, err.message);
@@ -25,7 +26,7 @@ export const CoinPaprikaService = {
    * Отримати всі доступні платформи (Ethereum, Tron, Binance Smart Chain і т.д.)
    */
   getPlatforms: async () => {
-    return fetchFromPaprika("/contracts/platforms");
+    return fetchFromPaprika("/contracts");
   },
 
   /**
