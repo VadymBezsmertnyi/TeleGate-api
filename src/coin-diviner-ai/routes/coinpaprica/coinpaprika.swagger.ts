@@ -427,7 +427,7 @@
  * /coinpaprika/search:
  *   get:
  *     summary: Пошук монет та токенів
- *     description: Виконує пошук криптовалют за назвою або символом (тікером). Повертає список монет та токенів, які відповідають пошуковому запиту
+ *     description: Виконує пошук криптовалют за назвою або символом (тікером). Повертає список монет, токенів, бірж, ICO, персон та тегів, які відповідають пошуковому запиту
  *     tags: [Coin Diviner AI - CoinPaprika]
  *     parameters:
  *       - in: query
@@ -435,7 +435,7 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: Пошуковий запит (назва монети або символ)
+ *         description: Пошуковий запит (назва монети, символ, біржа тощо)
  *         example: bitcoin
  *     responses:
  *       200:
@@ -444,28 +444,42 @@
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - currencies
+ *                 - exchanges
+ *                 - icos
+ *                 - people
+ *                 - tags
  *               properties:
  *                 currencies:
  *                   type: array
  *                   description: Знайдені криптовалюти
  *                   items:
  *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - symbol
+ *                       - rank
+ *                       - is_new
+ *                       - is_active
+ *                       - type
  *                     properties:
  *                       id:
  *                         type: string
- *                         description: Унікальний ID монети
+ *                         description: Унікальний ID монети/токена
  *                         example: btc-bitcoin
  *                       name:
  *                         type: string
- *                         description: Назва монети
+ *                         description: Назва монети/токена
  *                         example: Bitcoin
  *                       symbol:
  *                         type: string
- *                         description: Символ (тікер) монети
+ *                         description: Символ (тікер) монети/токена
  *                         example: BTC
  *                       rank:
  *                         type: number
- *                         description: Ранг за капіталізацією
+ *                         description: Ранг за ринковою капіталізацією
  *                         example: 1
  *                       is_new:
  *                         type: boolean
@@ -478,13 +492,39 @@
  *                       type:
  *                         type: string
  *                         enum: [coin, token]
- *                         description: Тип (coin - власний блокчейн, token - токен)
+ *                         description: Тип криптовалюти (coin - власний блокчейн, token - токен на іншій платформі)
  *                         example: coin
+ *                       rev:
+ *                         type: number
+ *                         description: Номер ревізії запису
+ *                         example: 1845873191
+ *                       contract_address:
+ *                         type: array
+ *                         description: Адреси смарт-контрактів (тільки для токенів)
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             type:
+ *                               type: string
+ *                               description: Тип контракту
+ *                               example: ERC20
+ *                             address:
+ *                               type: string
+ *                               description: Адреса контракту
+ *                               example: "0x787B197F793F7D04366536F6a7a56a799868A64b"
  *                 exchanges:
  *                   type: array
  *                   description: Знайдені біржі
  *                   items:
  *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - markets
+ *                       - markets_url
+ *                       - fiats
+ *                       - status
+ *                       - updated_at
  *                     properties:
  *                       id:
  *                         type: string
@@ -494,42 +534,110 @@
  *                         type: string
  *                         description: Назва біржі
  *                         example: Binance
+ *                       markets:
+ *                         type: number
+ *                         description: Кількість торгових пар
+ *                         example: 2500
+ *                       markets_url:
+ *                         type: string
+ *                         description: URL для отримання торгових пар біржі
+ *                         example: "/exchanges/binance/markets"
+ *                       fiats:
+ *                         type: array
+ *                         description: Підтримувані фіатні валюти
+ *                         items:
+ *                           type: string
+ *                         example: ["USD", "EUR", "GBP"]
+ *                       status:
+ *                         type: string
+ *                         description: Статус біржі
+ *                         example: active
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Час останнього оновлення
+ *                         example: "2024-01-15T10:30:00Z"
  *                 icos:
  *                   type: array
- *                   description: Знайдені ICO
+ *                   description: Знайдені ICO (Initial Coin Offering)
  *                   items:
  *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - symbol
+ *                       - is_new
+ *                       - rev
  *                     properties:
  *                       id:
  *                         type: string
  *                         description: ID ICO
+ *                         example: disc-discoperi
  *                       name:
  *                         type: string
  *                         description: Назва ICO
+ *                         example: Discoperi ICO
+ *                       symbol:
+ *                         type: string
+ *                         description: Символ ICO
+ *                         example: DISC
+ *                       is_new:
+ *                         type: boolean
+ *                         description: Чи є ICO новим
+ *                         example: false
+ *                       rev:
+ *                         type: number
+ *                         description: Номер ревізії
+ *                         example: 11056037
  *                 people:
  *                   type: array
- *                   description: Знайдені персони (засновники, розробники)
+ *                   description: Знайдені персони (засновники, розробники, члени команд)
  *                   items:
  *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - teams_count
  *                     properties:
  *                       id:
  *                         type: string
  *                         description: ID персони
+ *                         example: satoshi-nakamoto
  *                       name:
  *                         type: string
  *                         description: Ім'я персони
+ *                         example: Satoshi Nakamoto
+ *                       teams_count:
+ *                         type: number
+ *                         description: Кількість команд, в яких бере участь
+ *                         example: 1
  *                 tags:
  *                   type: array
- *                   description: Знайдені теги (категорії)
+ *                   description: Знайдені теги (категорії, сектори)
  *                   items:
  *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - coin_counter
+ *                       - ico_counter
  *                     properties:
  *                       id:
  *                         type: string
  *                         description: ID тегу
+ *                         example: defi
  *                       name:
  *                         type: string
  *                         description: Назва тегу
+ *                         example: Decentralized Finance (DeFi)
+ *                       coin_counter:
+ *                         type: number
+ *                         description: Кількість монет з цим тегом
+ *                         example: 250
+ *                       ico_counter:
+ *                         type: number
+ *                         description: Кількість ICO з цим тегом
+ *                         example: 30
  *       400:
  *         description: Відсутній обов'язковий параметр пошуку
  *         content:
