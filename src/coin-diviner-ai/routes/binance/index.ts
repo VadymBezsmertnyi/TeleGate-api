@@ -66,7 +66,7 @@ router.get("/exchange-info", async (req: Request, res: Response) => {
 router.get("/exchange-info/:symbol", async (req: Request, res: Response) => {
   const { symbol } = req.params;
   try {
-    const exchangeInfo = await BinanceService.getExchangeInfo();
+    const exchangeInfo = await BinanceService.getExchangeInfo(symbol);
     const symbolInfo = exchangeInfo.find((s) => s.symbol === symbol);
     if (!symbolInfo) return res.status(404).json({ error: "Symbol not found" });
 

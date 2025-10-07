@@ -74,9 +74,15 @@ const BinanceService = {
 
   /**
    * Отримати список усіх доступних торгових пар
+   * Якщо вказано symbol - фільтруємо по ньому
+   * (наприклад, щоб отримати всі пари з BTC: символ починається з "BTC")
+   * @returns список об'єктів з інформацією по кожній парі (символ, базовий актив, котирувальний актив, статус) або порожній масив, якщо не знайдено
    */
-  getExchangeInfo: async () => {
-    const info = await client.exchangeInfo();
+  getExchangeInfo: async (symbol?: string) => {
+    const options = symbol ? { symbol } : undefined;
+    const info = await client.exchangeInfo(options).catch(() => null);
+    if (!info) return [];
+
     return info.symbols.map((s) => ({
       symbol: s.symbol,
       baseAsset: s.baseAsset,
