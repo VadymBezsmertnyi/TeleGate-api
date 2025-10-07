@@ -12,9 +12,9 @@ router.get(
     const symbol = req.query.symbol || "BTCUSDT";
     try {
       const priceData = await BinanceService.getPrice(symbol);
-      res.json(priceData);
+      return res.json(priceData);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch price data" });
+      return res.status(500).json({ error: "Failed to fetch price data" });
     }
   }
 );
@@ -25,9 +25,9 @@ router.get(
     const symbol = req.query.symbol || "BTCUSDT";
     try {
       const statsData = await BinanceService.get24hStats(symbol);
-      res.json(statsData);
+      return res.json(statsData);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch 24h stats data" });
+      return res.status(500).json({ error: "Failed to fetch 24h stats data" });
     }
   }
 );
@@ -47,9 +47,9 @@ router.get(
 
     try {
       const klinesData = await BinanceService.getKlines(symbol, interval);
-      res.json(klinesData);
+      return res.json(klinesData);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch klines data" });
+      return res.status(500).json({ error: "Failed to fetch klines data" });
     }
   }
 );
@@ -57,9 +57,22 @@ router.get(
 router.get("/exchange-info", async (req: Request, res: Response) => {
   try {
     const exchangeInfo = await BinanceService.getExchangeInfo();
-    res.json(exchangeInfo);
+    return res.json(exchangeInfo);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch exchange info" });
+    return res.status(500).json({ error: "Failed to fetch exchange info" });
+  }
+});
+
+router.get("/exchange-info/:symbol", async (req: Request, res: Response) => {
+  const { symbol } = req.params;
+  try {
+    const exchangeInfo = await BinanceService.getExchangeInfo();
+    const symbolInfo = exchangeInfo.find((s) => s.symbol === symbol);
+    if (!symbolInfo) return res.status(404).json({ error: "Symbol not found" });
+
+    return res.json(symbolInfo);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch exchange info" });
   }
 });
 
