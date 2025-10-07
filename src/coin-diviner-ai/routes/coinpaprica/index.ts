@@ -15,17 +15,19 @@ router.get("/platforms", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/coins", async (req: Request, res: Response) => {
-  const { platform_id } = req.query;
-  try {
-    const coins = await CoinPaprikaService.getAllCoins(
-      platform_id as string | undefined
-    );
-    return res.status(200).json(coins);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error: " + error });
+router.get(
+  "/coins",
+  async (req: Request<{}, {}, {}, { platform_id?: string }>, res: Response) => {
+    const { platform_id } = req.query;
+    try {
+      const coins = await CoinPaprikaService.getAllCoins(platform_id);
+      console.log("Coins fetched:", coins ? coins.length : 0);
+      return res.status(200).json(coins);
+    } catch (error) {
+      return res.status(500).json({ message: "Server error: " + error });
+    }
   }
-});
+);
 
 router.get("/coins/:coinId", async (req: Request, res: Response) => {
   const { coinId } = req.params;

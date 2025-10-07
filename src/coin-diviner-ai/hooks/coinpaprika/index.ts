@@ -1,19 +1,19 @@
 import axios from "axios";
+import { TCoinMainInfo } from "./coinpaprika.types";
 
 const API_BASE = "https://api.coinpaprika.com/v1";
 
-export const fetchFromPaprika = async (
+export const fetchFromPaprika = async <T>(
   endpoint: string,
   params: Record<string, any> = {}
-) => {
+): Promise<T | null> => {
   try {
-    const { data } = await axios.get(`${API_BASE}${endpoint}`, {
+    const { data } = await axios.get<T>(`${API_BASE}${endpoint}`, {
       params,
       headers: process.env.COINPAPRIKA_API_KEY
         ? { Authorization: `Bearer ${process.env.COINPAPRIKA_API_KEY}` }
         : {},
     });
-    console.log("data", data);
     return data;
   } catch (err: any) {
     console.warn(`❌ Paprika error [${endpoint}]:`, err.message);
@@ -24,19 +24,22 @@ export const fetchFromPaprika = async (
 export const CoinPaprikaService = {
   /**
    * Отримати всі доступні платформи (Ethereum, Tron, Binance Smart Chain і т.д.)
+   * Напр. "eth-ethereum", "trx-tron", "bsc-binance-smart-chain" тощо
+   * @returns список platform_id
    */
   getPlatforms: async () => {
-    return fetchFromPaprika("/contracts");
+    return fetchFromPaprika<string[]>("/contracts");
   },
 
   /**
    * Отримати список всіх монет (можна відфільтрувати за platform_id)
    * Напр. platform_id = "eth-ethereum" → усі токени ERC-20
+   * @returns список монет/токенів з основною інформацією
    */
   getAllCoins: async (platform_id?: string) => {
-    const all = await fetchFromPaprika("/coins");
-    return platform_id
-      ? all.filter((c: any) => c.platform?.id === platform_id)
+    const all = await fetchFromPaprika<TCoinMainInfo[]>("/coins");
+    return platform_id && all
+      ? all.filter((c: TCoinMainInfo) => c.id === platform_id)
       : all;
   },
 
