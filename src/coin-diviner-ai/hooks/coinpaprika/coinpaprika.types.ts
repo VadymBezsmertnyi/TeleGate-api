@@ -1,3 +1,8 @@
+export enum ECoinType {
+  COIN = "coin",
+  TOKEN = "token",
+}
+
 export type TCoinMainInfo = {
   id: string;
   name: string;
@@ -5,7 +10,7 @@ export type TCoinMainInfo = {
   rank: number;
   is_new: boolean;
   is_active: boolean;
-  type: "coin" | "token";
+  type: ECoinType;
 };
 
 export type TCoinTag = {
@@ -41,7 +46,14 @@ export type TCoinWhitepaper = {
   thumbnail: string;
 };
 
-export type TCoinFullInfo = TCoinMainInfo & {
+export type TCoinFullInfo = {
+  id: string;
+  name: string;
+  symbol: string;
+  rank: number;
+  is_new: boolean;
+  is_active: boolean;
+  type: ECoinType;
   description: string;
   logo: string;
   tags: TCoinTag[];
