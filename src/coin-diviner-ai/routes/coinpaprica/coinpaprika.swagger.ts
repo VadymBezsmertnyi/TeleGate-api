@@ -421,3 +421,132 @@
  *                 message:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /coinpaprika/search:
+ *   get:
+ *     summary: Пошук монет та токенів
+ *     description: Виконує пошук криптовалют за назвою або символом (тікером). Повертає список монет та токенів, які відповідають пошуковому запиту
+ *     tags: [Coin Diviner AI - CoinPaprika]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Пошуковий запит (назва монети або символ)
+ *         example: bitcoin
+ *     responses:
+ *       200:
+ *         description: Результати пошуку успішно отримані
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 currencies:
+ *                   type: array
+ *                   description: Знайдені криптовалюти
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: Унікальний ID монети
+ *                         example: btc-bitcoin
+ *                       name:
+ *                         type: string
+ *                         description: Назва монети
+ *                         example: Bitcoin
+ *                       symbol:
+ *                         type: string
+ *                         description: Символ (тікер) монети
+ *                         example: BTC
+ *                       rank:
+ *                         type: number
+ *                         description: Ранг за капіталізацією
+ *                         example: 1
+ *                       is_new:
+ *                         type: boolean
+ *                         description: Чи є монета новою
+ *                         example: false
+ *                       is_active:
+ *                         type: boolean
+ *                         description: Чи є монета активною
+ *                         example: true
+ *                       type:
+ *                         type: string
+ *                         enum: [coin, token]
+ *                         description: Тип (coin - власний блокчейн, token - токен)
+ *                         example: coin
+ *                 exchanges:
+ *                   type: array
+ *                   description: Знайдені біржі
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID біржі
+ *                         example: binance
+ *                       name:
+ *                         type: string
+ *                         description: Назва біржі
+ *                         example: Binance
+ *                 icos:
+ *                   type: array
+ *                   description: Знайдені ICO
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID ICO
+ *                       name:
+ *                         type: string
+ *                         description: Назва ICO
+ *                 people:
+ *                   type: array
+ *                   description: Знайдені персони (засновники, розробники)
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID персони
+ *                       name:
+ *                         type: string
+ *                         description: Ім'я персони
+ *                 tags:
+ *                   type: array
+ *                   description: Знайдені теги (категорії)
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: ID тегу
+ *                       name:
+ *                         type: string
+ *                         description: Назва тегу
+ *       400:
+ *         description: Відсутній обов'язковий параметр пошуку
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Query parameter 'q' is required
+ *       500:
+ *         description: Помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */

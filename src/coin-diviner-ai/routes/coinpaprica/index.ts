@@ -57,4 +57,22 @@ router.get("/tickers/:coinId", async (req: Request, res: Response) => {
   }
 });
 
+router.get(
+  "/search",
+  async (req: Request<{}, {}, {}, { q: string }>, res: Response) => {
+    const { q } = req.query;
+    if (!q)
+      return res
+        .status(400)
+        .json({ message: "Query parameter 'q' is required" });
+
+    try {
+      const results = await CoinPaprikaService.search(q);
+      return res.status(200).json(results);
+    } catch (error) {
+      return res.status(500).json({ message: "Server error: " + error });
+    }
+  }
+);
+
 export default router;

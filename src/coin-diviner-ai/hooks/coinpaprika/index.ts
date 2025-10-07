@@ -54,4 +54,11 @@ export const CoinPaprikaService = {
    */
   getTicker: async (coinId: string) =>
     fetchFromPaprika<TCoinTicker>(`/tickers/${coinId}`),
+
+  /**
+   * Пошук монет/токенів за назвою або символом
+   */
+  search: async (query: string) => {
+    return fetchFromPaprika(`/search`, { q: query });
+  },
 };
