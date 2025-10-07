@@ -1,5 +1,5 @@
 import axios from "axios";
-import { TCoinFullInfo, TCoinMainInfo } from "./coinpaprika.types";
+import { TCoinFullInfo, TCoinMainInfo, TCoinTicker } from "./coinpaprika.types";
 
 const API_BASE = "https://api.coinpaprika.com/v1";
 
@@ -27,9 +27,7 @@ export const CoinPaprikaService = {
    * Напр. "eth-ethereum", "trx-tron", "bsc-binance-smart-chain" тощо
    * @returns список platform_id
    */
-  getPlatforms: async () => {
-    return fetchFromPaprika<string[]>("/contracts");
-  },
+  getPlatforms: async () => fetchFromPaprika<string[]>("/contracts"),
 
   /**
    * Отримати список всіх монет (можна відфільтрувати за platform_id)
@@ -48,14 +46,12 @@ export const CoinPaprikaService = {
    * (назва, опис, категорія, соц. посилання, логотип тощо)
    * @returns детальна інформація про монету/токен
    */
-  getCoinInfo: async (coinId: string) => {
-    return fetchFromPaprika<TCoinFullInfo>(`/coins/${coinId}`);
-  },
+  getCoinInfo: async (coinId: string) =>
+    fetchFromPaprika<TCoinFullInfo>(`/coins/${coinId}`),
 
   /**
    * Отримати дані ринку по монеті (ціна, об’єм, капіталізація)
    */
-  getTicker: async (coinId: string) => {
-    return fetchFromPaprika(`/tickers/${coinId}`);
-  },
+  getTicker: async (coinId: string) =>
+    fetchFromPaprika<TCoinTicker>(`/tickers/${coinId}`),
 };
