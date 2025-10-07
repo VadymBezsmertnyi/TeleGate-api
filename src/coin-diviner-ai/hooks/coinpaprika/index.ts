@@ -1,5 +1,10 @@
 import axios from "axios";
-import { TCoinFullInfo, TCoinMainInfo, TCoinTicker } from "./coinpaprika.types";
+import {
+  TCoinFullInfo,
+  TCoinMainInfo,
+  TCoinSearchResult,
+  TCoinTicker,
+} from "./coinpaprika.types";
 
 const API_BASE = "https://api.coinpaprika.com/v1";
 
@@ -59,6 +64,6 @@ export const CoinPaprikaService = {
    * Пошук монет/токенів за назвою або символом
    */
   search: async (query: string) => {
-    return fetchFromPaprika(`/search`, { q: query });
+    return fetchFromPaprika<TCoinSearchResult>(`/search`, { q: query });
   },
 };
