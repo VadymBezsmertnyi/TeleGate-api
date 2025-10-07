@@ -104,8 +104,8 @@
  * @swagger
  * /coinpaprika/coins/{coinId}:
  *   get:
- *     summary: Отримати інформацію про монету
- *     description: Повертає детальну інформацію про конкретну криптовалюту
+ *     summary: Отримати детальну інформацію про монету
+ *     description: Повертає повну інформацію про криптовалюту - опис, теги, команду, соціальні посилання, white paper тощо
  *     tags: [Coin Diviner AI - CoinPaprika]
  *     parameters:
  *       - in: path
@@ -113,36 +113,146 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: ID монети (наприклад, btc-bitcoin)
+ *         description: ID монети
+ *         example: btc-bitcoin
  *     responses:
  *       200:
- *         description: Інформація про монету успішно отримана
+ *         description: Детальна інформація про монету успішно отримана
  *         content:
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - id
+ *                 - name
+ *                 - symbol
+ *                 - rank
+ *                 - type
+ *                 - description
+ *                 - logo
+ *                 - tags
+ *                 - team
+ *                 - links
  *               properties:
  *                 id:
  *                   type: string
- *                   description: ID монети
+ *                   example: btc-bitcoin
  *                 name:
  *                   type: string
- *                   description: Назва монети
+ *                   example: Bitcoin
  *                 symbol:
  *                   type: string
- *                   description: Символ монети
+ *                   example: BTC
  *                 rank:
  *                   type: number
- *                   description: Ранг монети
- *                 description:
- *                   type: string
- *                   description: Опис монети
- *                 type:
- *                   type: string
- *                   description: Тип монети
+ *                   example: 1
+ *                 is_new:
+ *                   type: boolean
+ *                   example: false
  *                 is_active:
  *                   type: boolean
- *                   description: Чи є монета активною
+ *                   example: true
+ *                 type:
+ *                   type: string
+ *                   enum: [coin, token]
+ *                   example: coin
+ *                 description:
+ *                   type: string
+ *                   description: Детальний опис монети/токена
+ *                 logo:
+ *                   type: string
+ *                   description: URL логотипу
+ *                 tags:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       coin_counter:
+ *                         type: number
+ *                       ico_counter:
+ *                         type: number
+ *                 team:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       position:
+ *                         type: string
+ *                 links:
+ *                   type: object
+ *                   properties:
+ *                     explorer:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     facebook:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     reddit:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     source_code:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     website:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     youtube:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                 open_source:
+ *                   type: boolean
+ *                 started_at:
+ *                   type: string
+ *                   format: date-time
+ *                 development_status:
+ *                   type: string
+ *                 hardware_wallet:
+ *                   type: boolean
+ *                 proof_type:
+ *                   type: string
+ *                   description: Тип консенсусу (PoW, PoS тощо)
+ *                 org_structure:
+ *                   type: string
+ *                 hash_algorithm:
+ *                   type: string
+ *                 links_extended:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       url:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       stats:
+ *                         type: object
+ *                 whitepaper:
+ *                   type: object
+ *                   properties:
+ *                     link:
+ *                       type: string
+ *                     thumbnail:
+ *                       type: string
+ *                 first_data_at:
+ *                   type: string
+ *                   format: date-time
+ *                 last_data_at:
+ *                   type: string
+ *                   format: date-time
  *       404:
  *         description: Монету не знайдено
  *         content:
@@ -168,8 +278,8 @@
  * @swagger
  * /coinpaprika/tickers/{coinId}:
  *   get:
- *     summary: Отримати ticker інформацію про монету
- *     description: Повертає актуальні ринкові дані (ціна, обсяг, зміни) для конкретної криптовалюти
+ *     summary: Отримати ринкові дані монети
+ *     description: Повертає актуальні ринкові дані - ціну, обсяги торгівлі, капіталізацію, зміни цін за різні періоди (15m, 1h, 24h, 7d, 30d, 1y), ATH тощо
  *     tags: [Coin Diviner AI - CoinPaprika]
  *     parameters:
  *       - in: path
@@ -177,39 +287,120 @@
  *         schema:
  *           type: string
  *         required: true
- *         description: ID монети (наприклад, btc-bitcoin)
+ *         description: ID монети
+ *         example: btc-bitcoin
  *     responses:
  *       200:
- *         description: Ticker інформацію успішно отримано
+ *         description: Ринкові дані успішно отримано
  *         content:
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - id
+ *                 - name
+ *                 - symbol
+ *                 - rank
+ *                 - circulating_supply
+ *                 - total_supply
+ *                 - max_supply
+ *                 - quotes
  *               properties:
  *                 id:
  *                   type: string
- *                   description: ID монети
+ *                   example: btc-bitcoin
  *                 name:
  *                   type: string
- *                   description: Назва монети
+ *                   example: Bitcoin
  *                 symbol:
  *                   type: string
- *                   description: Символ монети
+ *                   example: BTC
  *                 rank:
  *                   type: number
- *                   description: Ранг монети
+ *                   example: 1
  *                 circulating_supply:
  *                   type: number
- *                   description: Обіг монет
+ *                   description: Кількість монет в обігу
+ *                   example: 19000000
  *                 total_supply:
  *                   type: number
  *                   description: Загальна кількість монет
+ *                   example: 19000000
  *                 max_supply:
  *                   type: number
- *                   description: Максимальна кількість монет
+ *                   description: Максимальна можлива кількість монет
+ *                   example: 21000000
+ *                 beta_value:
+ *                   type: number
+ *                   description: Бета коефіцієнт
+ *                 first_data_at:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Дата першої інформації про монету
+ *                 last_updated:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Час останнього оновлення
  *                 quotes:
  *                   type: object
- *                   description: Котирування в різних валютах
+ *                   description: Котирування в різних валютах (за замовчуванням USD)
+ *                   properties:
+ *                     USD:
+ *                       type: object
+ *                       properties:
+ *                         price:
+ *                           type: number
+ *                           description: Поточна ціна в USD
+ *                           example: 45000.50
+ *                         volume_24h:
+ *                           type: number
+ *                           description: Обсяг торгів за 24 години
+ *                         volume_24h_change_24h:
+ *                           type: number
+ *                           description: Зміна обсягу за 24 години (%)
+ *                         market_cap:
+ *                           type: number
+ *                           description: Ринкова капіталізація
+ *                         market_cap_change_24h:
+ *                           type: number
+ *                           description: Зміна капіталізації за 24 години (%)
+ *                         percent_change_15m:
+ *                           type: number
+ *                           description: Зміна ціни за 15 хвилин (%)
+ *                         percent_change_30m:
+ *                           type: number
+ *                           description: Зміна ціни за 30 хвилин (%)
+ *                         percent_change_1h:
+ *                           type: number
+ *                           description: Зміна ціни за 1 годину (%)
+ *                         percent_change_6h:
+ *                           type: number
+ *                           description: Зміна ціни за 6 годин (%)
+ *                         percent_change_12h:
+ *                           type: number
+ *                           description: Зміна ціни за 12 годин (%)
+ *                         percent_change_24h:
+ *                           type: number
+ *                           description: Зміна ціни за 24 години (%)
+ *                         percent_change_7d:
+ *                           type: number
+ *                           description: Зміна ціни за 7 днів (%)
+ *                         percent_change_30d:
+ *                           type: number
+ *                           description: Зміна ціни за 30 днів (%)
+ *                         percent_change_1y:
+ *                           type: number
+ *                           description: Зміна ціни за 1 рік (%)
+ *                         ath_price:
+ *                           type: number
+ *                           description: Історичний максимум ціни (All Time High)
+ *                         ath_date:
+ *                           type: string
+ *                           format: date-time
+ *                           description: Дата досягнення ATH
+ *                         percent_from_price_ath:
+ *                           type: number
+ *                           description: Відсоток від ATH (%)
  *       404:
  *         description: Ticker не знайдено
  *         content:
