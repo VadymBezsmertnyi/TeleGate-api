@@ -8,7 +8,7 @@ const client = Binance({
   apiSecret: process.env.BINANCE_API_SECRET,
 });
 
-export const BinanceService = {
+const BinanceService = {
   /**
    * Отримати поточну ціну по парі (наприклад BTCUSDT)
    */
@@ -84,17 +84,6 @@ export const BinanceService = {
       status: s.status,
     }));
   },
-
-  /**
-   * Live ціна через WebSocket (callback на кожну зміну)
-   */
-  streamPrice: (symbol: string, callback: (data: any) => void) => {
-    return client.ws.ticker(symbol, (ticker) => {
-      callback({
-        symbol: ticker.symbol,
-        price: parseFloat(ticker.curDayClose),
-        change: parseFloat(ticker.priceChangePercent),
-      });
-    });
-  },
 };
+
+export default BinanceService;
