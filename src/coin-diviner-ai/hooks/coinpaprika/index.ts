@@ -1,5 +1,5 @@
 import axios from "axios";
-import { TCoinMainInfo } from "./coinpaprika.types";
+import { TCoinFullInfo, TCoinMainInfo } from "./coinpaprika.types";
 
 const API_BASE = "https://api.coinpaprika.com/v1";
 
@@ -46,9 +46,10 @@ export const CoinPaprikaService = {
   /**
    * Отримати детальну інформацію про монету/токен
    * (назва, опис, категорія, соц. посилання, логотип тощо)
+   * @returns детальна інформація про монету/токен
    */
   getCoinInfo: async (coinId: string) => {
-    return fetchFromPaprika(`/coins/${coinId}`);
+    return fetchFromPaprika<TCoinFullInfo>(`/coins/${coinId}`);
   },
 
   /**

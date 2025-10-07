@@ -29,18 +29,20 @@ router.get(
   }
 );
 
-router.get("/coins/:coinId", async (req: Request, res: Response) => {
-  const { coinId } = req.params;
-  try {
-    const coinInfo = await CoinPaprikaService.getCoinInfo(coinId);
-    if (!coinInfo) {
-      return res.status(404).json({ message: "Coin not found" });
+router.get(
+  "/coins/:coinId",
+  async (req: Request<{ coinId: string }>, res: Response) => {
+    const { coinId } = req.params;
+    try {
+      const coinInfo = await CoinPaprikaService.getCoinInfo(coinId);
+      if (!coinInfo) return res.status(404).json({ message: "Coin not found" });
+
+      return res.status(200).json(coinInfo);
+    } catch (error) {
+      return res.status(500).json({ message: "Server error: " + error });
     }
-    return res.status(200).json(coinInfo);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error: " + error });
   }
-});
+);
 
 router.get("/tickers/:coinId", async (req: Request, res: Response) => {
   const { coinId } = req.params;
