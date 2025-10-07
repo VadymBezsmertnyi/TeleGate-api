@@ -3,24 +3,19 @@
  * /coinpaprika/platforms:
  *   get:
  *     summary: Отримати список платформ
- *     description: Повертає список всіх доступних криптовалютних платформ
+ *     description: Повертає список всіх доступних криптовалютних платформ (platform_id). Наприклад "eth-ethereum", "trx-tron", "bsc-binance-smart-chain" тощо
  *     tags: [Coin Diviner AI - CoinPaprika]
  *     responses:
  *       200:
- *         description: Список платформ успішно отримано
+ *         description: Список platform_id успішно отримано
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     description: ID платформи
- *                   name:
- *                     type: string
- *                     description: Назва платформи
+ *                 type: string
+ *                 example: eth-ethereum
+ *               example: ["eth-ethereum", "trx-tron", "bsc-binance-smart-chain", "sol-solana"]
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -37,7 +32,7 @@
  * /coinpaprika/coins:
  *   get:
  *     summary: Отримати список монет
- *     description: Повертає список всіх криптовалют, опціонально відфільтрованих за платформою
+ *     description: Повертає список всіх криптовалют з основною інформацією. Можна відфільтрувати за platform_id (наприклад, "eth-ethereum" для токенів ERC-20)
  *     tags: [Coin Diviner AI - CoinPaprika]
  *     parameters:
  *       - in: query
@@ -45,7 +40,8 @@
  *         schema:
  *           type: string
  *         required: false
- *         description: ID платформи для фільтрації монет
+ *         description: ID платформи для фільтрації монет (наприклад, "eth-ethereum")
+ *         example: eth-ethereum
  *     responses:
  *       200:
  *         description: Список монет успішно отримано
@@ -55,25 +51,44 @@
  *               type: array
  *               items:
  *                 type: object
+ *                 required:
+ *                   - id
+ *                   - name
+ *                   - symbol
+ *                   - rank
+ *                   - is_new
+ *                   - is_active
+ *                   - type
  *                 properties:
  *                   id:
  *                     type: string
- *                     description: ID монети
+ *                     description: Унікальний ID монети/токена
+ *                     example: btc-bitcoin
  *                   name:
  *                     type: string
- *                     description: Назва монети
+ *                     description: Назва монети/токена
+ *                     example: Bitcoin
  *                   symbol:
  *                     type: string
- *                     description: Символ монети
+ *                     description: Символ (тікер) монети/токена
+ *                     example: BTC
  *                   rank:
  *                     type: number
- *                     description: Ранг монети
+ *                     description: Ранг монети за капіталізацією
+ *                     example: 1
  *                   is_new:
  *                     type: boolean
  *                     description: Чи є монета новою
+ *                     example: false
  *                   is_active:
  *                     type: boolean
  *                     description: Чи є монета активною
+ *                     example: true
+ *                   type:
+ *                     type: string
+ *                     enum: [coin, token]
+ *                     description: Тип криптовалюти (coin - власний блокчейн, token - токен на іншій платформі)
+ *                     example: coin
  *       500:
  *         description: Помилка сервера
  *         content:
