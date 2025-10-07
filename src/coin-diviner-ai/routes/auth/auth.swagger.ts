@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /coin-diviner-ai/api/auth/login:
+ * /auth/login:
  *   get:
  *     summary: Авторизація адміністратора
  *     description: Перевіряє логін та пароль адміністратора для Coin Diviner AI

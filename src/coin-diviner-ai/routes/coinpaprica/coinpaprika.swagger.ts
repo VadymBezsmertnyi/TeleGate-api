@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /coin-diviner-ai/api/coinpaprika/platforms:
+ * /coinpaprika/platforms:
  *   get:
  *     summary: Отримати список платформ
  *     description: Повертає список всіх доступних криптовалютних платформ
@@ -34,7 +34,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/coinpaprika/coins:
+ * /coinpaprika/coins:
  *   get:
  *     summary: Отримати список монет
  *     description: Повертає список всіх криптовалют, опціонально відфільтрованих за платформою
@@ -87,7 +87,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/coinpaprika/coins/{coinId}:
+ * /coinpaprika/coins/{coinId}:
  *   get:
  *     summary: Отримати інформацію про монету
  *     description: Повертає детальну інформацію про конкретну криптовалюту
@@ -151,7 +151,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/coinpaprika/tickers/{coinId}:
+ * /coinpaprika/tickers/{coinId}:
  *   get:
  *     summary: Отримати ticker інформацію про монету
  *     description: Повертає актуальні ринкові дані (ціна, обсяг, зміни) для конкретної криптовалюти
