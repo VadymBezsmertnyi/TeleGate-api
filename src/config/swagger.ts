@@ -15,11 +15,19 @@ const options = {
     servers: [
       {
         url: "http://localhost:5008/api",
-        description: "Development server",
+        description: "Development server - TeleGate",
       },
       {
         url: "https://telegate-api-4b26ec7aa804.herokuapp.com/api",
-        description: "Production server",
+        description: "Production server - TeleGate",
+      },
+      {
+        url: "http://localhost:5008/coin-diviner-ai/api",
+        description: "Development server - Coin Diviner AI",
+      },
+      {
+        url: "https://telegate-api-4b26ec7aa804.herokuapp.com/coin-diviner-ai/api",
+        description: "Production server - Coin Diviner AI",
       },
     ],
     components: {
@@ -500,7 +508,10 @@ const options = {
       },
     },
   },
-  apis: ["./src/routes/**/*.swagger.ts"],
+  apis: [
+    "./src/routes/**/*.swagger.ts",
+    "./src/coin-diviner-ai/routes/**/*.swagger.ts",
+  ],
 };
 
 export const specs = swaggerJsdoc(options);

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 import { TBodyLogin } from "./auth.types";
+import "./auth.swagger";
 
 dotenv.config();
 const router = Router();

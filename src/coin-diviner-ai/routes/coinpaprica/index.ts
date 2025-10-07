@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 import { CoinPaprikaService } from "../../hooks/coinpaprika";
+import "./coinpaprika.swagger";
 
 dotenv.config();
 const router = Router();
