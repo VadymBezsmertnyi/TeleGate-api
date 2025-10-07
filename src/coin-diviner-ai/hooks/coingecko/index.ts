@@ -6,6 +6,7 @@ import {
   CoinMarketChart,
   SimplePrice,
 } from "@microfox/coingecko-sdk";
+import { TCoinGeckoSearchResult } from "./coingecko.types";
 
 const BASE_URL = "https://api.coingecko.com/api/v3";
 
@@ -100,6 +101,12 @@ const CoinGeckoService = {
       vs_currency,
       days,
     }),
+
+  /**
+   * 🔍 Пошук токенів за назвою або символом
+   */
+  search: async (query: string): Promise<TCoinGeckoSearchResult | null> =>
+    fetchFromGecko<TCoinGeckoSearchResult>("/search", { query }),
 };
 
 export default CoinGeckoService;

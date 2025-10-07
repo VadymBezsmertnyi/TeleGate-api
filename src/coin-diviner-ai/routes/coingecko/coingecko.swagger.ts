@@ -454,3 +454,108 @@
  *                 message:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /coingecko/search:
+ *   get:
+ *     summary: Пошук криптовалют
+ *     description: Виконує пошук монет, бірж, ICO та категорій за назвою або символом. Повертає знайдені криптовалюти з основною інформацією та зображеннями
+ *     tags: [Coin Diviner AI - CoinGecko]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Пошуковий запит (назва або символ криптовалюти)
+ *         example: bitcoin
+ *     responses:
+ *       200:
+ *         description: Результати пошуку успішно отримані
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - coins
+ *                 - exchanges
+ *                 - icos
+ *                 - categories
+ *               properties:
+ *                 coins:
+ *                   type: array
+ *                   description: Знайдені криптовалюти
+ *                   items:
+ *                     type: object
+ *                     required:
+ *                       - id
+ *                       - name
+ *                       - symbol
+ *                       - market_cap_rank
+ *                       - thumb
+ *                       - large
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: Унікальний ID монети
+ *                         example: bitcoin
+ *                       name:
+ *                         type: string
+ *                         description: Назва монети
+ *                         example: Bitcoin
+ *                       symbol:
+ *                         type: string
+ *                         description: Символ (тікер) монети
+ *                         example: BTC
+ *                       market_cap_rank:
+ *                         type: number
+ *                         nullable: true
+ *                         description: Ранг за ринковою капіталізацією
+ *                         example: 1
+ *                       thumb:
+ *                         type: string
+ *                         description: URL мініатюри зображення монети
+ *                         example: https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png
+ *                       large:
+ *                         type: string
+ *                         description: URL великого зображення монети
+ *                         example: https://assets.coingecko.com/coins/images/1/large/bitcoin.png
+ *                 exchanges:
+ *                   type: array
+ *                   description: Знайдені біржі
+ *                   items:
+ *                     type: object
+ *                   example: []
+ *                 icos:
+ *                   type: array
+ *                   description: Знайдені ICO
+ *                   items:
+ *                     type: object
+ *                   example: []
+ *                 categories:
+ *                   type: array
+ *                   description: Знайдені категорії
+ *                   items:
+ *                     type: object
+ *                   example: []
+ *       400:
+ *         description: Відсутній обов'язковий параметр пошуку
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bad request: 'query' parameter is required"
+ *       500:
+ *         description: Помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */

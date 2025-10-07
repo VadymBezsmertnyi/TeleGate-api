@@ -86,4 +86,23 @@ router.get(
   }
 );
 
+router.get(
+  "/search",
+  async (req: Request<{}, {}, {}, { query: string }>, res: Response) => {
+    const { query } = req.query;
+    if (!query) {
+      return res
+        .status(400)
+        .json({ message: "Bad request: 'query' parameter is required" });
+    }
+
+    try {
+      const searchResults = await CoinGeckoService.search(query);
+      return res.status(200).json(searchResults);
+    } catch (error) {
+      return res.status(500).json({ message: "Server error: " + error });
+    }
+  }
+);
+
 export default router;
