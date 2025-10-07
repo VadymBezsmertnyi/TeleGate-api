@@ -1,86 +1,105 @@
+import axios from "axios";
 import {
   CoinData,
   CoinMarkets,
   CoinList,
   CoinMarketChart,
   SimplePrice,
-  createCoinGeckoSDK,
 } from "@microfox/coingecko-sdk";
 
-const client = createCoinGeckoSDK({
-  apiKey: process.env.COINGECKO_API_KEY,
-});
+const BASE_URL = "https://api.coingecko.com/api/v3";
+
+/**
+ * 🔁 Універсальна функція запитів до CoinGecko API
+ */
+export const fetchFromGecko = async <T>(
+  endpoint: string,
+  params: Record<string, any> = {}
+): Promise<T | null> => {
+  try {
+    const { data } = await axios.get<T>(`${BASE_URL}${endpoint}`, {
+      params,
+      headers: process.env.COINGECKO_API_KEY
+        ? { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY }
+        : {},
+    });
+    return data;
+  } catch (err: any) {
+    console.warn(`❌ CoinGecko error [${endpoint}]:`, err.message);
+    return null;
+  }
+};
 
 const CoinGeckoService = {
   /**
-   * Перевірка підключення
+   * 🛰 Перевірка підключення
    */
-  ping: async () => client.ping(),
+  ping: async () => fetchFromGecko<{ gecko_says: string }>("/ping"),
 
   /**
-   * Список усіх монет (з platform'ами)
+   * 📜 Список усіх монет (із платформами)
    */
-  getCoinsList: async (): Promise<CoinList> =>
-    client.getCoinsList({ include_platform: true, status: "active" }),
+  getCoinsList: async (): Promise<CoinList | null> =>
+    fetchFromGecko<CoinList>("/coins/list", {
+      include_platform: true,
+      status: "active",
+    }),
 
   /**
-   * Ринкові дані по монетах (наприклад топ 100)
+   * 💹 Ринкові дані по монетах (топ-100)
    */
   getMarkets: async (
     vs_currency = "usd",
     per_page = 100,
     page = 1
-  ): Promise<CoinMarkets> => {
-    return client.getCoinsMarkets({
+  ): Promise<CoinMarkets | null> =>
+    fetchFromGecko<CoinMarkets>("/coins/markets", {
       vs_currency,
-      include_tokens: "true",
       order: "market_cap_desc",
       per_page,
       page,
       sparkline: false,
-    });
-  },
+    }),
 
   /**
-   * Отримати дані про конкретну монету
+   * 📊 Детальна інформація про монету
    */
-  getCoinData: async (id: string): Promise<CoinData> => {
-    return client.getCoinData(id, {
+  getCoinData: async (id: string): Promise<CoinData | null> =>
+    fetchFromGecko<CoinData>(`/coins/${id}`, {
       localization: false,
       tickers: true,
       market_data: true,
       community_data: true,
       developer_data: true,
-    });
-  },
+    }),
 
   /**
-   * Поточна ціна (спрощений запит)
+   * 💰 Поточна ціна
    */
   getSimplePrice: async (
     ids: string[],
     vs_currencies = "usd"
-  ): Promise<SimplePrice> => {
-    return client.getSimplePrice({
+  ): Promise<SimplePrice | null> =>
+    fetchFromGecko<SimplePrice>("/simple/price", {
       ids: ids.join(","),
-      include_tokens: "true",
       vs_currencies,
       include_market_cap: true,
       include_24hr_vol: true,
       include_24hr_change: true,
-    });
-  },
+    }),
 
   /**
-   * Історичний графік (для побудови лінії цін)
+   * 📈 Історичний графік
    */
   getMarketChart: async (
     id: string,
     vs_currency = "usd",
     days = "30"
-  ): Promise<CoinMarketChart> => {
-    return client.getCoinMarketChart(id, { vs_currency, days });
-  },
+  ): Promise<CoinMarketChart | null> =>
+    fetchFromGecko<CoinMarketChart>(`/coins/${id}/market_chart`, {
+      vs_currency,
+      days,
+    }),
 };
 
 export default CoinGeckoService;
