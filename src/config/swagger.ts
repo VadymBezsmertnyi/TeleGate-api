@@ -36,7 +36,8 @@ const options = {
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
-          description: "Telegram токен авторизації",
+          description:
+            "JWT токен авторизації (Telegram токен або JWT access token)",
         },
       },
       schemas: {

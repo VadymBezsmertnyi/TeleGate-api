@@ -216,7 +216,7 @@
  *     description: Повертає дані авторизованого користувача
  *     tags: [Coin Diviner AI - Auth]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Дані користувача отримано
@@ -369,7 +369,7 @@
  *     description: Створює нового користувача. Потрібна авторизація
  *     tags: [Coin Diviner AI - Auth]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -479,7 +479,7 @@
  *     description: Оновлює email, пароль або телефон користувача за ID. Потрібна авторизація
  *     tags: [Coin Diviner AI - Auth]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -590,7 +590,7 @@
  *     description: Видаляє користувача за ID. Потрібна авторизація
  *     tags: [Coin Diviner AI - Auth]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -660,7 +660,7 @@
  *     description: Повертає список всіх користувачів. Потрібна авторизація
  *     tags: [Coin Diviner AI - Auth]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Список користувачів отримано
