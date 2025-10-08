@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 import { CandleChartInterval_LT } from "binance-api-node";
 import BinanceService from "../../hooks/binance";
+import "./binance.swagger";
 
 dotenv.config();
 const router = Router();
