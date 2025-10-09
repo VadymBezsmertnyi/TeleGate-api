@@ -11,6 +11,6 @@ const authSM = new Schema(
   }
 );
 
-const AuthModel = model("Auth", authSM);
+const AuthModel = model("coinDivinerAI-auth", authSM);
 
 export default AuthModel;
