@@ -48,23 +48,6 @@ export const searchQuerySchema = z.object({
   updatedAt: z.date().optional(),
 });
 
-export const searchCoinsResultSchema = z.object({
-  results: z.array(z.union([coinPaprikaDataSchema, coinGeckoDataSchema])),
-  source: z.enum(["coinpaprika", "coingecko"]).nullable(),
-  cached: z.boolean(),
-});
-
-export const priceResultSchema = z.object({
-  symbol: z.string(),
-  price: z.number(),
-  source: z.enum(["binance", "dexscreener", "coingecko"]),
-});
-
-export const priceHistoryResultSchema = z.object({
-  data: z.any(),
-  source: z.enum(["coingecko", "coinpaprika"]),
-});
-
 export const searchQueryParamsSchema = z.object({
   query: z.string().min(1),
 });
@@ -76,4 +59,34 @@ export const priceQueryParamsSchema = z.object({
 export const priceHistoryQueryParamsSchema = z.object({
   id: z.string().min(1),
   range: z.enum(["1h", "1d", "7d", "30d"]).optional().default("7d"),
+});
+
+export const searchResponseSchema = z.object({
+  results: z.array(z.union([coinPaprikaDataSchema, coinGeckoDataSchema])),
+  source: z.enum(["coinpaprika", "coingecko"]).nullable(),
+  cached: z.boolean(),
+});
+
+export const priceResponseSchema = z.object({
+  symbol: z.string(),
+  price: z.number(),
+  source: z.enum(["binance", "dexscreener", "coingecko"]),
+});
+
+export const priceHistoryResponseSchema = z.object({
+  data: z.any(),
+  source: z.enum(["coingecko", "coinpaprika"]),
+});
+
+export const validationErrorSchema = z.object({
+  message: z.string(),
+  errors: z.array(z.any()),
+});
+
+export const notFoundErrorSchema = z.object({
+  message: z.string(),
+});
+
+export const serverErrorSchema = z.object({
+  message: z.string(),
 });
