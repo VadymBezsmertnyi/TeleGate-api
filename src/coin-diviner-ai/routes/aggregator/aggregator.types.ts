@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   coinPaprikaDataSchema,
   coinGeckoDataSchema,
+  cryptoCoinSchema,
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
@@ -15,6 +16,8 @@ import {
 
 export type TCoinPaprikaData = z.infer<typeof coinPaprikaDataSchema>;
 export type TCoinGeckoData = z.infer<typeof coinGeckoDataSchema>;
+export type TCryptoCoin = z.infer<typeof cryptoCoinSchema>;
+
 export type TSearchQueryParams = z.infer<typeof searchQueryParamsSchema>;
 export type TPriceQueryParams = z.infer<typeof priceQueryParamsSchema>;
 export type TPriceHistoryQueryParams = z.infer<

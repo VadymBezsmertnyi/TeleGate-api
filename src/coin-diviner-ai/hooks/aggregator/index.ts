@@ -10,6 +10,7 @@ import type {
   TPriceHistoryResponse,
   TCoinPaprikaData,
   TCoinGeckoData,
+  TCryptoCoin,
 } from "../../routes/aggregator/aggregator.types";
 
 const AggregatorService = {
@@ -39,20 +40,27 @@ const AggregatorService = {
         }).limit(20);
 
         if (cachedCoins && cachedCoins.length > 0) {
-          const results: (TCoinPaprikaData | TCoinGeckoData)[] = cachedCoins
-            .map((coin) => {
-              if (coin.coinPaprikaData) return coin.coinPaprikaData;
-              if (coin.coinGeckoData) return coin.coinGeckoData;
-              return null;
-            })
-            .filter((r): r is TCoinPaprikaData | TCoinGeckoData => r !== null);
+          const results: TCryptoCoin[] = cachedCoins.map((coin) => ({
+            _id: coin._id,
+            coinId: coin.coinId,
+            name: coin.name,
+            symbol: coin.symbol,
+            coinPaprikaData: coin.coinPaprikaData,
+            coinGeckoData: coin.coinGeckoData,
+            lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
+              ? coin.lastUpdatedCoinPaprika
+              : undefined,
+            lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
+              ? coin.lastUpdatedCoinGecko
+              : undefined,
+            createdAt: coin.createdAt,
+            updatedAt: coin.updatedAt,
+          }));
 
-          if (results.length > 0) {
-            const source = cachedCoins[0].coinPaprikaData
-              ? ("coinpaprika" as const)
-              : ("coingecko" as const);
-            return { results, source, cached: true };
-          }
+          const source = cachedCoins[0].coinPaprikaData
+            ? ("coinpaprika" as const)
+            : ("coingecko" as const);
+          return { results, source, cached: true };
         }
       } catch (error) {
         console.warn("❌ Database search failed:", error);
@@ -95,6 +103,8 @@ const AggregatorService = {
         console.warn("❌ Failed to update search query:", error);
       }
 
+      const savedCoinIds: string[] = [];
+
       try {
         for (const result of resultsToSave) {
           const coinId = result.id;
@@ -117,12 +127,38 @@ const AggregatorService = {
             { $set: setData },
             { upsert: true, new: true }
           );
+          savedCoinIds.push(coinId);
         }
       } catch (error) {
         console.warn("❌ Failed to save search results:", error);
       }
 
-      return { results: resultsToSave, source: sourceUsed, cached: false };
+      try {
+        const savedCoins = await CryptoCoinModel.find({
+          coinId: { $in: savedCoinIds },
+        });
+
+        const results: TCryptoCoin[] = savedCoins.map((coin) => ({
+          _id: coin._id,
+          coinId: coin.coinId,
+          name: coin.name,
+          symbol: coin.symbol,
+          coinPaprikaData: coin.coinPaprikaData,
+          coinGeckoData: coin.coinGeckoData,
+          lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
+            ? coin.lastUpdatedCoinPaprika
+            : undefined,
+          lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
+            ? coin.lastUpdatedCoinGecko
+            : undefined,
+          createdAt: coin.createdAt,
+          updatedAt: coin.updatedAt,
+        }));
+
+        return { results, source: sourceUsed, cached: false };
+      } catch (error) {
+        console.warn("❌ Failed to fetch saved coins:", error);
+      }
     }
 
     return { results: [], source: null, cached: false };

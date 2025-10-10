@@ -9,22 +9,35 @@ export const coinPaprikaDataSchema = z.object({
   id: z.string(),
   name: z.string(),
   symbol: z.string(),
-  rank: z.number().optional(),
-  is_new: z.boolean().optional(),
-  is_active: z.boolean().optional(),
-  type: z.string().optional(),
-  rev: z.number().optional(),
+  rank: z.number().optional().nullable(),
+  is_new: z.boolean().optional().nullable(),
+  is_active: z.boolean().optional().nullable(),
+  type: z.string().optional().nullable(),
+  rev: z.number().optional().nullable(),
   contract_address: z.array(contractAddressSchema).optional(),
 });
 
 export const coinGeckoDataSchema = z.object({
   id: z.string(),
   name: z.string(),
-  api_symbol: z.string().optional(),
+  api_symbol: z.string().optional().nullable(),
   symbol: z.string(),
   market_cap_rank: z.number().nullable().optional(),
-  thumb: z.string().optional(),
-  large: z.string().optional(),
+  thumb: z.string().optional().nullable(),
+  large: z.string().optional().nullable(),
+});
+
+export const cryptoCoinSchema = z.object({
+  _id: z.any().optional(),
+  coinId: z.string(),
+  name: z.string(),
+  symbol: z.string(),
+  coinPaprikaData: coinPaprikaDataSchema.optional().nullable(),
+  coinGeckoData: coinGeckoDataSchema.optional().nullable(),
+  lastUpdatedCoinPaprika: z.date().optional(),
+  lastUpdatedCoinGecko: z.date().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 export const searchQueryParamsSchema = z.object({
@@ -41,7 +54,7 @@ export const priceHistoryQueryParamsSchema = z.object({
 });
 
 export const searchResponseSchema = z.object({
-  results: z.array(z.union([coinPaprikaDataSchema, coinGeckoDataSchema])),
+  results: z.array(cryptoCoinSchema),
   source: z.enum(["coinpaprika", "coingecko"]).nullable(),
   cached: z.boolean(),
 });
