@@ -41,7 +41,6 @@ const cryptoCoinSchema = new Schema(
     coinId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     symbol: { type: String, required: true },
-    searchTerms: [{ type: String }],
     coinPaprikaData: { type: coinPaprikaDataSchema },
     coinGeckoData: { type: coinGeckoDataSchema },
     lastUpdatedCoinPaprika: { type: Date },
@@ -55,9 +54,6 @@ const cryptoCoinSchema = new Schema(
 cryptoCoinSchema.index({ coinId: 1 });
 cryptoCoinSchema.index({ symbol: 1 });
 cryptoCoinSchema.index({ name: 1 });
-cryptoCoinSchema.index({ searchTerms: 1 });
-cryptoCoinSchema.index({ lastUpdatedCoinPaprika: 1 });
-cryptoCoinSchema.index({ lastUpdatedCoinGecko: 1 });
 
 const CryptoCoinModel = model("coinDivinerAI-crypto-coins", cryptoCoinSchema);
 

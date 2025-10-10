@@ -3,63 +3,52 @@ import { CoinPaprikaService } from "../coinpaprika";
 import CoinGeckoService from "../coingecko";
 import DexScreenerService from "../dexscreener";
 import CryptoCoinModel from "../../routes/aggregator/aggregator.model";
+import SearchQueryModel from "../../routes/aggregator/aggregator.search-query.model";
 
 const AggregatorService = {
   searchCoins: async (query: string) => {
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    let shouldSearchInDB = false;
 
     try {
-      const cachedCoins = await CryptoCoinModel.find({
-        $and: [
-          {
-            $or: [
-              { searchTerms: { $in: [normalizedQuery] } },
-              { name: { $regex: normalizedQuery, $options: "i" } },
-              { symbol: { $regex: normalizedQuery, $options: "i" } },
-            ],
-          },
-          {
-            $or: [
-              { lastUpdatedCoinPaprika: { $gte: oneHourAgo } },
-              { lastUpdatedCoinGecko: { $gte: oneHourAgo } },
-            ],
-          },
-        ],
-      }).limit(20);
-
-      if (cachedCoins && cachedCoins.length > 0) {
-        const results = cachedCoins.map((coin) => {
-          const paprikaFresh =
-            coin.coinPaprikaData &&
-            coin.lastUpdatedCoinPaprika &&
-            coin.lastUpdatedCoinPaprika >= oneHourAgo;
-
-          const geckoFresh =
-            coin.coinGeckoData &&
-            coin.lastUpdatedCoinGecko &&
-            coin.lastUpdatedCoinGecko >= oneHourAgo;
-          if (paprikaFresh && geckoFresh)
-            return coin.lastUpdatedCoinPaprika! > coin.lastUpdatedCoinGecko!
-              ? coin.coinPaprikaData
-              : coin.coinGeckoData;
-          if (paprikaFresh) return coin.coinPaprikaData;
-          if (geckoFresh) return coin.coinGeckoData;
-
-          return coin.coinPaprikaData || coin.coinGeckoData;
-        });
-
-        const firstCoin = cachedCoins[0];
-        const source =
-          firstCoin.lastUpdatedCoinPaprika &&
-          firstCoin.lastUpdatedCoinPaprika >= oneHourAgo
-            ? "coinpaprika"
-            : "coingecko";
-
-        return { results, source, cached: true };
-      }
+      const searchQuery = await SearchQueryModel.findOne({
+        query: normalizedQuery,
+      });
+      if (searchQuery && searchQuery.lastSearched >= oneHourAgo)
+        shouldSearchInDB = true;
     } catch (error) {
-      console.warn("❌ Database search failed:", error);
+      console.warn("❌ SearchQuery check failed:", error);
+    }
+
+    if (shouldSearchInDB) {
+      try {
+        const cachedCoins = await CryptoCoinModel.find({
+          $or: [
+            { coinId: normalizedQuery },
+            { name: { $regex: normalizedQuery, $options: "i" } },
+            { symbol: { $regex: normalizedQuery, $options: "i" } },
+          ],
+        }).limit(20);
+
+        if (cachedCoins && cachedCoins.length > 0) {
+          const results = cachedCoins.map((coin) => {
+            if (coin.coinPaprikaData) return coin.coinPaprikaData;
+            if (coin.coinGeckoData) return coin.coinGeckoData;
+            return null;
+          });
+
+          const validResults = results.filter((r) => r !== null);
+          if (validResults.length > 0) {
+            const source = cachedCoins[0].coinPaprikaData
+              ? "coinpaprika"
+              : "coingecko";
+            return { results: validResults, source, cached: true };
+          }
+        }
+      } catch (error) {
+        console.warn("❌ Database search failed:", error);
+      }
     }
 
     let resultsToSave: any[] = [];
@@ -89,6 +78,16 @@ const AggregatorService = {
 
     if (resultsToSave.length > 0 && sourceUsed) {
       try {
+        await SearchQueryModel.findOneAndUpdate(
+          { query: normalizedQuery },
+          { query: normalizedQuery, lastSearched: new Date() },
+          { upsert: true, new: true }
+        );
+      } catch (error) {
+        console.warn("❌ Failed to update search query:", error);
+      }
+
+      try {
         for (const result of resultsToSave) {
           const coinId = result.id;
           const setData: any = {
@@ -107,10 +106,7 @@ const AggregatorService = {
 
           await CryptoCoinModel.findOneAndUpdate(
             { coinId },
-            {
-              $set: setData,
-              $addToSet: { searchTerms: normalizedQuery },
-            },
+            { $set: setData },
             { upsert: true, new: true }
           );
         }

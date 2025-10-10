@@ -30,11 +30,18 @@ export type TCryptoCoin = {
   coinId: string;
   name: string;
   symbol: string;
-  searchTerms?: string[];
   coinPaprikaData?: TCoinPaprikaData;
   coinGeckoData?: TCoinGeckoData;
   lastUpdatedCoinPaprika?: Date;
   lastUpdatedCoinGecko?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export type TSearchQuery = {
+  _id?: string;
+  query: string;
+  lastSearched: Date;
   createdAt?: Date;
   updatedAt?: Date;
 };
