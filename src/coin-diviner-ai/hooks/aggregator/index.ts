@@ -4,9 +4,16 @@ import CoinGeckoService from "../coingecko";
 import DexScreenerService from "../dexscreener";
 import CryptoCoinModel from "../../routes/aggregator/aggregator.model";
 import SearchQueryModel from "../../routes/aggregator/aggregator.search-query.model";
+import type {
+  TSearchResponse,
+  TPriceResponse,
+  TPriceHistoryResponse,
+  TCoinPaprikaData,
+  TCoinGeckoData,
+} from "../../routes/aggregator/aggregator.types";
 
 const AggregatorService = {
-  searchCoins: async (query: string) => {
+  searchCoins: async (query: string): Promise<TSearchResponse> => {
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     let shouldSearchInDB = false;
@@ -32,18 +39,19 @@ const AggregatorService = {
         }).limit(20);
 
         if (cachedCoins && cachedCoins.length > 0) {
-          const results = cachedCoins.map((coin) => {
-            if (coin.coinPaprikaData) return coin.coinPaprikaData;
-            if (coin.coinGeckoData) return coin.coinGeckoData;
-            return null;
-          });
+          const results: (TCoinPaprikaData | TCoinGeckoData)[] = cachedCoins
+            .map((coin) => {
+              if (coin.coinPaprikaData) return coin.coinPaprikaData;
+              if (coin.coinGeckoData) return coin.coinGeckoData;
+              return null;
+            })
+            .filter((r): r is TCoinPaprikaData | TCoinGeckoData => r !== null);
 
-          const validResults = results.filter((r) => r !== null);
-          if (validResults.length > 0) {
+          if (results.length > 0) {
             const source = cachedCoins[0].coinPaprikaData
-              ? "coinpaprika"
-              : "coingecko";
-            return { results: validResults, source, cached: true };
+              ? ("coinpaprika" as const)
+              : ("coingecko" as const);
+            return { results, source, cached: true };
           }
         }
       } catch (error) {
@@ -51,7 +59,7 @@ const AggregatorService = {
       }
     }
 
-    let resultsToSave: any[] = [];
+    let resultsToSave: (TCoinPaprikaData | TCoinGeckoData)[] = [];
     let sourceUsed: "coinpaprika" | "coingecko" | null = null;
 
     try {
@@ -120,11 +128,15 @@ const AggregatorService = {
     return { results: [], source: null, cached: false };
   },
 
-  getPrice: async (symbolOrAddress: string) => {
+  getPrice: async (symbolOrAddress: string): Promise<TPriceResponse | null> => {
     try {
       const binancePrice = await BinanceService.getPrice(symbolOrAddress);
       if (binancePrice && binancePrice.price)
-        return { ...binancePrice, source: "binance" };
+        return {
+          symbol: binancePrice.symbol,
+          price: binancePrice.price,
+          source: "binance" as const,
+        };
     } catch (error) {
       console.warn("❌ Binance getPrice failed:", error);
     }
@@ -136,7 +148,7 @@ const AggregatorService = {
         return {
           symbol: pair.baseToken.symbol,
           price: parseFloat(pair.priceUsd || "0"),
-          source: "dexscreener",
+          source: "dexscreener" as const,
         };
       }
     } catch (error) {
@@ -148,11 +160,12 @@ const AggregatorService = {
         [symbolOrAddress.toLowerCase()],
         "usd"
       );
-      if (geckoPrice && geckoPrice[symbolOrAddress.toLowerCase()])
+      const priceData = geckoPrice?.[symbolOrAddress.toLowerCase()];
+      if (priceData && priceData.usd !== null && priceData.usd !== undefined)
         return {
           symbol: symbolOrAddress,
-          price: geckoPrice[symbolOrAddress.toLowerCase()].usd,
-          source: "coingecko",
+          price: priceData.usd,
+          source: "coingecko" as const,
         };
     } catch (error) {
       console.warn("❌ CoinGecko getSimplePrice failed:", error);
@@ -164,7 +177,7 @@ const AggregatorService = {
   getPriceHistory: async (
     id: string,
     range: "1h" | "1d" | "7d" | "30d" = "7d"
-  ) => {
+  ): Promise<TPriceHistoryResponse | null> => {
     const rangeMap: Record<string, string> = {
       "1h": "1",
       "1d": "1",
@@ -179,14 +192,15 @@ const AggregatorService = {
         rangeMap[range]
       );
       if (geckoChart && geckoChart.prices)
-        return { data: geckoChart, source: "coingecko" };
+        return { data: geckoChart, source: "coingecko" as const };
     } catch (error) {
       console.warn("❌ CoinGecko getMarketChart failed:", error);
     }
 
     try {
       const paprikaTicker = await CoinPaprikaService.getTicker(id);
-      if (paprikaTicker) return { data: paprikaTicker, source: "coinpaprika" };
+      if (paprikaTicker)
+        return { data: paprikaTicker, source: "coinpaprika" as const };
     } catch (error) {
       console.warn("❌ CoinPaprika getTicker failed:", error);
     }

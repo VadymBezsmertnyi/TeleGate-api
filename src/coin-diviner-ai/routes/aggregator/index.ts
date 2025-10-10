@@ -6,6 +6,17 @@ import {
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
 } from "./aggregator.schemas";
+import type {
+  TSearchQueryParams,
+  TPriceQueryParams,
+  TPriceHistoryQueryParams,
+  TSearchResponse,
+  TPriceResponse,
+  TPriceHistoryResponse,
+  TValidationError,
+  TNotFoundError,
+  TServerError,
+} from "./aggregator.types";
 import "./aggregator.swagger";
 
 dotenv.config();
@@ -14,57 +25,87 @@ const router = Router();
 router.get("/search", async (req: Request, res: Response) => {
   try {
     const validationResult = searchQueryParamsSchema.safeParse(req.query);
-    if (!validationResult.success)
-      return res.status(400).json({
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
-      });
+      };
+      return res.status(400).json(errorResponse);
+    }
 
-    const { query } = validationResult.data;
-    const searchResults = await AggregatorService.searchCoins(query);
+    const { query }: TSearchQueryParams = validationResult.data;
+    const searchResults: TSearchResponse = await AggregatorService.searchCoins(
+      query
+    );
     return res.status(200).json(searchResults);
   } catch (error) {
-    return res.status(500).json({ message: "Server error: " + error });
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    return res.status(500).json(errorResponse);
   }
 });
 
 router.get("/price", async (req: Request, res: Response) => {
   try {
     const validationResult = priceQueryParamsSchema.safeParse(req.query);
-    if (!validationResult.success)
-      return res.status(400).json({
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
-      });
+      };
+      return res.status(400).json(errorResponse);
+    }
 
-    const { symbol } = validationResult.data;
-    const priceData = await AggregatorService.getPrice(symbol);
-    if (!priceData)
-      return res.status(404).json({ message: "Price data not found" });
+    const { symbol }: TPriceQueryParams = validationResult.data;
+    const priceData: TPriceResponse | null = await AggregatorService.getPrice(
+      symbol
+    );
+
+    if (!priceData) {
+      const errorResponse: TNotFoundError = {
+        message: "Price data not found",
+      };
+      return res.status(404).json(errorResponse);
+    }
 
     return res.status(200).json(priceData);
   } catch (error) {
-    return res.status(500).json({ message: "Server error: " + error });
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    return res.status(500).json(errorResponse);
   }
 });
 
 router.get("/price-history", async (req: Request, res: Response) => {
   try {
     const validationResult = priceHistoryQueryParamsSchema.safeParse(req.query);
-    if (!validationResult.success)
-      return res.status(400).json({
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
-      });
+      };
+      return res.status(400).json(errorResponse);
+    }
 
-    const { id, range } = validationResult.data;
-    const historyData = await AggregatorService.getPriceHistory(id, range);
-    if (!historyData)
-      return res.status(404).json({ message: "Price history not found" });
+    const { id, range }: TPriceHistoryQueryParams = validationResult.data;
+    const historyData: TPriceHistoryResponse | null =
+      await AggregatorService.getPriceHistory(id, range);
+
+    if (!historyData) {
+      const errorResponse: TNotFoundError = {
+        message: "Price history not found",
+      };
+      return res.status(404).json(errorResponse);
+    }
 
     return res.status(200).json(historyData);
   } catch (error) {
-    return res.status(500).json({ message: "Server error: " + error });
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    return res.status(500).json(errorResponse);
   }
 });
 
