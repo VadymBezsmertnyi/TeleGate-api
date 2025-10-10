@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const searchQuerySchema = new Schema(
+const searchQuerySM = new Schema(
   {
     query: { type: String, required: true, unique: true },
     lastSearched: { type: Date, required: true },
@@ -10,12 +10,9 @@ const searchQuerySchema = new Schema(
   }
 );
 
-searchQuerySchema.index({ query: 1 });
-searchQuerySchema.index({ lastSearched: 1 });
+searchQuerySM.index({ query: 1 });
+searchQuerySM.index({ lastSearched: 1 });
 
-const SearchQueryModel = model(
-  "coinDivinerAI-search-queries",
-  searchQuerySchema
-);
+const SearchQueryModel = model("coinDivinerAI-search-queries", searchQuerySM);
 
 export default SearchQueryModel;

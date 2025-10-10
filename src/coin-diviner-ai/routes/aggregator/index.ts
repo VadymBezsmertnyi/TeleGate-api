@@ -5,6 +5,12 @@ import {
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
+  searchResponseSchema,
+  priceResponseSchema,
+  priceHistoryResponseSchema,
+  validationErrorSchema,
+  notFoundErrorSchema,
+  serverErrorSchema,
 } from "./aggregator.schemas";
 import type {
   TSearchQueryParams,
@@ -30,19 +36,32 @@ router.get("/search", async (req: Request, res: Response) => {
         message: "Validation error",
         errors: validationResult.error.issues,
       };
-      return res.status(400).json(errorResponse);
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
     }
 
     const { query }: TSearchQueryParams = validationResult.data;
     const searchResults: TSearchResponse = await AggregatorService.searchCoins(
       query
     );
-    return res.status(200).json(searchResults);
+
+    const responseValidation = searchResponseSchema.safeParse(searchResults);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
   } catch (error) {
     const errorResponse: TServerError = {
       message: "Server error: " + error,
     };
-    return res.status(500).json(errorResponse);
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
   }
 });
 
@@ -54,7 +73,8 @@ router.get("/price", async (req: Request, res: Response) => {
         message: "Validation error",
         errors: validationResult.error.issues,
       };
-      return res.status(400).json(errorResponse);
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
     }
 
     const { symbol }: TPriceQueryParams = validationResult.data;
@@ -66,15 +86,27 @@ router.get("/price", async (req: Request, res: Response) => {
       const errorResponse: TNotFoundError = {
         message: "Price data not found",
       };
-      return res.status(404).json(errorResponse);
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
     }
 
-    return res.status(200).json(priceData);
+    const responseValidation = priceResponseSchema.safeParse(priceData);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
   } catch (error) {
     const errorResponse: TServerError = {
       message: "Server error: " + error,
     };
-    return res.status(500).json(errorResponse);
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
   }
 });
 
@@ -86,7 +118,8 @@ router.get("/price-history", async (req: Request, res: Response) => {
         message: "Validation error",
         errors: validationResult.error.issues,
       };
-      return res.status(400).json(errorResponse);
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
     }
 
     const { id, range }: TPriceHistoryQueryParams = validationResult.data;
@@ -97,15 +130,28 @@ router.get("/price-history", async (req: Request, res: Response) => {
       const errorResponse: TNotFoundError = {
         message: "Price history not found",
       };
-      return res.status(404).json(errorResponse);
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
     }
 
-    return res.status(200).json(historyData);
+    const responseValidation =
+      priceHistoryResponseSchema.safeParse(historyData);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
   } catch (error) {
     const errorResponse: TServerError = {
       message: "Server error: " + error,
     };
-    return res.status(500).json(errorResponse);
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
   }
 });
 

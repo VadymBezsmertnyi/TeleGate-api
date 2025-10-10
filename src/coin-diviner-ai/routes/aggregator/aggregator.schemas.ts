@@ -27,6 +27,27 @@ export const coinGeckoDataSchema = z.object({
   large: z.string().optional(),
 });
 
+export const cryptoCoinSchema = z.object({
+  _id: z.any().optional(),
+  coinId: z.string(),
+  name: z.string(),
+  symbol: z.string(),
+  coinPaprikaData: coinPaprikaDataSchema.optional(),
+  coinGeckoData: coinGeckoDataSchema.optional(),
+  lastUpdatedCoinPaprika: z.date().optional(),
+  lastUpdatedCoinGecko: z.date().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export const searchQuerySchema = z.object({
+  _id: z.any().optional(),
+  query: z.string(),
+  lastSearched: z.date(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
 export const searchQueryParamsSchema = z.object({
   query: z.string().min(1),
 });

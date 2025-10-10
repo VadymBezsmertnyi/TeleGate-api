@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const contractAddressSchema = new Schema(
+const contractAddressSM = new Schema(
   {
     type: { type: String, required: true },
     address: { type: String, required: true },
@@ -8,7 +8,7 @@ const contractAddressSchema = new Schema(
   { _id: false }
 );
 
-const coinPaprikaDataSchema = new Schema(
+const coinPaprikaDataSM = new Schema(
   {
     id: { type: String, required: true },
     name: { type: String, required: true },
@@ -18,12 +18,12 @@ const coinPaprikaDataSchema = new Schema(
     is_active: { type: Boolean },
     type: { type: String },
     rev: { type: Number },
-    contract_address: [contractAddressSchema],
+    contract_address: [contractAddressSM],
   },
   { _id: false }
 );
 
-const coinGeckoDataSchema = new Schema(
+const coinGeckoDataSM = new Schema(
   {
     id: { type: String, required: true },
     name: { type: String, required: true },
@@ -36,13 +36,13 @@ const coinGeckoDataSchema = new Schema(
   { _id: false }
 );
 
-const cryptoCoinSchema = new Schema(
+const cryptoCoinSM = new Schema(
   {
     coinId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     symbol: { type: String, required: true },
-    coinPaprikaData: { type: coinPaprikaDataSchema },
-    coinGeckoData: { type: coinGeckoDataSchema },
+    coinPaprikaData: { type: coinPaprikaDataSM },
+    coinGeckoData: { type: coinGeckoDataSM },
     lastUpdatedCoinPaprika: { type: Date },
     lastUpdatedCoinGecko: { type: Date },
   },
@@ -51,10 +51,10 @@ const cryptoCoinSchema = new Schema(
   }
 );
 
-cryptoCoinSchema.index({ coinId: 1 });
-cryptoCoinSchema.index({ symbol: 1 });
-cryptoCoinSchema.index({ name: 1 });
+cryptoCoinSM.index({ coinId: 1 });
+cryptoCoinSM.index({ symbol: 1 });
+cryptoCoinSM.index({ name: 1 });
 
-const CryptoCoinModel = model("coinDivinerAI-crypto-coins", cryptoCoinSchema);
+const CryptoCoinModel = model("coinDivinerAI-crypto-coins", cryptoCoinSM);
 
 export default CryptoCoinModel;
