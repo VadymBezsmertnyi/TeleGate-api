@@ -1,64 +1,28 @@
-export type TContractAddress = {
-  type: string;
-  address: string;
-};
+import { z } from "zod";
+import {
+  contractAddressSchema,
+  coinPaprikaDataSchema,
+  coinGeckoDataSchema,
+  cryptoCoinSchema,
+  searchQuerySchema,
+  searchCoinsResultSchema,
+  priceResultSchema,
+  priceHistoryResultSchema,
+  searchQueryParamsSchema,
+  priceQueryParamsSchema,
+  priceHistoryQueryParamsSchema,
+} from "./aggregator.schemas";
 
-export type TCoinPaprikaData = {
-  id: string;
-  name: string;
-  symbol: string;
-  rank?: number;
-  is_new?: boolean;
-  is_active?: boolean;
-  type?: string;
-  rev?: number;
-  contract_address?: TContractAddress[];
-};
-
-export type TCoinGeckoData = {
-  id: string;
-  name: string;
-  api_symbol?: string;
-  symbol: string;
-  market_cap_rank?: number | null;
-  thumb?: string;
-  large?: string;
-};
-
-export type TCryptoCoin = {
-  _id?: string;
-  coinId: string;
-  name: string;
-  symbol: string;
-  coinPaprikaData?: TCoinPaprikaData;
-  coinGeckoData?: TCoinGeckoData;
-  lastUpdatedCoinPaprika?: Date;
-  lastUpdatedCoinGecko?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-};
-
-export type TSearchQuery = {
-  _id?: string;
-  query: string;
-  lastSearched: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-};
-
-export type TSearchCoinsResult = {
-  results: (TCoinPaprikaData | TCoinGeckoData)[];
-  source: "coinpaprika" | "coingecko" | null;
-  cached: boolean;
-};
-
-export type TPriceResult = {
-  symbol: string;
-  price: number;
-  source: "binance" | "dexscreener" | "coingecko";
-};
-
-export type TPriceHistoryResult = {
-  data: any;
-  source: "coingecko" | "coinpaprika";
-};
+export type TContractAddress = z.infer<typeof contractAddressSchema>;
+export type TCoinPaprikaData = z.infer<typeof coinPaprikaDataSchema>;
+export type TCoinGeckoData = z.infer<typeof coinGeckoDataSchema>;
+export type TCryptoCoin = z.infer<typeof cryptoCoinSchema>;
+export type TSearchQuery = z.infer<typeof searchQuerySchema>;
+export type TSearchCoinsResult = z.infer<typeof searchCoinsResultSchema>;
+export type TPriceResult = z.infer<typeof priceResultSchema>;
+export type TPriceHistoryResult = z.infer<typeof priceHistoryResultSchema>;
+export type TSearchQueryParams = z.infer<typeof searchQueryParamsSchema>;
+export type TPriceQueryParams = z.infer<typeof priceQueryParamsSchema>;
+export type TPriceHistoryQueryParams = z.infer<
+  typeof priceHistoryQueryParamsSchema
+>;
