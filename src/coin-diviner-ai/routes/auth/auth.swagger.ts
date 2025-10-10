@@ -75,6 +75,13 @@
  *                 error:
  *                   type: string
  *                   example: Validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1001
+ *                   description: Код помилки (ErrorCode.VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
  *                 details:
  *                   type: array
  *                   items:
@@ -89,6 +96,30 @@
  *                 error:
  *                   type: string
  *                   example: Invalid credentials
+ *                 code:
+ *                   type: number
+ *                   example: 1002
+ *                   description: Код помилки (ErrorCode.INVALID_CREDENTIALS)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid credentials
+ *       405:
+ *         description: Помилка валідації даних з бази
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Data validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1012
+ *                   description: Код помилки (ErrorCode.DATA_VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Data validation error
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -97,6 +128,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -182,10 +220,34 @@
  *                 error:
  *                   type: string
  *                   example: Validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1001
+ *                   description: Код помилки (ErrorCode.VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
  *                 details:
  *                   type: array
  *                   items:
  *                     type: object
+ *       405:
+ *         description: Помилка валідації даних з бази
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Data validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1012
+ *                   description: Код помилки (ErrorCode.DATA_VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Data validation error
  *       409:
  *         description: Користувач вже існує
  *         content:
@@ -196,6 +258,13 @@
  *                 error:
  *                   type: string
  *                   example: User already exists
+ *                 code:
+ *                   type: number
+ *                   example: 1003
+ *                   description: Код помилки (ErrorCode.USER_ALREADY_EXISTS)
+ *                 message:
+ *                   type: string
+ *                   example: User already exists
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -204,6 +273,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -254,6 +330,13 @@
  *                 error:
  *                   type: string
  *                   example: Invalid or expired token
+ *                 code:
+ *                   type: number
+ *                   example: 1007
+ *                   description: Код помилки (ErrorCode.INVALID_TOKEN / MISSING_AUTH_HEADER / MISSING_TOKEN)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired token
  *       404:
  *         description: Користувача не знайдено
  *         content:
@@ -264,6 +347,30 @@
  *                 error:
  *                   type: string
  *                   example: User not found
+ *                 code:
+ *                   type: number
+ *                   example: 1011
+ *                   description: Код помилки (ErrorCode.USER_NOT_FOUND)
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       405:
+ *         description: Помилка валідації даних з бази
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Data validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1012
+ *                   description: Код помилки (ErrorCode.DATA_VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Data validation error
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -272,6 +379,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -325,6 +439,13 @@
  *                 error:
  *                   type: string
  *                   example: Validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1001
+ *                   description: Код помилки (ErrorCode.VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
  *                 details:
  *                   type: array
  *                   items:
@@ -339,6 +460,13 @@
  *                 error:
  *                   type: string
  *                   example: Invalid or expired refresh token
+ *                 code:
+ *                   type: number
+ *                   example: 1009
+ *                   description: Код помилки (ErrorCode.INVALID_REFRESH_TOKEN)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired refresh token
  *       404:
  *         description: Користувача не знайдено
  *         content:
@@ -349,6 +477,13 @@
  *                 error:
  *                   type: string
  *                   example: User not found
+ *                 code:
+ *                   type: number
+ *                   example: 1011
+ *                   description: Код помилки (ErrorCode.USER_NOT_FOUND)
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -357,6 +492,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -435,6 +577,13 @@
  *                 error:
  *                   type: string
  *                   example: Validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1001
+ *                   description: Код помилки (ErrorCode.VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
  *                 details:
  *                   type: array
  *                   items:
@@ -449,6 +598,30 @@
  *                 error:
  *                   type: string
  *                   example: Invalid or expired token
+ *                 code:
+ *                   type: number
+ *                   example: 1007
+ *                   description: Код помилки (ErrorCode.INVALID_TOKEN / MISSING_AUTH_HEADER / MISSING_TOKEN)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired token
+ *       405:
+ *         description: Помилка валідації даних з бази
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Data validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1012
+ *                   description: Код помилки (ErrorCode.DATA_VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Data validation error
  *       409:
  *         description: Користувач вже існує
  *         content:
@@ -459,6 +632,13 @@
  *                 error:
  *                   type: string
  *                   example: User already exists
+ *                 code:
+ *                   type: number
+ *                   example: 1003
+ *                   description: Код помилки (ErrorCode.USER_ALREADY_EXISTS)
+ *                 message:
+ *                   type: string
+ *                   example: User already exists
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -467,6 +647,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -550,6 +737,13 @@
  *                 error:
  *                   type: string
  *                   example: Invalid user ID
+ *                 code:
+ *                   type: number
+ *                   example: 1013
+ *                   description: Код помилки (ErrorCode.INVALID_USER_ID / VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid user ID
  *       401:
  *         description: Відсутній або невірний токен
  *         content:
@@ -558,6 +752,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Invalid or expired token
+ *                 code:
+ *                   type: number
+ *                   example: 1007
+ *                   description: Код помилки (ErrorCode.INVALID_TOKEN / MISSING_AUTH_HEADER / MISSING_TOKEN)
+ *                 message:
  *                   type: string
  *                   example: Invalid or expired token
  *       404:
@@ -570,6 +771,30 @@
  *                 error:
  *                   type: string
  *                   example: User not found
+ *                 code:
+ *                   type: number
+ *                   example: 1011
+ *                   description: Код помилки (ErrorCode.USER_NOT_FOUND)
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       405:
+ *         description: Помилка валідації даних з бази
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Data validation error
+ *                 code:
+ *                   type: number
+ *                   example: 1012
+ *                   description: Код помилки (ErrorCode.DATA_VALIDATION_ERROR)
+ *                 message:
+ *                   type: string
+ *                   example: Data validation error
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -578,6 +803,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -620,6 +852,13 @@
  *                 error:
  *                   type: string
  *                   example: Invalid user ID
+ *                 code:
+ *                   type: number
+ *                   example: 1013
+ *                   description: Код помилки (ErrorCode.INVALID_USER_ID)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid user ID
  *       401:
  *         description: Відсутній або невірний токен
  *         content:
@@ -628,6 +867,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Invalid or expired token
+ *                 code:
+ *                   type: number
+ *                   example: 1007
+ *                   description: Код помилки (ErrorCode.INVALID_TOKEN / MISSING_AUTH_HEADER / MISSING_TOKEN)
+ *                 message:
  *                   type: string
  *                   example: Invalid or expired token
  *       404:
@@ -640,6 +886,13 @@
  *                 error:
  *                   type: string
  *                   example: User not found
+ *                 code:
+ *                   type: number
+ *                   example: 1011
+ *                   description: Код помилки (ErrorCode.USER_NOT_FOUND)
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -648,6 +901,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
@@ -703,6 +963,13 @@
  *                 error:
  *                   type: string
  *                   example: Invalid or expired token
+ *                 code:
+ *                   type: number
+ *                   example: 1007
+ *                   description: Код помилки (ErrorCode.INVALID_TOKEN / MISSING_AUTH_HEADER / MISSING_TOKEN)
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or expired token
  *       500:
  *         description: Помилка сервера
  *         content:
@@ -711,6 +978,13 @@
  *               type: object
  *               properties:
  *                 error:
+ *                   type: string
+ *                   example: Server error
+ *                 code:
+ *                   type: number
+ *                   example: 1014
+ *                   description: Код помилки (ErrorCode.SERVER_ERROR)
+ *                 message:
  *                   type: string
  *                   example: Server error
  */
