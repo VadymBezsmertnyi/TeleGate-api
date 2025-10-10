@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/aggregator/search:
+ * /aggregator/search:
  *   get:
  *     summary: Пошук монет/токенів
  *     tags: [Coin Diviner AI - Aggregator]
@@ -29,7 +29,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/aggregator/price:
+ * /aggregator/price:
  *   get:
  *     summary: Отримати поточну ціну монети/токена
  *     tags: [Coin Diviner AI - Aggregator]
@@ -53,7 +53,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/aggregator/price-history:
+ * /aggregator/price-history:
  *   get:
  *     summary: Отримати історію ціни монети/токена
  *     tags: [Coin Diviner AI - Aggregator]
