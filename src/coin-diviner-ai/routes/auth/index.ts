@@ -12,6 +12,7 @@ import {
 } from "./auth.schemas";
 import AuthModel from "./auth.model";
 import { verifyToken, verifyRefreshToken, setTokens } from "../../hooks/auth";
+import { returnError, ErrorCode } from "./auth.helps";
 import "./auth.swagger";
 
 dotenv.config();
@@ -21,23 +22,42 @@ router.post("/login", async (req: Request, res: Response) => {
   try {
     const validationResult = loginSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
-        error: "Validation error",
-        details: validationResult.error.issues,
-      });
+      return returnError(
+        res,
+        400,
+        "Validation error",
+        ErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
 
     const { email, password } = validationResult.data;
     const user = await AuthModel.findOne({ email });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    if (!user)
+      return returnError(
+        res,
+        401,
+        "Invalid credentials",
+        ErrorCode.INVALID_CREDENTIALS
+      );
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
-      return res.status(401).json({ error: "Invalid credentials" });
+      return returnError(
+        res,
+        401,
+        "Invalid credentials",
+        ErrorCode.INVALID_CREDENTIALS
+      );
 
     const tokens = setTokens(user._id.toString());
     const resultCheckZod = authSchema.safeParse(user);
     if (!resultCheckZod.success)
-      return res.status(405).json({ error: "Data validation error" });
+      return returnError(
+        res,
+        405,
+        "Data validation error",
+        ErrorCode.DATA_VALIDATION_ERROR
+      );
 
     return res.status(200).json({
       message: "Login successful",
@@ -46,7 +66,7 @@ router.post("/login", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Login error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -54,15 +74,23 @@ router.post("/register", async (req: Request, res: Response) => {
   try {
     const validationResult = registerSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
-        error: "Validation error",
-        details: validationResult.error.issues,
-      });
+      return returnError(
+        res,
+        400,
+        "Validation error",
+        ErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
 
     const { email, password, phone } = validationResult.data;
     const existingUser = await AuthModel.findOne({ email });
     if (existingUser)
-      return res.status(409).json({ error: "User already exists" });
+      return returnError(
+        res,
+        409,
+        "User already exists",
+        ErrorCode.USER_ALREADY_EXISTS
+      );
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await AuthModel.create({
@@ -73,7 +101,12 @@ router.post("/register", async (req: Request, res: Response) => {
     const tokens = setTokens(newUser._id.toString());
     const resultCheckZod = authSchema.safeParse(newUser);
     if (!resultCheckZod.success)
-      return res.status(405).json({ error: "Data validation error" });
+      return returnError(
+        res,
+        405,
+        "Data validation error",
+        ErrorCode.DATA_VALIDATION_ERROR
+      );
 
     return res.status(201).json({
       message: "Registration successful",
@@ -82,7 +115,7 @@ router.post("/register", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Registration error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -90,28 +123,43 @@ router.get("/me", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
+      return returnError(
+        res,
+        401,
+        "Missing or invalid authorization header",
+        ErrorCode.MISSING_AUTH_HEADER
+      );
 
     const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    if (!token)
+      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
 
     const decoded = verifyToken(token);
     if (!decoded)
-      return res.status(401).json({ error: "Invalid or expired token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired token",
+        ErrorCode.INVALID_TOKEN
+      );
 
     const user = await AuthModel.findById(decoded.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user)
+      return returnError(res, 404, "User not found", ErrorCode.USER_NOT_FOUND);
 
     const resultCheckZod = authSchema.safeParse(user);
     if (!resultCheckZod.success)
-      return res.status(405).json({ error: "Data validation error" });
+      return returnError(
+        res,
+        405,
+        "Data validation error",
+        ErrorCode.DATA_VALIDATION_ERROR
+      );
 
     return res.status(200).json({ data: resultCheckZod.data });
   } catch (error) {
     console.warn("Get me error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -119,20 +167,27 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
   try {
     const validationResult = refreshTokenSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
-        error: "Validation error",
-        details: validationResult.error.issues,
-      });
+      return returnError(
+        res,
+        400,
+        "Validation error",
+        ErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
 
     const { refreshToken } = validationResult.data;
     const decoded = verifyRefreshToken(refreshToken);
     if (!decoded)
-      return res
-        .status(401)
-        .json({ error: "Invalid or expired refresh token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired refresh token",
+        ErrorCode.INVALID_REFRESH_TOKEN
+      );
 
     const user = await AuthModel.findById(decoded.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user)
+      return returnError(res, 404, "User not found", ErrorCode.USER_NOT_FOUND);
 
     const tokens = setTokens(user._id.toString());
     return res.status(200).json({
@@ -141,7 +196,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Refresh token error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -149,29 +204,45 @@ router.post("/create", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
+      return returnError(
+        res,
+        401,
+        "Missing or invalid authorization header",
+        ErrorCode.MISSING_AUTH_HEADER
+      );
 
     const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    if (!token)
+      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
 
     const decoded = verifyToken(token);
     if (!decoded)
-      return res.status(401).json({ error: "Invalid or expired token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired token",
+        ErrorCode.INVALID_TOKEN
+      );
 
     const validationResult = createAuthSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
-        error: "Validation error",
-        details: validationResult.error.issues,
-      });
+      return returnError(
+        res,
+        400,
+        "Validation error",
+        ErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
 
     const { email, password, phone } = validationResult.data;
-
     const existingUser = await AuthModel.findOne({ email });
     if (existingUser)
-      return res.status(409).json({ error: "User already exists" });
+      return returnError(
+        res,
+        409,
+        "User already exists",
+        ErrorCode.USER_ALREADY_EXISTS
+      );
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await AuthModel.create({
@@ -181,7 +252,12 @@ router.post("/create", async (req: Request, res: Response) => {
     });
     const resultCheckZod = authSchema.safeParse(newUser);
     if (!resultCheckZod.success)
-      return res.status(405).json({ error: "Data validation error" });
+      return returnError(
+        res,
+        405,
+        "Data validation error",
+        ErrorCode.DATA_VALIDATION_ERROR
+      );
 
     return res.status(201).json({
       message: "User created successfully",
@@ -189,7 +265,7 @@ router.post("/create", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Create user error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -197,27 +273,44 @@ router.put("/update/:id", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
+      return returnError(
+        res,
+        401,
+        "Missing or invalid authorization header",
+        ErrorCode.MISSING_AUTH_HEADER
+      );
 
     const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    if (!token)
+      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
 
     const decoded = verifyToken(token);
     if (!decoded)
-      return res.status(401).json({ error: "Invalid or expired token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired token",
+        ErrorCode.INVALID_TOKEN
+      );
 
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).json({ error: "Invalid user ID" });
+      return returnError(
+        res,
+        400,
+        "Invalid user ID",
+        ErrorCode.INVALID_USER_ID
+      );
 
     const validationResult = updateAuthSchema.safeParse(req.body);
     if (!validationResult.success)
-      return res.status(400).json({
-        error: "Validation error",
-        details: validationResult.error.issues,
-      });
+      return returnError(
+        res,
+        400,
+        "Validation error",
+        ErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
 
     const updateData: any = {};
     if (validationResult.data.email)
@@ -233,11 +326,17 @@ router.put("/update/:id", async (req: Request, res: Response) => {
     const updatedUser = await AuthModel.findByIdAndUpdate(id, updateData, {
       new: true,
     });
-    if (!updatedUser) return res.status(404).json({ error: "User not found" });
+    if (!updatedUser)
+      return returnError(res, 404, "User not found", ErrorCode.USER_NOT_FOUND);
 
     const resultCheckZod = authSchema.safeParse(updatedUser);
     if (!resultCheckZod.success)
-      return res.status(405).json({ error: "Data validation error" });
+      return returnError(
+        res,
+        405,
+        "Data validation error",
+        ErrorCode.DATA_VALIDATION_ERROR
+      );
 
     return res.status(200).json({
       message: "User updated successfully",
@@ -245,7 +344,7 @@ router.put("/update/:id", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Update user error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -253,30 +352,45 @@ router.delete("/delete/:id", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
+      return returnError(
+        res,
+        401,
+        "Missing or invalid authorization header",
+        ErrorCode.MISSING_AUTH_HEADER
+      );
 
     const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    if (!token)
+      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
 
     const decoded = verifyToken(token);
     if (!decoded)
-      return res.status(401).json({ error: "Invalid or expired token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired token",
+        ErrorCode.INVALID_TOKEN
+      );
 
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).json({ error: "Invalid user ID" });
+      return returnError(
+        res,
+        400,
+        "Invalid user ID",
+        ErrorCode.INVALID_USER_ID
+      );
 
     const deletedUser = await AuthModel.findByIdAndDelete(id);
-    if (!deletedUser) return res.status(404).json({ error: "User not found" });
+    if (!deletedUser)
+      return returnError(res, 404, "User not found", ErrorCode.USER_NOT_FOUND);
 
     return res.status(200).json({
       message: "User deleted successfully",
     });
   } catch (error) {
     console.warn("Delete user error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
@@ -284,16 +398,25 @@ router.get("/get-all", async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res
-        .status(401)
-        .json({ error: "Missing or invalid authorization header" });
+      return returnError(
+        res,
+        401,
+        "Missing or invalid authorization header",
+        ErrorCode.MISSING_AUTH_HEADER
+      );
 
     const token = authHeader.substring(7);
-    if (!token) return res.status(401).json({ error: "Missing token" });
+    if (!token)
+      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
 
     const decoded = verifyToken(token);
     if (!decoded)
-      return res.status(401).json({ error: "Invalid or expired token" });
+      return returnError(
+        res,
+        401,
+        "Invalid or expired token",
+        ErrorCode.INVALID_TOKEN
+      );
 
     const users = await AuthModel.find();
     const usersData = users.map((user) => ({
@@ -309,7 +432,7 @@ router.get("/get-all", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Get all users error:", error);
-    return res.status(500).json({ error: "Server error" });
+    return returnError(res, 500, "Server error", ErrorCode.SERVER_ERROR);
   }
 });
 
