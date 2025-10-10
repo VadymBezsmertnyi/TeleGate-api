@@ -1,10 +1,7 @@
 import { z } from "zod";
 import {
-  contractAddressSchema,
   coinPaprikaDataSchema,
   coinGeckoDataSchema,
-  cryptoCoinSchema,
-  searchQuerySchema,
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
@@ -16,11 +13,8 @@ import {
   serverErrorSchema,
 } from "./aggregator.schemas";
 
-export type TContractAddress = z.infer<typeof contractAddressSchema>;
 export type TCoinPaprikaData = z.infer<typeof coinPaprikaDataSchema>;
 export type TCoinGeckoData = z.infer<typeof coinGeckoDataSchema>;
-export type TCryptoCoin = z.infer<typeof cryptoCoinSchema>;
-export type TSearchQuery = z.infer<typeof searchQuerySchema>;
 
 export type TSearchQueryParams = z.infer<typeof searchQueryParamsSchema>;
 export type TPriceQueryParams = z.infer<typeof priceQueryParamsSchema>;
