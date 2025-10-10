@@ -2,33 +2,134 @@ import BinanceService from "../binance";
 import { CoinPaprikaService } from "../coinpaprika";
 import CoinGeckoService from "../coingecko";
 import DexScreenerService from "../dexscreener";
+import CryptoCoinModel from "../../routes/aggregator/aggregator.model";
 
 const AggregatorService = {
   searchCoins: async (query: string) => {
+    const normalizedQuery = query.toLowerCase().trim();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    try {
+      const cachedCoins = await CryptoCoinModel.find({
+        $and: [
+          {
+            $or: [
+              { searchTerms: { $in: [normalizedQuery] } },
+              { name: { $regex: normalizedQuery, $options: "i" } },
+              { symbol: { $regex: normalizedQuery, $options: "i" } },
+            ],
+          },
+          {
+            $or: [
+              { lastUpdatedCoinPaprika: { $gte: oneHourAgo } },
+              { lastUpdatedCoinGecko: { $gte: oneHourAgo } },
+            ],
+          },
+        ],
+      }).limit(20);
+
+      if (cachedCoins && cachedCoins.length > 0) {
+        const results = cachedCoins.map((coin) => {
+          const paprikaFresh =
+            coin.coinPaprikaData &&
+            coin.lastUpdatedCoinPaprika &&
+            coin.lastUpdatedCoinPaprika >= oneHourAgo;
+
+          const geckoFresh =
+            coin.coinGeckoData &&
+            coin.lastUpdatedCoinGecko &&
+            coin.lastUpdatedCoinGecko >= oneHourAgo;
+          if (paprikaFresh && geckoFresh)
+            return coin.lastUpdatedCoinPaprika! > coin.lastUpdatedCoinGecko!
+              ? coin.coinPaprikaData
+              : coin.coinGeckoData;
+          if (paprikaFresh) return coin.coinPaprikaData;
+          if (geckoFresh) return coin.coinGeckoData;
+
+          return coin.coinPaprikaData || coin.coinGeckoData;
+        });
+
+        const firstCoin = cachedCoins[0];
+        const source =
+          firstCoin.lastUpdatedCoinPaprika &&
+          firstCoin.lastUpdatedCoinPaprika >= oneHourAgo
+            ? "coinpaprika"
+            : "coingecko";
+
+        return { results, source, cached: true };
+      }
+    } catch (error) {
+      console.warn("❌ Database search failed:", error);
+    }
+
+    let resultsToSave: any[] = [];
+    let sourceUsed: "coinpaprika" | "coingecko" | null = null;
+
     try {
       const paprikaResult = await CoinPaprikaService.search(query);
-      if (paprikaResult && paprikaResult.currencies.length > 0)
-        return { results: paprikaResult.currencies, source: "coinpaprika" };
+      if (paprikaResult && paprikaResult.currencies.length > 0) {
+        resultsToSave = paprikaResult.currencies;
+        sourceUsed = "coinpaprika";
+      }
     } catch (error) {
       console.warn("❌ CoinPaprika search failed:", error);
     }
 
-    try {
-      const geckoResult = await CoinGeckoService.search(query);
-      if (geckoResult && geckoResult.coins.length > 0)
-        return { results: geckoResult.coins, source: "coingecko" };
-    } catch (error) {
-      console.warn("❌ CoinGecko search failed:", error);
+    if (resultsToSave.length === 0) {
+      try {
+        const geckoResult = await CoinGeckoService.search(query);
+        if (geckoResult && geckoResult.coins.length > 0) {
+          resultsToSave = geckoResult.coins;
+          sourceUsed = "coingecko";
+        }
+      } catch (error) {
+        console.warn("❌ CoinGecko search failed:", error);
+      }
     }
 
-    return { results: [], source: null };
+    if (resultsToSave.length > 0 && sourceUsed) {
+      try {
+        for (const result of resultsToSave) {
+          const coinId = result.id;
+          const setData: any = {
+            coinId,
+            name: result.name,
+            symbol: result.symbol,
+          };
+
+          if (sourceUsed === "coinpaprika") {
+            setData.coinPaprikaData = result;
+            setData.lastUpdatedCoinPaprika = new Date();
+          } else if (sourceUsed === "coingecko") {
+            setData.coinGeckoData = result;
+            setData.lastUpdatedCoinGecko = new Date();
+          }
+
+          await CryptoCoinModel.findOneAndUpdate(
+            { coinId },
+            {
+              $set: setData,
+              $addToSet: { searchTerms: normalizedQuery },
+            },
+            { upsert: true, new: true }
+          );
+        }
+      } catch (error) {
+        console.warn("❌ Failed to save search results:", error);
+      }
+
+      return { results: resultsToSave, source: sourceUsed, cached: false };
+    }
+
+    return { results: [], source: null, cached: false };
   },
 
   getPrice: async (symbolOrAddress: string) => {
     try {
       const binancePrice = await BinanceService.getPrice(symbolOrAddress);
-      if (binancePrice && binancePrice.price)
+      if (binancePrice && binancePrice.price) {
         return { ...binancePrice, source: "binance" };
+      }
     } catch (error) {
       console.warn("❌ Binance getPrice failed:", error);
     }
@@ -52,12 +153,13 @@ const AggregatorService = {
         [symbolOrAddress.toLowerCase()],
         "usd"
       );
-      if (geckoPrice && geckoPrice[symbolOrAddress.toLowerCase()])
+      if (geckoPrice && geckoPrice[symbolOrAddress.toLowerCase()]) {
         return {
           symbol: symbolOrAddress,
           price: geckoPrice[symbolOrAddress.toLowerCase()].usd,
           source: "coingecko",
         };
+      }
     } catch (error) {
       console.warn("❌ CoinGecko getSimplePrice failed:", error);
     }
@@ -82,15 +184,18 @@ const AggregatorService = {
         "usd",
         rangeMap[range]
       );
-      if (geckoChart && geckoChart.prices)
+      if (geckoChart && geckoChart.prices) {
         return { data: geckoChart, source: "coingecko" };
+      }
     } catch (error) {
       console.warn("❌ CoinGecko getMarketChart failed:", error);
     }
 
     try {
       const paprikaTicker = await CoinPaprikaService.getTicker(id);
-      if (paprikaTicker) return { data: paprikaTicker, source: "coinpaprika" };
+      if (paprikaTicker) {
+        return { data: paprikaTicker, source: "coinpaprika" };
+      }
     } catch (error) {
       console.warn("❌ CoinPaprika getTicker failed:", error);
     }
