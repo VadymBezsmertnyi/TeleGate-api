@@ -35,15 +35,7 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid credentials" });
 
     const tokens = setTokens(user._id.toString());
-    const userData = {
-      _id: user._id,
-      email: user.email,
-      phone: user.phone,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-
-    const resultCheckZod = authSchema.safeParse(userData);
+    const resultCheckZod = authSchema.safeParse(user);
     if (!resultCheckZod.success)
       return res.status(405).json({ error: "Data validation error" });
 
@@ -79,14 +71,7 @@ router.post("/register", async (req: Request, res: Response) => {
       phone: phone || null,
     });
     const tokens = setTokens(newUser._id.toString());
-    const userData = {
-      _id: newUser._id,
-      email: newUser.email,
-      phone: newUser.phone,
-      createdAt: newUser.createdAt,
-      updatedAt: newUser.updatedAt,
-    };
-    const resultCheckZod = authSchema.safeParse(userData);
+    const resultCheckZod = authSchema.safeParse(newUser);
     if (!resultCheckZod.success)
       return res.status(405).json({ error: "Data validation error" });
 
@@ -119,14 +104,7 @@ router.get("/me", async (req: Request, res: Response) => {
     const user = await AuthModel.findById(decoded.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const userData = {
-      _id: user._id,
-      email: user.email,
-      phone: user.phone,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-    const resultCheckZod = authSchema.safeParse(userData);
+    const resultCheckZod = authSchema.safeParse(user);
     if (!resultCheckZod.success)
       return res.status(405).json({ error: "Data validation error" });
 
@@ -201,14 +179,7 @@ router.post("/create", async (req: Request, res: Response) => {
       password: hashedPassword,
       phone: phone || null,
     });
-    const userData = {
-      _id: newUser._id,
-      email: newUser.email,
-      phone: newUser.phone,
-      createdAt: newUser.createdAt,
-      updatedAt: newUser.updatedAt,
-    };
-    const resultCheckZod = authSchema.safeParse(userData);
+    const resultCheckZod = authSchema.safeParse(newUser);
     if (!resultCheckZod.success)
       return res.status(405).json({ error: "Data validation error" });
 
@@ -264,14 +235,7 @@ router.put("/update/:id", async (req: Request, res: Response) => {
     });
     if (!updatedUser) return res.status(404).json({ error: "User not found" });
 
-    const userData = {
-      _id: updatedUser._id,
-      email: updatedUser.email,
-      phone: updatedUser.phone,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
-    };
-    const resultCheckZod = authSchema.safeParse(userData);
+    const resultCheckZod = authSchema.safeParse(updatedUser);
     if (!resultCheckZod.success)
       return res.status(405).json({ error: "Data validation error" });
 
