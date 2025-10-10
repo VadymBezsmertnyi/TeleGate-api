@@ -2,8 +2,6 @@ import { z } from "zod";
 import {
   coinPaprikaDataSchema,
   coinGeckoDataSchema,
-  cryptoCoinSchema,
-  searchQuerySchema,
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
