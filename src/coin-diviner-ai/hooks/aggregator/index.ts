@@ -123,9 +123,8 @@ const AggregatorService = {
   getPrice: async (symbolOrAddress: string) => {
     try {
       const binancePrice = await BinanceService.getPrice(symbolOrAddress);
-      if (binancePrice && binancePrice.price) {
+      if (binancePrice && binancePrice.price)
         return { ...binancePrice, source: "binance" };
-      }
     } catch (error) {
       console.warn("❌ Binance getPrice failed:", error);
     }
@@ -149,13 +148,12 @@ const AggregatorService = {
         [symbolOrAddress.toLowerCase()],
         "usd"
       );
-      if (geckoPrice && geckoPrice[symbolOrAddress.toLowerCase()]) {
+      if (geckoPrice && geckoPrice[symbolOrAddress.toLowerCase()])
         return {
           symbol: symbolOrAddress,
           price: geckoPrice[symbolOrAddress.toLowerCase()].usd,
           source: "coingecko",
         };
-      }
     } catch (error) {
       console.warn("❌ CoinGecko getSimplePrice failed:", error);
     }
@@ -180,18 +178,15 @@ const AggregatorService = {
         "usd",
         rangeMap[range]
       );
-      if (geckoChart && geckoChart.prices) {
+      if (geckoChart && geckoChart.prices)
         return { data: geckoChart, source: "coingecko" };
-      }
     } catch (error) {
       console.warn("❌ CoinGecko getMarketChart failed:", error);
     }
 
     try {
       const paprikaTicker = await CoinPaprikaService.getTicker(id);
-      if (paprikaTicker) {
-        return { data: paprikaTicker, source: "coinpaprika" };
-      }
+      if (paprikaTicker) return { data: paprikaTicker, source: "coinpaprika" };
     } catch (error) {
       console.warn("❌ CoinPaprika getTicker failed:", error);
     }
