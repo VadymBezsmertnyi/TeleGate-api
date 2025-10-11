@@ -202,8 +202,9 @@ router.get("/all-prices", async (req: Request, res: Response) => {
 
 router.get("/all-price-history", async (req: Request, res: Response) => {
   try {
-    const validationResult =
-      allPriceHistoryQueryParamsSchema.safeParse(req.query);
+    const validationResult = allPriceHistoryQueryParamsSchema.safeParse(
+      req.query
+    );
     if (!validationResult.success) {
       const errorResponse: TValidationError = {
         message: "Validation error",

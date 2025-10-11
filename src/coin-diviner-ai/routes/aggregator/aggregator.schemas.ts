@@ -135,7 +135,9 @@ export const allPricesResponseSchema = z.object({
 });
 
 export const priceHistoryDataSchema = z.object({
-  data: z.union([coinGeckoMarketChartSchema, coinPaprikaTickerSchema]).nullable(),
+  data: z
+    .union([coinGeckoMarketChartSchema, coinPaprikaTickerSchema])
+    .nullable(),
   updatedAt: z.date(),
   error: z.string().optional().nullable(),
 });
