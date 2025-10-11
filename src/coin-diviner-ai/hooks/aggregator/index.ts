@@ -33,7 +33,6 @@ const AggregatorService = {
       try {
         const cachedCoins = await CryptoCoinModel.find({
           $or: [
-            { coinId: normalizedQuery },
             { name: { $regex: normalizedQuery, $options: "i" } },
             { symbol: { $regex: normalizedQuery, $options: "i" } },
           ],
@@ -42,7 +41,6 @@ const AggregatorService = {
         if (cachedCoins && cachedCoins.length > 0) {
           const results: TCryptoCoin[] = cachedCoins.map((coin) => ({
             _id: coin._id,
-            coinId: coin.coinId,
             name: coin.name,
             symbol: coin.symbol,
             coinPaprikaData: coin.coinPaprikaData,
@@ -103,13 +101,11 @@ const AggregatorService = {
         console.warn("❌ Failed to update search query:", error);
       }
 
-      const savedCoinIds: string[] = [];
+      const savedCoinsIds: string[] = [];
 
       try {
         for (const result of resultsToSave) {
-          const coinId = result.id;
           const setData: any = {
-            coinId,
             name: result.name,
             symbol: result.symbol,
           };
@@ -122,12 +118,12 @@ const AggregatorService = {
             setData.lastUpdatedCoinGecko = new Date();
           }
 
-          await CryptoCoinModel.findOneAndUpdate(
-            { coinId },
+          const savedCoin = await CryptoCoinModel.findOneAndUpdate(
+            { symbol: result.symbol, name: result.name },
             { $set: setData },
             { upsert: true, new: true }
           );
-          savedCoinIds.push(coinId);
+          if (savedCoin) savedCoinsIds.push(savedCoin._id.toString());
         }
       } catch (error) {
         console.warn("❌ Failed to save search results:", error);
@@ -135,12 +131,11 @@ const AggregatorService = {
 
       try {
         const savedCoins = await CryptoCoinModel.find({
-          coinId: { $in: savedCoinIds },
+          _id: { $in: savedCoinsIds },
         });
 
         const results: TCryptoCoin[] = savedCoins.map((coin) => ({
           _id: coin._id,
-          coinId: coin.coinId,
           name: coin.name,
           symbol: coin.symbol,
           coinPaprikaData: coin.coinPaprikaData,

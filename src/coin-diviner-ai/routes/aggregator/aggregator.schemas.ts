@@ -29,7 +29,6 @@ export const coinGeckoDataSchema = z.object({
 
 export const cryptoCoinSchema = z.object({
   _id: z.any().optional(),
-  coinId: z.string(),
   name: z.string(),
   symbol: z.string(),
   coinPaprikaData: coinPaprikaDataSchema.optional().nullable(),

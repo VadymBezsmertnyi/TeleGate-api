@@ -38,7 +38,6 @@ const coinGeckoDataSM = new Schema(
 
 const cryptoCoinSM = new Schema(
   {
-    coinId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     symbol: { type: String, required: true },
     coinPaprikaData: { type: coinPaprikaDataSM },
@@ -51,7 +50,7 @@ const cryptoCoinSM = new Schema(
   }
 );
 
-cryptoCoinSM.index({ coinId: 1 });
+cryptoCoinSM.index({ symbol: 1, name: 1 }, { unique: true });
 cryptoCoinSM.index({ symbol: 1 });
 cryptoCoinSM.index({ name: 1 });
 
