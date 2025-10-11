@@ -10,6 +10,9 @@ import {
   searchResponseSchema,
   priceResponseSchema,
   priceHistoryResponseSchema,
+  coinGeckoMarketChartSchema,
+  coinPaprikaQuoteSchema,
+  coinPaprikaTickerSchema,
   priceDataSchema,
   allPricesResponseSchema,
   validationErrorSchema,
@@ -31,6 +34,9 @@ export type TAllPricesQueryParams = z.infer<typeof allPricesQueryParamsSchema>;
 export type TSearchResponse = z.infer<typeof searchResponseSchema>;
 export type TPriceResponse = z.infer<typeof priceResponseSchema>;
 export type TPriceHistoryResponse = z.infer<typeof priceHistoryResponseSchema>;
+export type TCoinGeckoMarketChart = z.infer<typeof coinGeckoMarketChartSchema>;
+export type TCoinPaprikaQuote = z.infer<typeof coinPaprikaQuoteSchema>;
+export type TCoinPaprikaTicker = z.infer<typeof coinPaprikaTickerSchema>;
 export type TPriceData = z.infer<typeof priceDataSchema>;
 export type TAllPricesResponse = z.infer<typeof allPricesResponseSchema>;
 
