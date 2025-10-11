@@ -38,10 +38,12 @@ export const cryptoCoinSchema = z.object({
   lastUpdatedCoinGecko: z.date().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
+  source: z.enum(["coinpaprika", "coingecko", "both"]).optional(),
 });
 
 export const searchQueryParamsSchema = z.object({
   query: z.string().min(1),
+  deepSearch: z.enum(["true", "false"]).optional(),
 });
 
 export const priceQueryParamsSchema = z.object({
@@ -64,7 +66,7 @@ export const allPriceHistoryQueryParamsSchema = z.object({
 
 export const searchResponseSchema = z.object({
   results: z.array(cryptoCoinSchema),
-  source: z.enum(["coinpaprika", "coingecko"]).nullable(),
+  deepSearch: z.boolean().optional(),
   cached: z.boolean(),
 });
 

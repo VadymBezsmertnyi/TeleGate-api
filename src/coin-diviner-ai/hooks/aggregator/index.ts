@@ -16,83 +16,125 @@ import type {
 } from "../../routes/aggregator/aggregator.types";
 
 const AggregatorService = {
-  searchCoins: async (query: string): Promise<TSearchResponse> => {
+  searchCoins: async (
+    query: string,
+    deepSearch: boolean = false
+  ): Promise<TSearchResponse> => {
+    console.log(
+      `🔍 Searching for coins with query: "${query}", deepSearch: ${deepSearch}`
+    );
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     let shouldSearchInDB = false;
 
-    try {
-      const searchQuery = await SearchQueryModel.findOne({
-        query: normalizedQuery,
-      });
-      if (searchQuery && searchQuery.lastSearched >= oneHourAgo)
-        shouldSearchInDB = true;
-    } catch (error) {
-      console.warn("❌ SearchQuery check failed:", error);
+    if (!deepSearch) {
+      try {
+        const searchQuery = await SearchQueryModel.findOne({
+          query: normalizedQuery,
+        });
+        if (searchQuery && searchQuery.lastSearched >= oneHourAgo)
+          shouldSearchInDB = true;
+      } catch (error) {
+        console.warn("❌ SearchQuery check failed:", error);
+      }
+
+      if (shouldSearchInDB) {
+        try {
+          const cachedCoins = await CryptoCoinModel.find({
+            $or: [
+              { name: { $regex: normalizedQuery, $options: "i" } },
+              { symbol: { $regex: normalizedQuery, $options: "i" } },
+            ],
+          }).limit(20);
+
+          if (cachedCoins && cachedCoins.length > 0) {
+            const results: TCryptoCoin[] = cachedCoins.map((coin) => {
+              let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
+              if (coin.coinPaprikaData && coin.coinGeckoData) {
+                source = "both";
+              } else if (coin.coinGeckoData) {
+                source = "coingecko";
+              }
+
+              return {
+                _id: coin._id,
+                name: coin.name,
+                symbol: coin.symbol,
+                coinPaprikaData: coin.coinPaprikaData,
+                coinGeckoData: coin.coinGeckoData,
+                lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
+                  ? coin.lastUpdatedCoinPaprika
+                  : undefined,
+                lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
+                  ? coin.lastUpdatedCoinGecko
+                  : undefined,
+                createdAt: coin.createdAt,
+                updatedAt: coin.updatedAt,
+                source,
+              };
+            });
+
+            return { results, cached: true, deepSearch: false };
+          }
+        } catch (error) {
+          console.warn("❌ Database search failed:", error);
+        }
+      }
     }
 
-    if (shouldSearchInDB) {
+    let paprikaResults: TCoinPaprikaData[] = [];
+    let geckoResults: TCoinGeckoData[] = [];
+
+    if (deepSearch) {
+      const [paprikaData, geckoData] = await Promise.allSettled([
+        CoinPaprikaService.search(query),
+        CoinGeckoService.search(query),
+      ]);
+
+      if (paprikaData.status === "fulfilled" && paprikaData.value?.currencies) {
+        paprikaResults = paprikaData.value.currencies;
+      }
+      if (geckoData.status === "fulfilled" && geckoData.value?.coins) {
+        geckoResults = geckoData.value.coins;
+      }
+    } else {
       try {
-        const cachedCoins = await CryptoCoinModel.find({
-          $or: [
-            { name: { $regex: normalizedQuery, $options: "i" } },
-            { symbol: { $regex: normalizedQuery, $options: "i" } },
-          ],
-        }).limit(20);
-
-        if (cachedCoins && cachedCoins.length > 0) {
-          const results: TCryptoCoin[] = cachedCoins.map((coin) => ({
-            _id: coin._id,
-            name: coin.name,
-            symbol: coin.symbol,
-            coinPaprikaData: coin.coinPaprikaData,
-            coinGeckoData: coin.coinGeckoData,
-            lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
-              ? coin.lastUpdatedCoinPaprika
-              : undefined,
-            lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
-              ? coin.lastUpdatedCoinGecko
-              : undefined,
-            createdAt: coin.createdAt,
-            updatedAt: coin.updatedAt,
-          }));
-
-          const source = cachedCoins[0].coinPaprikaData
-            ? ("coinpaprika" as const)
-            : ("coingecko" as const);
-          return { results, source, cached: true };
+        const paprikaResult = await CoinPaprikaService.search(query);
+        if (paprikaResult && paprikaResult.currencies.length > 0) {
+          paprikaResults = paprikaResult.currencies;
         }
       } catch (error) {
-        console.warn("❌ Database search failed:", error);
+        console.warn("❌ CoinPaprika search failed:", error);
       }
-    }
 
-    let resultsToSave: (TCoinPaprikaData | TCoinGeckoData)[] = [];
-    let sourceUsed: "coinpaprika" | "coingecko" | null = null;
-
-    try {
-      const paprikaResult = await CoinPaprikaService.search(query);
-      if (paprikaResult && paprikaResult.currencies.length > 0) {
-        resultsToSave = paprikaResult.currencies;
-        sourceUsed = "coinpaprika";
-      }
-    } catch (error) {
-      console.warn("❌ CoinPaprika search failed:", error);
-    }
-
-    if (resultsToSave.length === 0) {
-      try {
-        const geckoResult = await CoinGeckoService.search(query);
-        if (geckoResult && geckoResult.coins.length > 0) {
-          resultsToSave = geckoResult.coins;
-          sourceUsed = "coingecko";
+      if (paprikaResults.length === 0) {
+        try {
+          const geckoResult = await CoinGeckoService.search(query);
+          if (geckoResult && geckoResult.coins.length > 0) {
+            geckoResults = geckoResult.coins;
+          }
+        } catch (error) {
+          console.warn("❌ CoinGecko search failed:", error);
         }
-      } catch (error) {
-        console.warn("❌ CoinGecko search failed:", error);
       }
     }
 
-    if (resultsToSave.length > 0 && sourceUsed) {
+    const coinMap = new Map<
+      string,
+      { paprika?: TCoinPaprikaData; gecko?: TCoinGeckoData }
+    >();
+
+    paprikaResults.forEach((coin) => {
+      const key = `${coin.symbol.toLowerCase()}-${coin.name.toLowerCase()}`;
+      coinMap.set(key, { ...coinMap.get(key), paprika: coin });
+    });
+
+    geckoResults.forEach((coin) => {
+      const key = `${coin.symbol.toLowerCase()}-${coin.name.toLowerCase()}`;
+      coinMap.set(key, { ...coinMap.get(key), gecko: coin });
+    });
+
+    if (coinMap.size > 0) {
       try {
         await SearchQueryModel.findOneAndUpdate(
           { query: normalizedQuery },
@@ -106,22 +148,27 @@ const AggregatorService = {
       const savedCoinsIds: string[] = [];
 
       try {
-        for (const result of resultsToSave) {
+        for (const [, data] of coinMap.entries()) {
+          const { paprika, gecko } = data;
+          const name = paprika?.name || gecko?.name || "";
+          const symbol = paprika?.symbol || gecko?.symbol || "";
+
           const setData: any = {
-            name: result.name,
-            symbol: result.symbol,
+            name,
+            symbol,
           };
 
-          if (sourceUsed === "coinpaprika") {
-            setData.coinPaprikaData = result;
+          if (paprika) {
+            setData.coinPaprikaData = paprika;
             setData.lastUpdatedCoinPaprika = new Date();
-          } else if (sourceUsed === "coingecko") {
-            setData.coinGeckoData = result;
+          }
+          if (gecko) {
+            setData.coinGeckoData = gecko;
             setData.lastUpdatedCoinGecko = new Date();
           }
 
           const savedCoin = await CryptoCoinModel.findOneAndUpdate(
-            { symbol: result.symbol, name: result.name },
+            { symbol, name },
             { $set: setData },
             { upsert: true, new: true }
           );
@@ -136,29 +183,39 @@ const AggregatorService = {
           _id: { $in: savedCoinsIds },
         });
 
-        const results: TCryptoCoin[] = savedCoins.map((coin) => ({
-          _id: coin._id,
-          name: coin.name,
-          symbol: coin.symbol,
-          coinPaprikaData: coin.coinPaprikaData,
-          coinGeckoData: coin.coinGeckoData,
-          lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
-            ? coin.lastUpdatedCoinPaprika
-            : undefined,
-          lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
-            ? coin.lastUpdatedCoinGecko
-            : undefined,
-          createdAt: coin.createdAt,
-          updatedAt: coin.updatedAt,
-        }));
+        const results: TCryptoCoin[] = savedCoins.map((coin) => {
+          let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
+          if (coin.coinPaprikaData && coin.coinGeckoData) {
+            source = "both";
+          } else if (coin.coinGeckoData) {
+            source = "coingecko";
+          }
 
-        return { results, source: sourceUsed, cached: false };
+          return {
+            _id: coin._id,
+            name: coin.name,
+            symbol: coin.symbol,
+            coinPaprikaData: coin.coinPaprikaData,
+            coinGeckoData: coin.coinGeckoData,
+            lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
+              ? coin.lastUpdatedCoinPaprika
+              : undefined,
+            lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
+              ? coin.lastUpdatedCoinGecko
+              : undefined,
+            createdAt: coin.createdAt,
+            updatedAt: coin.updatedAt,
+            source,
+          };
+        });
+
+        return { results, cached: false, deepSearch };
       } catch (error) {
         console.warn("❌ Failed to fetch saved coins:", error);
       }
     }
 
-    return { results: [], source: null, cached: false };
+    return { results: [], cached: false, deepSearch };
   },
 
   getPrice: async (coinId: string): Promise<TPriceResponse | null> => {

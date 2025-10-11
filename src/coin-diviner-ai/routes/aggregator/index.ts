@@ -48,9 +48,11 @@ router.get("/search", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { query }: TSearchQueryParams = validationResult.data;
+    const { query, deepSearch }: TSearchQueryParams = validationResult.data;
+    const isDeepSearch = deepSearch === "true";
     const searchResults: TSearchResponse = await AggregatorService.searchCoins(
-      query
+      query,
+      isDeepSearch
     );
 
     const responseValidation = searchResponseSchema.safeParse(searchResults);
