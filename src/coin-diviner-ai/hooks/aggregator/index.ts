@@ -24,60 +24,73 @@ const AggregatorService = {
     );
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     let shouldSearchInDB = false;
+    let searchQueryRecord: any = null;
 
-    if (!deepSearch) {
-      try {
-        const searchQuery = await SearchQueryModel.findOne({
-          query: normalizedQuery,
-        });
-        if (searchQuery && searchQuery.lastSearched >= oneHourAgo)
+    try {
+      searchQueryRecord = await SearchQueryModel.findOne({
+        query: normalizedQuery,
+      });
+
+      if (deepSearch && searchQueryRecord?.lastDeepSearch) {
+        if (searchQueryRecord.lastDeepSearch >= oneDayAgo) {
+          console.log("⏰ Deep search was done less than 24h ago, using cached");
           shouldSearchInDB = true;
-      } catch (error) {
-        console.warn("❌ SearchQuery check failed:", error);
-      }
-
-      if (shouldSearchInDB) {
-        try {
-          const cachedCoins = await CryptoCoinModel.find({
-            $or: [
-              { name: { $regex: normalizedQuery, $options: "i" } },
-              { symbol: { $regex: normalizedQuery, $options: "i" } },
-            ],
-          }).limit(20);
-
-          if (cachedCoins && cachedCoins.length > 0) {
-            const results: TCryptoCoin[] = cachedCoins.map((coin) => {
-              let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
-              if (coin.coinPaprikaData && coin.coinGeckoData) {
-                source = "both";
-              } else if (coin.coinGeckoData) {
-                source = "coingecko";
-              }
-
-              return {
-                _id: coin._id,
-                name: coin.name,
-                symbol: coin.symbol,
-                coinPaprikaData: coin.coinPaprikaData,
-                coinGeckoData: coin.coinGeckoData,
-                lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
-                  ? coin.lastUpdatedCoinPaprika
-                  : undefined,
-                lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
-                  ? coin.lastUpdatedCoinGecko
-                  : undefined,
-                createdAt: coin.createdAt,
-                updatedAt: coin.updatedAt,
-                source,
-              };
-            });
-
-            return { results, cached: true, deepSearch: false };
-          }
-        } catch (error) {
-          console.warn("❌ Database search failed:", error);
         }
+      } else if (!deepSearch && searchQueryRecord && searchQueryRecord.lastSearched >= oneHourAgo) {
+        shouldSearchInDB = true;
+      }
+    } catch (error) {
+      console.warn("❌ SearchQuery check failed:", error);
+    }
+
+    if (shouldSearchInDB) {
+      try {
+        const cachedCoins = await CryptoCoinModel.find({
+          $or: [
+            { name: { $regex: normalizedQuery, $options: "i" } },
+            { symbol: { $regex: normalizedQuery, $options: "i" } },
+          ],
+        }).limit(20);
+
+        if (cachedCoins && cachedCoins.length > 0) {
+          const results: TCryptoCoin[] = cachedCoins.map((coin) => {
+            let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
+            if (coin.coinPaprikaData && coin.coinGeckoData) {
+              source = "both";
+            } else if (coin.coinGeckoData) {
+              source = "coingecko";
+            }
+
+            return {
+              _id: coin._id,
+              name: coin.name,
+              symbol: coin.symbol,
+              coinPaprikaData: coin.coinPaprikaData,
+              coinGeckoData: coin.coinGeckoData,
+              lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
+                ? coin.lastUpdatedCoinPaprika
+                : undefined,
+              lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
+                ? coin.lastUpdatedCoinGecko
+                : undefined,
+              createdAt: coin.createdAt,
+              updatedAt: coin.updatedAt,
+              source,
+            };
+          });
+
+          return {
+            results,
+            cached: true,
+            deepSearch: false,
+            wasDeepSearch: searchQueryRecord?.isDeepSearch || false,
+            lastDeepSearchDate: searchQueryRecord?.lastDeepSearch || null,
+          };
+        }
+      } catch (error) {
+        console.warn("❌ Database search failed:", error);
       }
     }
 
@@ -135,9 +148,19 @@ const AggregatorService = {
 
     if (coinMap.size > 0) {
       try {
+        const updateData: any = {
+          query: normalizedQuery,
+          lastSearched: new Date(),
+        };
+
+        if (deepSearch) {
+          updateData.isDeepSearch = true;
+          updateData.lastDeepSearch = new Date();
+        }
+
         await SearchQueryModel.findOneAndUpdate(
           { query: normalizedQuery },
-          { query: normalizedQuery, lastSearched: new Date() },
+          updateData,
           { upsert: true, new: true }
         );
       } catch (error) {
@@ -208,13 +231,25 @@ const AggregatorService = {
           };
         });
 
-        return { results, cached: false, deepSearch };
+        return {
+          results,
+          cached: false,
+          deepSearch,
+          wasDeepSearch: deepSearch,
+          lastDeepSearchDate: deepSearch ? new Date() : null,
+        };
       } catch (error) {
         console.warn("❌ Failed to fetch saved coins:", error);
       }
     }
 
-    return { results: [], cached: false, deepSearch };
+    return {
+      results: [],
+      cached: false,
+      deepSearch,
+      wasDeepSearch: false,
+      lastDeepSearchDate: null,
+    };
   },
 
   getPrice: async (coinId: string): Promise<TPriceResponse | null> => {

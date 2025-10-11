@@ -66,8 +66,10 @@ export const allPriceHistoryQueryParamsSchema = z.object({
 
 export const searchResponseSchema = z.object({
   results: z.array(cryptoCoinSchema),
-  deepSearch: z.boolean().optional(),
   cached: z.boolean(),
+  deepSearch: z.boolean().optional(),
+  wasDeepSearch: z.boolean().optional(),
+  lastDeepSearchDate: z.date().optional().nullable(),
 });
 
 export const priceResponseSchema = z.object({

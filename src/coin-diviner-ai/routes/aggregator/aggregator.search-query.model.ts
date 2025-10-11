@@ -4,6 +4,8 @@ const searchQuerySM = new Schema(
   {
     query: { type: String, required: true, unique: true },
     lastSearched: { type: Date, required: true },
+    isDeepSearch: { type: Boolean, default: false },
+    lastDeepSearch: { type: Date, default: null },
   },
   {
     timestamps: true,
