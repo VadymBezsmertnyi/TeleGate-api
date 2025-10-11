@@ -565,7 +565,7 @@
  * /coingecko/api-usage:
  *   get:
  *     summary: Отримати статистику використання CoinGecko API
- *     description: Повертає інформацію про поточне використання API - план, кількість запитів за місяць та ліміт
+ *     description: Повертає інформацію про поточне використання API - план, ліміти та кількість запитів
  *     tags: [Coin Diviner AI - CoinGecko]
  *     responses:
  *       200:
@@ -578,18 +578,23 @@
  *                 plan:
  *                   type: string
  *                   description: Тарифний план
- *                   example: pro
- *                 usage:
- *                   type: object
- *                   properties:
- *                     current_month_requests:
- *                       type: number
- *                       description: Кількість запитів за поточний місяць
- *                       example: 14256
- *                     monthly_request_limit:
- *                       type: number
- *                       description: Місячний ліміт запитів
- *                       example: 100000
+ *                   example: Other
+ *                 rate_limit_request_per_minute:
+ *                   type: number
+ *                   description: Ліміт запитів на хвилину
+ *                   example: 1000
+ *                 monthly_call_credit:
+ *                   type: number
+ *                   description: Місячний кредит запитів
+ *                   example: 1000000
+ *                 current_total_monthly_calls:
+ *                   type: number
+ *                   description: Загальна кількість запитів за поточний місяць
+ *                   example: 104
+ *                 current_remaining_monthly_calls:
+ *                   type: number
+ *                   description: Залишилось запитів за місяць
+ *                   example: 999896
  *       500:
  *         description: Помилка сервера
  *         content:

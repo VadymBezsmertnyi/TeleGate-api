@@ -11,3 +11,11 @@ export type TCoinGeckoSearchResult = {
   icos: any[];
   categories: any[];
 };
+
+export type TCoinGeckoApiUsage = {
+  plan: string;
+  rate_limit_request_per_minute: number;
+  monthly_call_credit: number;
+  current_total_monthly_calls: number;
+  current_remaining_monthly_calls: number;
+};

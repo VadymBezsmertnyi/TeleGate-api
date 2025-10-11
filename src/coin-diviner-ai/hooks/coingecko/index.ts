@@ -6,7 +6,7 @@ import {
   CoinMarketChart,
   SimplePrice,
 } from "@microfox/coingecko-sdk";
-import { TCoinGeckoSearchResult } from "./coingecko.types";
+import { TCoinGeckoSearchResult, TCoinGeckoApiUsage } from "./coingecko.types";
 
 const BASE_URL = "https://api.coingecko.com/api/v3";
 
@@ -26,7 +26,13 @@ export const fetchFromGecko = async <T>(
     });
     return data;
   } catch (err: any) {
-    console.warn(`❌ CoinGecko error [${endpoint}]:`, err.message);
+    console.warn(
+      `❌ CoinGecko error [${endpoint}]: ${
+        err.response?.data.status
+      }, error message: ${
+        err.response?.data.status.error_message || err.message
+      }`
+    );
     return null;
   }
 };
@@ -111,7 +117,8 @@ const CoinGeckoService = {
   /**
    * 📊 Статистика використання API
    */
-  getApiUsage: async () => fetchFromGecko<any>("/api_usage"),
+  getApiUsage: async (): Promise<TCoinGeckoApiUsage | null> =>
+    fetchFromGecko<TCoinGeckoApiUsage>(`/key`),
 };
 
 export default CoinGeckoService;
