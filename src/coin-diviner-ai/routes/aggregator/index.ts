@@ -126,9 +126,9 @@ router.get("/price-history", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { id, range }: TPriceHistoryQueryParams = validationResult.data;
+    const { coinId, range }: TPriceHistoryQueryParams = validationResult.data;
     const historyData: TPriceHistoryResponse | null =
-      await AggregatorService.getPriceHistory(id, range);
+      await AggregatorService.getPriceHistory(coinId, range);
 
     if (!historyData) {
       const errorResponse: TNotFoundError = {

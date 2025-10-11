@@ -232,37 +232,53 @@ const AggregatorService = {
   },
 
   getPriceHistory: async (
-    id: string,
+    coinId: string,
     range: "1h" | "1d" | "7d" | "30d" = "7d"
   ): Promise<TPriceHistoryResponse | null> => {
-    const rangeMap: Record<string, string> = {
-      "1h": "1",
-      "1d": "1",
-      "7d": "7",
-      "30d": "30",
-    };
-
     try {
-      const geckoChart = await CoinGeckoService.getMarketChart(
-        id,
-        "usd",
-        rangeMap[range]
-      );
-      if (geckoChart && geckoChart.prices)
-        return { data: geckoChart, source: "coingecko" as const };
-    } catch (error) {
-      console.warn("❌ CoinGecko getMarketChart failed:", error);
-    }
+      const coin = await CryptoCoinModel.findById(coinId);
+      if (!coin) {
+        console.warn("❌ Coin not found in DB:", coinId);
+        return null;
+      }
 
-    try {
-      const paprikaTicker = await CoinPaprikaService.getTicker(id);
-      if (paprikaTicker)
-        return { data: paprikaTicker, source: "coinpaprika" as const };
-    } catch (error) {
-      console.warn("❌ CoinPaprika getTicker failed:", error);
-    }
+      const rangeMap: Record<string, string> = {
+        "1h": "1",
+        "1d": "1",
+        "7d": "7",
+        "30d": "30",
+      };
+      if (coin.coinGeckoData?.id) {
+        try {
+          const geckoChart = await CoinGeckoService.getMarketChart(
+            coin.coinGeckoData.id,
+            "usd",
+            rangeMap[range]
+          );
+          if (geckoChart && geckoChart.prices)
+            return { data: geckoChart, source: "coingecko" as const };
+        } catch (error) {
+          console.warn("❌ CoinGecko getMarketChart failed:", error);
+        }
+      }
 
-    return null;
+      if (coin.coinPaprikaData?.id) {
+        try {
+          const paprikaTicker = await CoinPaprikaService.getTicker(
+            coin.coinPaprikaData.id
+          );
+          if (paprikaTicker)
+            return { data: paprikaTicker, source: "coinpaprika" as const };
+        } catch (error) {
+          console.warn("❌ CoinPaprika getTicker failed:", error);
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn("❌ getPriceHistory failed:", error);
+      return null;
+    }
   },
 
   getAllPrices: async (coinId: string): Promise<TAllPricesResponse> => {

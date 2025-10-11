@@ -49,7 +49,7 @@ export const priceQueryParamsSchema = z.object({
 });
 
 export const priceHistoryQueryParamsSchema = z.object({
-  id: z.string().min(1),
+  coinId: z.string().min(1),
   range: z.enum(["1h", "1d", "7d", "30d"]).optional().default("7d"),
 });
 
