@@ -21,7 +21,10 @@ export const fetchFromPaprika = async <T>(
     });
     return data;
   } catch (err: any) {
-    console.warn(`❌ Paprika error [${endpoint}]:`, err.message);
+    console.warn(
+      `❌ Paprika error [${endpoint}]:`,
+      err.response?.data.error || err.message
+    );
     return null;
   }
 };
