@@ -12,6 +12,7 @@ import type {
   TCoinGeckoData,
   TCryptoCoin,
   TAllPricesResponse,
+  TAllPriceHistoryResponse,
 } from "../../routes/aggregator/aggregator.types";
 
 const AggregatorService = {
@@ -434,6 +435,141 @@ const AggregatorService = {
         binance: null,
         dexscreener: null,
         coingecko: null,
+      };
+    }
+  },
+
+  getAllPriceHistory: async (
+    coinId: string,
+    range: "1h" | "1d" | "7d" | "30d" = "1d"
+  ): Promise<TAllPriceHistoryResponse> => {
+    try {
+      let coin = await CryptoCoinModel.findById(coinId);
+      if (!coin) {
+        console.warn("❌ Coin not found in DB:", coinId);
+        return {
+          symbol: "UNKNOWN",
+          coingecko: null,
+          coinpaprika: null,
+        };
+      }
+
+      const updateData: any = {};
+      let needsUpdate = false;
+
+      const coinSymbol = coin.symbol;
+      const coinName = coin.name;
+
+      if (!coin.coinPaprikaData) {
+        try {
+          const paprikaResult = await CoinPaprikaService.search(coinName);
+          if (paprikaResult && paprikaResult.currencies.length > 0) {
+            const coinData = paprikaResult.currencies.find(
+              (c) =>
+                c.symbol.toLowerCase() === coinSymbol.toLowerCase() &&
+                c.name.toLowerCase() === coinName.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinPaprikaData = coinData;
+              updateData.lastUpdatedCoinPaprika = new Date();
+              needsUpdate = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinPaprika data:", error);
+        }
+      }
+
+      if (!coin.coinGeckoData) {
+        try {
+          const geckoResult = await CoinGeckoService.search(coinName);
+          if (geckoResult && geckoResult.coins.length > 0) {
+            const coinData = geckoResult.coins.find(
+              (c) =>
+                c.symbol.toLowerCase() === coinSymbol.toLowerCase() &&
+                c.name.toLowerCase() === coinName.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinGeckoData = coinData;
+              updateData.lastUpdatedCoinGecko = new Date();
+              needsUpdate = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinGecko data:", error);
+        }
+      }
+
+      if (needsUpdate) {
+        const updatedCoin = await CryptoCoinModel.findByIdAndUpdate(
+          coinId,
+          { $set: updateData },
+          { new: true }
+        );
+        if (updatedCoin) coin = updatedCoin;
+      }
+      const response: TAllPriceHistoryResponse = {
+        symbol: coin.symbol,
+        coingecko: null,
+        coinpaprika: null,
+      };
+      const rangeMap: Record<string, string> = {
+        "1h": "1",
+        "1d": "1",
+        "7d": "7",
+        "30d": "30",
+      };
+      if (coin.coinGeckoData?.id) {
+        try {
+          const geckoChart = await CoinGeckoService.getMarketChart(
+            coin.coinGeckoData.id,
+            "usd",
+            rangeMap[range]
+          );
+          if (geckoChart && geckoChart.prices) {
+            response.coingecko = {
+              data: geckoChart,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.coingecko = {
+            data: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from CoinGecko",
+          };
+        }
+      }
+
+      if (coin.coinPaprikaData?.id) {
+        try {
+          const paprikaTicker = await CoinPaprikaService.getTicker(
+            coin.coinPaprikaData.id
+          );
+          if (paprikaTicker) {
+            response.coinpaprika = {
+              data: paprikaTicker,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.coinpaprika = {
+            data: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from CoinPaprika",
+          };
+        }
+      }
+
+      return response;
+    } catch (error: any) {
+      console.warn("❌ getAllPriceHistory failed:", error);
+      return {
+        symbol: "ERROR",
+        coingecko: null,
+        coinpaprika: null,
       };
     }
   },

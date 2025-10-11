@@ -6,10 +6,12 @@ import {
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
   allPricesQueryParamsSchema,
+  allPriceHistoryQueryParamsSchema,
   searchResponseSchema,
   priceResponseSchema,
   priceHistoryResponseSchema,
   allPricesResponseSchema,
+  allPriceHistoryResponseSchema,
   validationErrorSchema,
   notFoundErrorSchema,
   serverErrorSchema,
@@ -19,10 +21,12 @@ import type {
   TPriceQueryParams,
   TPriceHistoryQueryParams,
   TAllPricesQueryParams,
+  TAllPriceHistoryQueryParams,
   TSearchResponse,
   TPriceResponse,
   TPriceHistoryResponse,
   TAllPricesResponse,
+  TAllPriceHistoryResponse,
   TValidationError,
   TNotFoundError,
   TServerError,
@@ -177,6 +181,45 @@ router.get("/all-prices", async (req: Request, res: Response) => {
     );
 
     const responseValidation = allPricesResponseSchema.safeParse(allPrices);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.get("/all-price-history", async (req: Request, res: Response) => {
+  try {
+    const validationResult =
+      allPriceHistoryQueryParamsSchema.safeParse(req.query);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { coinId, range }: TAllPriceHistoryQueryParams =
+      validationResult.data;
+    const historyData: TAllPriceHistoryResponse =
+      await AggregatorService.getAllPriceHistory(coinId, range);
+
+    const responseValidation =
+      allPriceHistoryResponseSchema.safeParse(historyData);
     if (!responseValidation.success) {
       console.warn("❌ Response validation failed:", responseValidation.error);
       const errorResponse: TServerError = {

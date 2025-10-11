@@ -7,6 +7,7 @@ import {
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
   allPricesQueryParamsSchema,
+  allPriceHistoryQueryParamsSchema,
   searchResponseSchema,
   priceResponseSchema,
   priceHistoryResponseSchema,
@@ -14,7 +15,9 @@ import {
   coinPaprikaQuoteSchema,
   coinPaprikaTickerSchema,
   priceDataSchema,
+  priceHistoryDataSchema,
   allPricesResponseSchema,
+  allPriceHistoryResponseSchema,
   validationErrorSchema,
   notFoundErrorSchema,
   serverErrorSchema,
@@ -30,6 +33,9 @@ export type TPriceHistoryQueryParams = z.infer<
   typeof priceHistoryQueryParamsSchema
 >;
 export type TAllPricesQueryParams = z.infer<typeof allPricesQueryParamsSchema>;
+export type TAllPriceHistoryQueryParams = z.infer<
+  typeof allPriceHistoryQueryParamsSchema
+>;
 
 export type TSearchResponse = z.infer<typeof searchResponseSchema>;
 export type TPriceResponse = z.infer<typeof priceResponseSchema>;
@@ -38,7 +44,11 @@ export type TCoinGeckoMarketChart = z.infer<typeof coinGeckoMarketChartSchema>;
 export type TCoinPaprikaQuote = z.infer<typeof coinPaprikaQuoteSchema>;
 export type TCoinPaprikaTicker = z.infer<typeof coinPaprikaTickerSchema>;
 export type TPriceData = z.infer<typeof priceDataSchema>;
+export type TPriceHistoryData = z.infer<typeof priceHistoryDataSchema>;
 export type TAllPricesResponse = z.infer<typeof allPricesResponseSchema>;
+export type TAllPriceHistoryResponse = z.infer<
+  typeof allPriceHistoryResponseSchema
+>;
 
 export type TValidationError = z.infer<typeof validationErrorSchema>;
 export type TNotFoundError = z.infer<typeof notFoundErrorSchema>;

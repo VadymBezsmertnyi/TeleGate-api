@@ -298,3 +298,49 @@
  *                 message:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /aggregator/all-price-history:
+ *   get:
+ *     summary: Отримати історію цін з усіх доступних сервісів (CoinGecko, CoinPaprika)
+ *     description: Автоматично оновлює відсутні дані про монету перед запитом історії
+ *     tags: [Coin Diviner AI - Aggregator]
+ *     parameters:
+ *       - in: query
+ *         name: coinId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *         description: MongoDB _id монети з бази даних
+ *         example: 68e9d873ac6c781907849713
+ *       - in: query
+ *         name: range
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [1h, 1d, 7d, 30d]
+ *           default: 1d
+ *         description: Часовий діапазон
+ *     responses:
+ *       200:
+ *         description: Історія цін з усіх сервісів
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 symbol:
+ *                   type: string
+ *                 coingecko:
+ *                   type: object
+ *                   nullable: true
+ *                 coinpaprika:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         description: Помилка валідації
+ *       500:
+ *         description: Помилка сервера
+ */
