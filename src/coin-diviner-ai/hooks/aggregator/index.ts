@@ -283,7 +283,7 @@ const AggregatorService = {
 
   getAllPrices: async (coinId: string): Promise<TAllPricesResponse> => {
     try {
-      const coin = await CryptoCoinModel.findById(coinId);
+      let coin = await CryptoCoinModel.findById(coinId);
       if (!coin) {
         console.warn("❌ Coin not found in DB:", coinId);
         return {
@@ -292,6 +292,61 @@ const AggregatorService = {
           dexscreener: null,
           coingecko: null,
         };
+      }
+
+      const updateData: any = {};
+      let needsUpdate = false;
+
+      const coinSymbol = coin.symbol;
+      const coinName = coin.name;
+
+      if (!coin.coinPaprikaData) {
+        try {
+          const paprikaResult = await CoinPaprikaService.search(coinName);
+          if (paprikaResult && paprikaResult.currencies.length > 0) {
+            const coinData = paprikaResult.currencies.find(
+              (c) =>
+                c.symbol.toLowerCase() === coinSymbol.toLowerCase() &&
+                c.name.toLowerCase() === coinName.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinPaprikaData = coinData;
+              updateData.lastUpdatedCoinPaprika = new Date();
+              needsUpdate = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinPaprika data:", error);
+        }
+      }
+
+      if (!coin.coinGeckoData) {
+        try {
+          const geckoResult = await CoinGeckoService.search(coinName);
+          if (geckoResult && geckoResult.coins.length > 0) {
+            const coinData = geckoResult.coins.find(
+              (c) =>
+                c.symbol.toLowerCase() === coinSymbol.toLowerCase() &&
+                c.name.toLowerCase() === coinName.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinGeckoData = coinData;
+              updateData.lastUpdatedCoinGecko = new Date();
+              needsUpdate = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinGecko data:", error);
+        }
+      }
+
+      if (needsUpdate) {
+        const updatedCoin = await CryptoCoinModel.findByIdAndUpdate(
+          coinId,
+          { $set: updateData },
+          { new: true }
+        );
+        if (updatedCoin) coin = updatedCoin;
       }
 
       const response: TAllPricesResponse = {
