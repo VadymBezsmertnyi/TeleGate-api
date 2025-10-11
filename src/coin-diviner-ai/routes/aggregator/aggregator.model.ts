@@ -40,6 +40,7 @@ const cryptoCoinSM = new Schema(
   {
     name: { type: String, required: true },
     symbol: { type: String, required: true },
+    binancePair: { type: String },
     coinPaprikaData: { type: coinPaprikaDataSM },
     coinGeckoData: { type: coinGeckoDataSM },
     lastUpdatedCoinPaprika: { type: Date },

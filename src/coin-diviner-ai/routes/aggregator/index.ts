@@ -81,9 +81,9 @@ router.get("/price", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { symbol }: TPriceQueryParams = validationResult.data;
+    const { coinId }: TPriceQueryParams = validationResult.data;
     const priceData: TPriceResponse | null = await AggregatorService.getPrice(
-      symbol
+      coinId
     );
 
     if (!priceData) {
@@ -171,9 +171,9 @@ router.get("/all-prices", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { symbol }: TAllPricesQueryParams = validationResult.data;
+    const { coinId }: TAllPricesQueryParams = validationResult.data;
     const allPrices: TAllPricesResponse = await AggregatorService.getAllPrices(
-      symbol
+      coinId
     );
 
     const responseValidation = allPricesResponseSchema.safeParse(allPrices);

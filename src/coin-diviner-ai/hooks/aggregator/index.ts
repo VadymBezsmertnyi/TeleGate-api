@@ -160,51 +160,75 @@ const AggregatorService = {
     return { results: [], source: null, cached: false };
   },
 
-  getPrice: async (symbolOrAddress: string): Promise<TPriceResponse | null> => {
+  getPrice: async (coinId: string): Promise<TPriceResponse | null> => {
     try {
-      const binanceSymbol = `${symbolOrAddress.toUpperCase()}USDT`;
-      const binancePrice = await BinanceService.getPrice(binanceSymbol);
-      if (binancePrice && binancePrice.price)
-        return {
-          symbol: symbolOrAddress,
-          price: binancePrice.price,
-          source: "binance" as const,
-        };
-    } catch (error) {
-      console.warn("❌ Binance getPrice failed:", error);
-    }
-
-    try {
-      const dexResult = await DexScreenerService.search(symbolOrAddress);
-      if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
-        const pair = dexResult.pairs[0];
-        return {
-          symbol: symbolOrAddress,
-          price: parseFloat(pair.priceUsd || "0"),
-          source: "dexscreener" as const,
-        };
+      const coin = await CryptoCoinModel.findById(coinId);
+      if (!coin) {
+        console.warn("❌ Coin not found in DB:", coinId);
+        return null;
       }
-    } catch (error) {
-      console.warn("❌ DexScreener search failed:", error);
-    }
 
-    try {
-      const geckoPrice = await CoinGeckoService.getSimplePrice(
-        [symbolOrAddress.toLowerCase()],
-        "usd"
-      );
-      const priceData = geckoPrice?.[symbolOrAddress.toLowerCase()];
-      if (priceData && priceData.usd !== null && priceData.usd !== undefined)
-        return {
-          symbol: symbolOrAddress,
-          price: priceData.usd,
-          source: "coingecko" as const,
-        };
-    } catch (error) {
-      console.warn("❌ CoinGecko getSimplePrice failed:", error);
-    }
+      if (coin.binancePair) {
+        try {
+          const binancePrice = await BinanceService.getPrice(coin.binancePair);
+          if (binancePrice && binancePrice.price)
+            return {
+              symbol: coin.symbol,
+              price: binancePrice.price,
+              source: "binance" as const,
+            };
+        } catch (error) {
+          console.warn("❌ Binance getPrice failed:", error);
+        }
+      }
 
-    return null;
+      const contractAddress =
+        coin.coinPaprikaData?.contract_address?.[0]?.address;
+      if (contractAddress || coin.symbol) {
+        try {
+          const dexResult = await DexScreenerService.search(
+            contractAddress || coin.symbol
+          );
+          if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+            const pair = dexResult.pairs[0];
+            return {
+              symbol: coin.symbol,
+              price: parseFloat(pair.priceUsd || "0"),
+              source: "dexscreener" as const,
+            };
+          }
+        } catch (error) {
+          console.warn("❌ DexScreener search failed:", error);
+        }
+      }
+
+      if (coin.coinGeckoData?.id) {
+        try {
+          const geckoPrice = await CoinGeckoService.getSimplePrice(
+            [coin.coinGeckoData.id],
+            "usd"
+          );
+          const priceData = geckoPrice?.[coin.coinGeckoData.id];
+          if (
+            priceData &&
+            priceData.usd !== null &&
+            priceData.usd !== undefined
+          )
+            return {
+              symbol: coin.symbol,
+              price: priceData.usd,
+              source: "coingecko" as const,
+            };
+        } catch (error) {
+          console.warn("❌ CoinGecko getSimplePrice failed:", error);
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn("❌ getPrice failed:", error);
+      return null;
+    }
   },
 
   getPriceHistory: async (
@@ -241,74 +265,106 @@ const AggregatorService = {
     return null;
   },
 
-  getAllPrices: async (
-    symbolOrAddress: string
-  ): Promise<TAllPricesResponse> => {
-    const response: TAllPricesResponse = {
-      symbol: symbolOrAddress,
-      binance: null,
-      dexscreener: null,
-      coingecko: null,
-    };
-
+  getAllPrices: async (coinId: string): Promise<TAllPricesResponse> => {
     try {
-      const binanceSymbol = `${symbolOrAddress.toUpperCase()}USDT`;
-      const binancePrice = await BinanceService.getPrice(binanceSymbol);
-      if (binancePrice && binancePrice.price) {
-        response.binance = {
-          price: binancePrice.price,
-          updatedAt: new Date(),
-          error: null,
+      const coin = await CryptoCoinModel.findById(coinId);
+      if (!coin) {
+        console.warn("❌ Coin not found in DB:", coinId);
+        return {
+          symbol: "UNKNOWN",
+          binance: null,
+          dexscreener: null,
+          coingecko: null,
         };
       }
-    } catch (error: any) {
-      response.binance = {
-        price: null,
-        updatedAt: new Date(),
-        error: error.message || "Failed to fetch from Binance",
-      };
-    }
 
-    try {
-      const dexResult = await DexScreenerService.search(symbolOrAddress);
-      if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
-        const pair = dexResult.pairs[0];
-        response.dexscreener = {
-          price: parseFloat(pair.priceUsd || "0"),
-          updatedAt: new Date(),
-          error: null,
-        };
+      const response: TAllPricesResponse = {
+        symbol: coin.symbol,
+        binance: null,
+        dexscreener: null,
+        coingecko: null,
+      };
+
+      if (coin.binancePair) {
+        try {
+          const binancePrice = await BinanceService.getPrice(coin.binancePair);
+          if (binancePrice && binancePrice.price) {
+            response.binance = {
+              price: binancePrice.price,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.binance = {
+            price: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from Binance",
+          };
+        }
       }
-    } catch (error: any) {
-      response.dexscreener = {
-        price: null,
-        updatedAt: new Date(),
-        error: error.message || "Failed to fetch from DexScreener",
-      };
-    }
 
-    try {
-      const geckoPrice = await CoinGeckoService.getSimplePrice(
-        [symbolOrAddress.toLowerCase()],
-        "usd"
-      );
-      const priceData = geckoPrice?.[symbolOrAddress.toLowerCase()];
-      if (priceData && priceData.usd !== null && priceData.usd !== undefined) {
-        response.coingecko = {
-          price: priceData.usd,
-          updatedAt: new Date(),
-          error: null,
-        };
+      const contractAddress =
+        coin.coinPaprikaData?.contract_address?.[0]?.address;
+      if (contractAddress || coin.symbol) {
+        try {
+          const dexResult = await DexScreenerService.search(
+            contractAddress || coin.symbol
+          );
+          if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+            const pair = dexResult.pairs[0];
+            response.dexscreener = {
+              price: parseFloat(pair.priceUsd || "0"),
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.dexscreener = {
+            price: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from DexScreener",
+          };
+        }
       }
+
+      if (coin.coinGeckoData?.id) {
+        try {
+          const geckoPrice = await CoinGeckoService.getSimplePrice(
+            [coin.coinGeckoData.id],
+            "usd"
+          );
+          const priceData = geckoPrice?.[coin.coinGeckoData.id];
+          if (
+            priceData &&
+            priceData.usd !== null &&
+            priceData.usd !== undefined
+          ) {
+            response.coingecko = {
+              price: priceData.usd,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.coingecko = {
+            price: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from CoinGecko",
+          };
+        }
+      }
+
+      return response;
     } catch (error: any) {
-      response.coingecko = {
-        price: null,
-        updatedAt: new Date(),
-        error: error.message || "Failed to fetch from CoinGecko",
+      console.warn("❌ getAllPrices failed:", error);
+      return {
+        symbol: "ERROR",
+        binance: null,
+        dexscreener: null,
+        coingecko: null,
       };
     }
-
-    return response;
   },
 };
 

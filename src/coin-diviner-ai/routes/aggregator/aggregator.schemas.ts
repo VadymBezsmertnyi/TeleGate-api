@@ -31,6 +31,7 @@ export const cryptoCoinSchema = z.object({
   _id: z.any().optional(),
   name: z.string(),
   symbol: z.string(),
+  binancePair: z.string().optional().nullable(),
   coinPaprikaData: coinPaprikaDataSchema.optional().nullable(),
   coinGeckoData: coinGeckoDataSchema.optional().nullable(),
   lastUpdatedCoinPaprika: z.date().optional(),
@@ -44,7 +45,7 @@ export const searchQueryParamsSchema = z.object({
 });
 
 export const priceQueryParamsSchema = z.object({
-  symbol: z.string().min(1),
+  coinId: z.string().min(1),
 });
 
 export const priceHistoryQueryParamsSchema = z.object({
@@ -53,7 +54,7 @@ export const priceHistoryQueryParamsSchema = z.object({
 });
 
 export const allPricesQueryParamsSchema = z.object({
-  symbol: z.string().min(1),
+  coinId: z.string().min(1),
 });
 
 export const searchResponseSchema = z.object({
