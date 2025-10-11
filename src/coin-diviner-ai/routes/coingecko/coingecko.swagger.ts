@@ -559,3 +559,44 @@
  *                 message:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /coingecko/api-usage:
+ *   get:
+ *     summary: Отримати статистику використання CoinGecko API
+ *     description: Повертає інформацію про поточне використання API - план, кількість запитів за місяць та ліміт
+ *     tags: [Coin Diviner AI - CoinGecko]
+ *     responses:
+ *       200:
+ *         description: Статистика API успішно отримана
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 plan:
+ *                   type: string
+ *                   description: Тарифний план
+ *                   example: pro
+ *                 usage:
+ *                   type: object
+ *                   properties:
+ *                     current_month_requests:
+ *                       type: number
+ *                       description: Кількість запитів за поточний місяць
+ *                       example: 14256
+ *                     monthly_request_limit:
+ *                       type: number
+ *                       description: Місячний ліміт запитів
+ *                       example: 100000
+ *       500:
+ *         description: Помилка сервера
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */

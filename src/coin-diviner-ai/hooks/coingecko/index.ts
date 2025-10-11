@@ -107,6 +107,11 @@ const CoinGeckoService = {
    */
   search: async (query: string): Promise<TCoinGeckoSearchResult | null> =>
     fetchFromGecko<TCoinGeckoSearchResult>("/search", { query }),
+
+  /**
+   * 📊 Статистика використання API
+   */
+  getApiUsage: async () => fetchFromGecko<any>("/api_usage"),
 };
 
 export default CoinGeckoService;

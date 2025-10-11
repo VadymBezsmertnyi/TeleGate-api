@@ -105,4 +105,13 @@ router.get(
   }
 );
 
+router.get("/api-usage", async (req: Request, res: Response) => {
+  try {
+    const apiUsage = await CoinGeckoService.getApiUsage();
+    return res.status(200).json(apiUsage);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error: " + error });
+  }
+});
+
 export default router;
