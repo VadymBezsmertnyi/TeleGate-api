@@ -35,10 +35,16 @@ const AggregatorService = {
 
       if (deepSearch && searchQueryRecord?.lastDeepSearch) {
         if (searchQueryRecord.lastDeepSearch >= oneDayAgo) {
-          console.log("⏰ Deep search was done less than 24h ago, using cached");
+          console.log(
+            "⏰ Deep search was done less than 24h ago, using cached"
+          );
           shouldSearchInDB = true;
         }
-      } else if (!deepSearch && searchQueryRecord && searchQueryRecord.lastSearched >= oneHourAgo) {
+      } else if (
+        !deepSearch &&
+        searchQueryRecord &&
+        searchQueryRecord.lastSearched >= oneHourAgo
+      ) {
         shouldSearchInDB = true;
       }
     } catch (error) {
