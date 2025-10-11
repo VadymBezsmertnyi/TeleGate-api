@@ -52,6 +52,15 @@ export const priceHistoryQueryParamsSchema = z.object({
   range: z.enum(["1h", "1d", "7d", "30d"]).optional().default("7d"),
 });
 
+export const updateCoinQueryParamsSchema = z.object({
+  symbol: z.string().min(1),
+  name: z.string().min(1),
+});
+
+export const allPricesQueryParamsSchema = z.object({
+  symbol: z.string().min(1),
+});
+
 export const searchResponseSchema = z.object({
   results: z.array(cryptoCoinSchema),
   source: z.enum(["coinpaprika", "coingecko"]).nullable(),
@@ -67,6 +76,19 @@ export const priceResponseSchema = z.object({
 export const priceHistoryResponseSchema = z.object({
   data: z.any(),
   source: z.enum(["coingecko", "coinpaprika"]),
+});
+
+export const priceDataSchema = z.object({
+  price: z.number().nullable(),
+  updatedAt: z.date(),
+  error: z.string().optional().nullable(),
+});
+
+export const allPricesResponseSchema = z.object({
+  symbol: z.string(),
+  binance: priceDataSchema.optional().nullable(),
+  dexscreener: priceDataSchema.optional().nullable(),
+  coingecko: priceDataSchema.optional().nullable(),
 });
 
 export const validationErrorSchema = z.object({

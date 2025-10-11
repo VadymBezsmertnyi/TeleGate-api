@@ -5,9 +5,13 @@ import {
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
+  updateCoinQueryParamsSchema,
+  allPricesQueryParamsSchema,
   searchResponseSchema,
   priceResponseSchema,
   priceHistoryResponseSchema,
+  allPricesResponseSchema,
+  cryptoCoinSchema,
   validationErrorSchema,
   notFoundErrorSchema,
   serverErrorSchema,
@@ -16,9 +20,13 @@ import type {
   TSearchQueryParams,
   TPriceQueryParams,
   TPriceHistoryQueryParams,
+  TUpdateCoinQueryParams,
+  TAllPricesQueryParams,
   TSearchResponse,
   TPriceResponse,
   TPriceHistoryResponse,
+  TAllPricesResponse,
+  TCryptoCoin,
   TValidationError,
   TNotFoundError,
   TServerError,
@@ -136,6 +144,89 @@ router.get("/price-history", async (req: Request, res: Response) => {
 
     const responseValidation =
       priceHistoryResponseSchema.safeParse(historyData);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.get("/update-coin", async (req: Request, res: Response) => {
+  try {
+    const validationResult = updateCoinQueryParamsSchema.safeParse(req.query);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { symbol, name }: TUpdateCoinQueryParams = validationResult.data;
+    const updatedCoin: TCryptoCoin | null = await AggregatorService.updateCoin(
+      symbol,
+      name
+    );
+
+    if (!updatedCoin) {
+      const errorResponse: TNotFoundError = {
+        message: "Coin not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const responseValidation = cryptoCoinSchema.safeParse(updatedCoin);
+    if (!responseValidation.success) {
+      console.warn("❌ Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.get("/all-prices", async (req: Request, res: Response) => {
+  try {
+    const validationResult = allPricesQueryParamsSchema.safeParse(req.query);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { symbol }: TAllPricesQueryParams = validationResult.data;
+    const allPrices: TAllPricesResponse = await AggregatorService.getAllPrices(
+      symbol
+    );
+
+    const responseValidation = allPricesResponseSchema.safeParse(allPrices);
     if (!responseValidation.success) {
       console.warn("❌ Response validation failed:", responseValidation.error);
       const errorResponse: TServerError = {

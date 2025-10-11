@@ -11,6 +11,7 @@ import type {
   TCoinPaprikaData,
   TCoinGeckoData,
   TCryptoCoin,
+  TAllPricesResponse,
 } from "../../routes/aggregator/aggregator.types";
 
 const AggregatorService = {
@@ -161,10 +162,11 @@ const AggregatorService = {
 
   getPrice: async (symbolOrAddress: string): Promise<TPriceResponse | null> => {
     try {
-      const binancePrice = await BinanceService.getPrice(symbolOrAddress);
+      const binanceSymbol = `${symbolOrAddress.toUpperCase()}USDT`;
+      const binancePrice = await BinanceService.getPrice(binanceSymbol);
       if (binancePrice && binancePrice.price)
         return {
-          symbol: binancePrice.symbol,
+          symbol: symbolOrAddress,
           price: binancePrice.price,
           source: "binance" as const,
         };
@@ -177,7 +179,7 @@ const AggregatorService = {
       if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
         const pair = dexResult.pairs[0];
         return {
-          symbol: pair.baseToken.symbol,
+          symbol: symbolOrAddress,
           price: parseFloat(pair.priceUsd || "0"),
           source: "dexscreener" as const,
         };
@@ -237,6 +239,160 @@ const AggregatorService = {
     }
 
     return null;
+  },
+
+  getAllPrices: async (
+    symbolOrAddress: string
+  ): Promise<TAllPricesResponse> => {
+    const response: TAllPricesResponse = {
+      symbol: symbolOrAddress,
+      binance: null,
+      dexscreener: null,
+      coingecko: null,
+    };
+
+    try {
+      const binanceSymbol = `${symbolOrAddress.toUpperCase()}USDT`;
+      const binancePrice = await BinanceService.getPrice(binanceSymbol);
+      if (binancePrice && binancePrice.price) {
+        response.binance = {
+          price: binancePrice.price,
+          updatedAt: new Date(),
+          error: null,
+        };
+      }
+    } catch (error: any) {
+      response.binance = {
+        price: null,
+        updatedAt: new Date(),
+        error: error.message || "Failed to fetch from Binance",
+      };
+    }
+
+    try {
+      const dexResult = await DexScreenerService.search(symbolOrAddress);
+      if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+        const pair = dexResult.pairs[0];
+        response.dexscreener = {
+          price: parseFloat(pair.priceUsd || "0"),
+          updatedAt: new Date(),
+          error: null,
+        };
+      }
+    } catch (error: any) {
+      response.dexscreener = {
+        price: null,
+        updatedAt: new Date(),
+        error: error.message || "Failed to fetch from DexScreener",
+      };
+    }
+
+    try {
+      const geckoPrice = await CoinGeckoService.getSimplePrice(
+        [symbolOrAddress.toLowerCase()],
+        "usd"
+      );
+      const priceData = geckoPrice?.[symbolOrAddress.toLowerCase()];
+      if (priceData && priceData.usd !== null && priceData.usd !== undefined) {
+        response.coingecko = {
+          price: priceData.usd,
+          updatedAt: new Date(),
+          error: null,
+        };
+      }
+    } catch (error: any) {
+      response.coingecko = {
+        price: null,
+        updatedAt: new Date(),
+        error: error.message || "Failed to fetch from CoinGecko",
+      };
+    }
+
+    return response;
+  },
+
+  updateCoin: async (
+    symbol: string,
+    name: string
+  ): Promise<TCryptoCoin | null> => {
+    try {
+      const existingCoin = await CryptoCoinModel.findOne({ symbol, name });
+      if (!existingCoin) return null;
+
+      const updateData: any = {};
+      let updated = false;
+
+      if (!existingCoin.coinPaprikaData) {
+        try {
+          const paprikaResult = await CoinPaprikaService.search(name);
+          if (paprikaResult && paprikaResult.currencies.length > 0) {
+            const coinData = paprikaResult.currencies.find(
+              (c) =>
+                c.symbol.toLowerCase() === symbol.toLowerCase() &&
+                c.name.toLowerCase() === name.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinPaprikaData = coinData;
+              updateData.lastUpdatedCoinPaprika = new Date();
+              updated = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinPaprika data:", error);
+        }
+      }
+
+      if (!existingCoin.coinGeckoData) {
+        try {
+          const geckoResult = await CoinGeckoService.search(name);
+          if (geckoResult && geckoResult.coins.length > 0) {
+            const coinData = geckoResult.coins.find(
+              (c) =>
+                c.symbol.toLowerCase() === symbol.toLowerCase() &&
+                c.name.toLowerCase() === name.toLowerCase()
+            );
+            if (coinData) {
+              updateData.coinGeckoData = coinData;
+              updateData.lastUpdatedCoinGecko = new Date();
+              updated = true;
+            }
+          }
+        } catch (error) {
+          console.warn("❌ Failed to fetch CoinGecko data:", error);
+        }
+      }
+
+      if (updated) {
+        const updatedCoin = await CryptoCoinModel.findOneAndUpdate(
+          { symbol, name },
+          { $set: updateData },
+          { new: true }
+        );
+
+        if (updatedCoin) {
+          return {
+            _id: updatedCoin._id,
+            name: updatedCoin.name,
+            symbol: updatedCoin.symbol,
+            coinPaprikaData: updatedCoin.coinPaprikaData,
+            coinGeckoData: updatedCoin.coinGeckoData,
+            lastUpdatedCoinPaprika: updatedCoin.lastUpdatedCoinPaprika
+              ? updatedCoin.lastUpdatedCoinPaprika
+              : undefined,
+            lastUpdatedCoinGecko: updatedCoin.lastUpdatedCoinGecko
+              ? updatedCoin.lastUpdatedCoinGecko
+              : undefined,
+            createdAt: updatedCoin.createdAt,
+            updatedAt: updatedCoin.updatedAt,
+          };
+        }
+      }
+
+      return existingCoin as any;
+    } catch (error) {
+      console.warn("❌ Failed to update coin:", error);
+      return null;
+    }
   },
 };
 
