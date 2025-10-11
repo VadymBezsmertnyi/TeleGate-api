@@ -7,7 +7,6 @@ import SearchQueryModel from "../../routes/aggregator/aggregator.search-query.mo
 import type {
   TSearchResponse,
   TPriceResponse,
-  TPriceHistoryResponse,
   TCoinPaprikaData,
   TCoinGeckoData,
   TCryptoCoin,
@@ -292,7 +291,7 @@ const AggregatorService = {
   getPriceHistory: async (
     coinId: string,
     range: "1h" | "1d" | "7d" | "30d" = "7d"
-  ): Promise<TPriceHistoryResponse | null> => {
+  ): Promise<TAllPriceHistoryResponse | null> => {
     try {
       const coin = await CryptoCoinModel.findById(coinId);
       if (!coin) {
@@ -300,12 +299,19 @@ const AggregatorService = {
         return null;
       }
 
+      const response: TAllPriceHistoryResponse = {
+        symbol: coin.symbol,
+        coingecko: null,
+        coinpaprika: null,
+      };
+
       const rangeMap: Record<string, string> = {
         "1h": "1",
         "1d": "1",
         "7d": "7",
         "30d": "30",
       };
+
       if (coin.coinGeckoData?.id) {
         try {
           const geckoChart = await CoinGeckoService.getMarketChart(
@@ -313,10 +319,19 @@ const AggregatorService = {
             "usd",
             rangeMap[range]
           );
-          if (geckoChart && geckoChart.prices)
-            return { data: geckoChart, source: "coingecko" as const };
-        } catch (error) {
-          console.warn("❌ CoinGecko getMarketChart failed:", error);
+          if (geckoChart && geckoChart.prices) {
+            response.coingecko = {
+              data: geckoChart,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.coingecko = {
+            data: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from CoinGecko",
+          };
         }
       }
 
@@ -325,14 +340,23 @@ const AggregatorService = {
           const paprikaTicker = await CoinPaprikaService.getTicker(
             coin.coinPaprikaData.id
           );
-          if (paprikaTicker)
-            return { data: paprikaTicker, source: "coinpaprika" as const };
-        } catch (error) {
-          console.warn("❌ CoinPaprika getTicker failed:", error);
+          if (paprikaTicker) {
+            response.coinpaprika = {
+              data: paprikaTicker,
+              updatedAt: new Date(),
+              error: null,
+            };
+          }
+        } catch (error: any) {
+          response.coinpaprika = {
+            data: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from CoinPaprika",
+          };
         }
       }
 
-      return null;
+      return response;
     } catch (error) {
       console.warn("❌ getPriceHistory failed:", error);
       return null;

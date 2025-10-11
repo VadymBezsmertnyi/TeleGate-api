@@ -118,22 +118,10 @@ export const coinPaprikaTickerSchema = z.object({
   }),
 });
 
-export const priceHistoryResponseSchema = z.object({
-  data: z.union([coinGeckoMarketChartSchema, coinPaprikaTickerSchema]),
-  source: z.enum(["coingecko", "coinpaprika"]),
-});
-
 export const priceDataSchema = z.object({
   price: z.number().nullable(),
   updatedAt: z.date(),
   error: z.string().optional().nullable(),
-});
-
-export const allPricesResponseSchema = z.object({
-  symbol: z.string(),
-  binance: priceDataSchema.optional().nullable(),
-  dexscreener: priceDataSchema.optional().nullable(),
-  coingecko: priceDataSchema.optional().nullable(),
 });
 
 export const priceHistoryDataSchema = z.object({
@@ -142,6 +130,19 @@ export const priceHistoryDataSchema = z.object({
     .nullable(),
   updatedAt: z.date(),
   error: z.string().optional().nullable(),
+});
+
+export const priceHistoryResponseSchema = z.object({
+  symbol: z.string(),
+  coingecko: priceHistoryDataSchema.optional().nullable(),
+  coinpaprika: priceHistoryDataSchema.optional().nullable(),
+});
+
+export const allPricesResponseSchema = z.object({
+  symbol: z.string(),
+  binance: priceDataSchema.optional().nullable(),
+  dexscreener: priceDataSchema.optional().nullable(),
+  coingecko: priceDataSchema.optional().nullable(),
 });
 
 export const allPriceHistoryResponseSchema = z.object({
