@@ -52,11 +52,6 @@ export const priceHistoryQueryParamsSchema = z.object({
   range: z.enum(["1h", "1d", "7d", "30d"]).optional().default("7d"),
 });
 
-export const updateCoinQueryParamsSchema = z.object({
-  symbol: z.string().min(1),
-  name: z.string().min(1),
-});
-
 export const allPricesQueryParamsSchema = z.object({
   symbol: z.string().min(1),
 });

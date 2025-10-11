@@ -6,7 +6,6 @@ import {
   searchQueryParamsSchema,
   priceQueryParamsSchema,
   priceHistoryQueryParamsSchema,
-  updateCoinQueryParamsSchema,
   allPricesQueryParamsSchema,
   searchResponseSchema,
   priceResponseSchema,
@@ -26,9 +25,6 @@ export type TSearchQueryParams = z.infer<typeof searchQueryParamsSchema>;
 export type TPriceQueryParams = z.infer<typeof priceQueryParamsSchema>;
 export type TPriceHistoryQueryParams = z.infer<
   typeof priceHistoryQueryParamsSchema
->;
-export type TUpdateCoinQueryParams = z.infer<
-  typeof updateCoinQueryParamsSchema
 >;
 export type TAllPricesQueryParams = z.infer<typeof allPricesQueryParamsSchema>;
 
