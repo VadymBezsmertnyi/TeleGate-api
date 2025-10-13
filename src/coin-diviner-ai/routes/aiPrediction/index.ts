@@ -1,12 +1,18 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
-import CryptoCoinModel from "../aggregator/aggregator.model";
-import AggregatorService from "../../hooks/aggregator";
-import { generatePrediction } from "../../hooks/openAi";
+
+// schemas
 import {
   predictionQueryParamsSchema,
   predictionResponseSchema,
 } from "./aiPrediction.schemas";
+import {
+  notFoundErrorSchema,
+  serverErrorSchema,
+  validationErrorSchema,
+} from "../aggregator/aggregator.schemas";
+
+// types
 import type {
   TPredictionQueryParams,
   TPredictionResponse,
@@ -15,17 +21,21 @@ import type {
   ITokenData,
   IMarketData,
 } from "../../hooks/openAi/aiPrediction.types";
-import "./aiPrediction.swagger";
 import {
   TNotFoundError,
   TServerError,
   TValidationError,
 } from "../aggregator/aggregator.types";
-import {
-  notFoundErrorSchema,
-  serverErrorSchema,
-  validationErrorSchema,
-} from "../aggregator/aggregator.schemas";
+
+// models
+import CryptoCoinModel from "../aggregator/aggregator.model";
+
+// hooks
+import AggregatorService from "../../hooks/aggregator";
+import { generatePrediction } from "../../hooks/openAi";
+
+// swagger
+import "./aiPrediction.swagger";
 
 dotenv.config();
 const router = Router();
