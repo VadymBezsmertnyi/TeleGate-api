@@ -1,3 +1,6 @@
+import z from "zod";
+import { aiPredictionSchema } from "./aiPrediction.schemas";
+
 export interface ITokenData {
   id: string; // унікальний id токена (CoinGecko або CoinPaprika)
   symbol: string; // символ (наприклад: "DISCO")
@@ -51,7 +54,7 @@ export interface IGeneratePredictionOptions {
   language?: "uk" | "en"; // за замовчуванням буде 'uk'
 }
 
-export interface IAiPrediction {
+/* export interface IAiPrediction {
   user_position: {
     has_token: boolean; // чи користувач володіє токеном
     token_amount: number | null; // кількість токенів
@@ -98,3 +101,6 @@ export interface IAiPrediction {
     generated_at: string; // ISO-дата генерації
   };
 }
+ */
+
+export type TAiPrediction = z.infer<typeof aiPredictionSchema>;

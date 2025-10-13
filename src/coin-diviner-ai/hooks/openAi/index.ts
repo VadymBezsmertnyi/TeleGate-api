@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 // types
 import {
-  IAiPrediction,
+  TAiPrediction,
   IGeneratePredictionOptions,
 } from "./aiPrediction.types";
 
@@ -31,7 +31,7 @@ export const generatePrediction = async ({
   tokenData,
   marketData,
   language = "uk",
-}: IGeneratePredictionOptions): Promise<IAiPrediction> => {
+}: IGeneratePredictionOptions): Promise<TAiPrediction> => {
   const systemPrompt =
     language === "uk"
       ? `
