@@ -31,11 +31,11 @@ export const FORECAST = {
 export const RECOMMENDATION = {
   recommendation: {
     buy_now: false, //Рекомендація купувати зараз
-    buy_now_percent: 0, //Ймовірність прибутку (у %)
-    buy_now_message: "", //Пояснення причини купівлі
+    buy_confidence: 0, //Впевненість у рекомендації купівлі (0-100%)
+    buy_message: "", //Пояснення причини купівлі
     sell_now: false, //Рекомендація продавати зараз
-    sell_now_percent: 0, //Ймовірність падіння ціни (у %)
-    sell_now_message: "", //Пояснення причини продажу
+    sell_confidence: 0, //Впевненість у рекомендації продажу (0-100%)
+    sell_message: "", //Пояснення причини продажу
   },
 };
 
@@ -45,14 +45,14 @@ export const RECOMMENDATION = {
  */
 export const MARKET_CONTEXT = {
   market_context: {
-    market_sentiment: "neutral" as "bullish" | "bearish" | "neutral", // Загальний настрій ринку
+    sentiment: "neutral" as "bullish" | "bearish" | "neutral", // Загальний настрій ринку
     btc_trend: "neutral" as "up" | "down" | "neutral", // Поточна динаміка Bitcoin
     altcoin_trend: "neutral" as "up" | "down" | "neutral", // Тренд альткоїнів
     political_impact: "", // Політичні або макроекономічні фактори, що впливають на ринок
-    meme_factor_impact: "", // Мем-ефект, соціальна чи віральна активність навколо токена
+    meme_factor: "", // Мем-ефект, соціальна чи віральна активність навколо токена
     community_activity: "medium" as "high" | "medium" | "low", // Активність спільноти токена
     news_sentiment: "neutral" as "positive" | "neutral" | "negative", // Тональність новин (згадок у соцмережах, статтях)
-    market_analysis_message: "", // Коротке пояснення аналітичного стану ринку
+    analysis_summary: "", // Коротке пояснення аналітичного стану ринку
   },
 };
 
@@ -75,8 +75,8 @@ export const RISK_AND_INFLUENCE = {
  */
 export const SUMMARY = {
   summary: {
-    ai_summary: "", // Загальне резюме або короткий висновок AI
-    ai_generated_at: new Date().toISOString(), // Дата та час створення прогнозу
+    conclusion: "", // Загальне резюме або короткий висновок AI (1-2 речення)
+    generated_at: new Date().toISOString(), // Дата та час створення прогнозу (ISO формат)
   },
 };
 

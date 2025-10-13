@@ -33,14 +33,18 @@ export const aiPredictionSchema = z
     }),
     recommendation: z.object({
       buy_now: z.boolean().describe("Рекомендація купувати зараз"),
-      buy_now_percent: z.number().describe("Ймовірність прибутку (у %)"),
-      buy_now_message: z.string().describe("Пояснення причини купівлі"),
+      buy_confidence: z
+        .number()
+        .describe("Впевненість у рекомендації купівлі (0-100%)"),
+      buy_message: z.string().describe("Пояснення причини купівлі"),
       sell_now: z.boolean().describe("Рекомендація продавати зараз"),
-      sell_now_percent: z.number().describe("Ймовірність падіння ціни (у %)"),
-      sell_now_message: z.string().describe("Пояснення причини продажу"),
+      sell_confidence: z
+        .number()
+        .describe("Впевненість у рекомендації продажу (0-100%)"),
+      sell_message: z.string().describe("Пояснення причини продажу"),
     }),
     market_context: z.object({
-      market_sentiment: z
+      sentiment: z
         .enum(["bullish", "bearish", "neutral"])
         .describe("Загальний настрій ринку"),
       btc_trend: z
@@ -54,7 +58,7 @@ export const aiPredictionSchema = z
         .describe(
           "Політичні або макроекономічні фактори, що впливають на ринок"
         ),
-      meme_factor_impact: z
+      meme_factor: z
         .string()
         .describe("Мем-ефект, соціальна чи віральна активність навколо токена"),
       community_activity: z
@@ -63,7 +67,7 @@ export const aiPredictionSchema = z
       news_sentiment: z
         .enum(["positive", "neutral", "negative"])
         .describe("Тональність новин (згадок у соцмережах, статтях)"),
-      market_analysis_message: z
+      analysis_summary: z
         .string()
         .describe("Коротке пояснення аналітичного стану ринку"),
     }),
