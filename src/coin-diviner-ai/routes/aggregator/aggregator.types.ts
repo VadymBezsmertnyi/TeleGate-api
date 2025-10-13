@@ -15,7 +15,6 @@ import {
   coinPaprikaQuoteSchema,
   coinPaprikaTickerSchema,
   priceDataSchema,
-  priceHistoryDataSchema,
   allPricesResponseSchema,
   allPriceHistoryResponseSchema,
   validationErrorSchema,
@@ -44,7 +43,6 @@ export type TCoinGeckoMarketChart = z.infer<typeof coinGeckoMarketChartSchema>;
 export type TCoinPaprikaQuote = z.infer<typeof coinPaprikaQuoteSchema>;
 export type TCoinPaprikaTicker = z.infer<typeof coinPaprikaTickerSchema>;
 export type TPriceData = z.infer<typeof priceDataSchema>;
-export type TPriceHistoryData = z.infer<typeof priceHistoryDataSchema>;
 export type TAllPricesResponse = z.infer<typeof allPricesResponseSchema>;
 export type TAllPriceHistoryResponse = z.infer<
   typeof allPriceHistoryResponseSchema

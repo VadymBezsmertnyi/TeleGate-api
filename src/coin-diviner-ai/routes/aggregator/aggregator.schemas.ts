@@ -126,18 +126,22 @@ export const priceDataSchema = z.object({
   error: z.string().optional().nullable(),
 });
 
-export const priceHistoryDataSchema = z.object({
-  data: z
-    .union([coinGeckoMarketChartSchema, coinPaprikaTickerSchema])
-    .nullable(),
+export const priceHistoryDataGeckoSchema = z.object({
+  data: coinGeckoMarketChartSchema.nullable(),
+  updatedAt: z.date(),
+  error: z.string().optional().nullable(),
+});
+
+export const priceHistoryDataPaprikaSchema = z.object({
+  data: coinPaprikaTickerSchema.nullable(),
   updatedAt: z.date(),
   error: z.string().optional().nullable(),
 });
 
 export const priceHistoryResponseSchema = z.object({
   symbol: z.string(),
-  coingecko: priceHistoryDataSchema.optional().nullable(),
-  coinpaprika: priceHistoryDataSchema.optional().nullable(),
+  coingecko: priceHistoryDataGeckoSchema.optional().nullable(),
+  coinpaprika: priceHistoryDataPaprikaSchema.optional().nullable(),
 });
 
 export const allPricesResponseSchema = z.object({
@@ -149,8 +153,8 @@ export const allPricesResponseSchema = z.object({
 
 export const allPriceHistoryResponseSchema = z.object({
   symbol: z.string(),
-  coingecko: priceHistoryDataSchema.optional().nullable(),
-  coinpaprika: priceHistoryDataSchema.optional().nullable(),
+  coingecko: priceHistoryDataGeckoSchema.optional().nullable(),
+  coinpaprika: priceHistoryDataPaprikaSchema.optional().nullable(),
 });
 
 export const validationErrorSchema = z.object({
