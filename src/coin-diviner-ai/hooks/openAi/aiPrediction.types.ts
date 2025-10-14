@@ -15,7 +15,7 @@ export interface ITokenData {
   market_cap?: number | null; // ринкова капіталізація
   volume_24h?: number | null; // обсяг торгів за 24 години
   liquidity_usd?: number | null; // ліквідність (якщо доступна з DexScreener)
-  holders?: number | null; // кількість власників (якщо є)
+  holders?: number | null; // кількість власників (AI визначає самостійно)
 
   // === Додаткова інформація ===
   launch_date?: string | null; // дата запуску токена
@@ -55,32 +55,8 @@ export interface ITokenData {
   };
 }
 
-export interface IMarketData {
-  btc_price_usd: number; // поточна ціна BTC
-  btc_change_24h: number; // зміна ціни BTC за 24 год (%)
-  eth_price_usd: number; // поточна ціна ETH
-  eth_change_24h: number; // зміна ETH за 24 год (%)
-  total_market_cap_usd: number; // загальна капа ринку
-  total_volume_24h_usd: number; // сумарний добовий обсяг
-  btc_dominance_percent: number; // домінування BTC (%)
-  fear_greed_index: number; // індекс страху/жадібності (0–100)
-
-  // === Геополітичний та соціальний контекст ===
-  global_news_sentiment?: "positive" | "neutral" | "negative"; // загальний настрій новин
-  political_risk_level?: "low" | "medium" | "high"; // рівень політичних ризиків
-  meme_market_trend?: "growing" | "stable" | "cooling"; // активність мем-ринку
-  altcoin_trend?: "up" | "down" | "neutral"; // стан альткоїн-ринку
-
-  // === Для AI-кореляції ===
-  correlation_with_btc?: number; // коефіцієнт кореляції (0–1)
-  active_blockchains?: string[]; // які мережі зараз ростуть
-  top_gainers?: string[]; // топ-монети за приростом
-  top_losers?: string[]; // топ-монети за падінням
-}
-
 export interface IGeneratePredictionOptions {
   tokenData: ITokenData;
-  marketData: IMarketData;
   language?: "uk" | "en"; // за замовчуванням буде 'uk'
 }
 

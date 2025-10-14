@@ -17,10 +17,7 @@ import type {
   TPredictionQueryParams,
   TPredictionResponse,
 } from "./aiPrediction.types";
-import type {
-  ITokenData,
-  IMarketData,
-} from "../../hooks/openAi/aiPrediction.types";
+import type { ITokenData } from "../../hooks/openAi/aiPrediction.types";
 import {
   TNotFoundError,
   TServerError,
@@ -32,6 +29,7 @@ import CryptoCoinModel from "../aggregator/aggregator.model";
 
 // hooks
 import AggregatorService from "../../hooks/aggregator";
+import DexScreenerService from "../../hooks/dexscreener";
 import { generatePrediction } from "../../hooks/openAi";
 
 // swagger
@@ -63,11 +61,30 @@ router.get("/generate", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    const allPrices = await AggregatorService.getAllPrices(coinId);
-    const priceHistoryData = await AggregatorService.getAllPriceHistory(
-      coinId,
-      "7d"
-    );
+    const [allPrices, priceHistoryData] = await Promise.all([
+      AggregatorService.getAllPrices(coinId),
+      AggregatorService.getAllPriceHistory(coinId, "7d"),
+    ]);
+
+    let liquidity_usd: number | null = null;
+    let verified_on_dexscreener = false;
+
+    const contractAddress =
+      cryptoCoin.coinPaprikaData?.contract_address?.[0]?.address;
+    if (contractAddress || cryptoCoin.symbol) {
+      try {
+        const dexResult = await DexScreenerService.search(
+          contractAddress || cryptoCoin.symbol
+        );
+        if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+          const pair = dexResult.pairs[0];
+          liquidity_usd = pair.liquidity?.usd || null;
+          verified_on_dexscreener = true;
+        }
+      } catch (error) {
+        console.warn("DexScreener liquidity fetch error:", error);
+      }
+    }
 
     let current_price_usd: number | null = null;
     let price_change_24h: number | null = null;
@@ -198,14 +215,13 @@ router.get("/generate", async (req: Request, res: Response) => {
       price_change_7d,
       market_cap,
       volume_24h,
-      liquidity_usd: null, // TODO: отримати з DexScreener API (pair.liquidity.usd)
-      holders: null, // TODO: отримати з blockchain explorer
+      liquidity_usd,
       launch_date,
       is_meme:
         cryptoCoin.coinPaprikaData?.type === "token" &&
         (cryptoCoin.name.toLowerCase().includes("meme") ||
           cryptoCoin.symbol.toLowerCase().includes("meme")),
-      verified_on_dexscreener: false, // TODO: перевірити через DexScreener API
+      verified_on_dexscreener,
       coingecko_rank: cryptoCoin.coinGeckoData?.market_cap_rank || null,
       paprika_rank: cryptoCoin.coinPaprikaData?.rank || null,
       price_sources: priceSources,
@@ -216,29 +232,8 @@ router.get("/generate", async (req: Request, res: Response) => {
     // TODO: Отримати дані користувача з БД (user_position: has_token, token_amount, token_buy_price)
     // TODO: Для тестування дані користувача передаються як null - AI сам згенерує моковані значення
 
-    // TODO: Замінити моковані дані на реальні з API
-    const marketData: IMarketData = {
-      btc_price_usd: 95000, // TODO: отримати з CoinGecko/Binance
-      btc_change_24h: 2.5, // TODO: отримати з CoinGecko/Binance
-      eth_price_usd: 3500, // TODO: отримати з CoinGecko/Binance
-      eth_change_24h: 1.8, // TODO: отримати з CoinGecko/Binance
-      total_market_cap_usd: 2500000000000, // TODO: отримати з CoinGecko global API
-      total_volume_24h_usd: 85000000000, // TODO: отримати з CoinGecko global API
-      btc_dominance_percent: 48.5, // TODO: отримати з CoinGecko global API
-      fear_greed_index: 65, // TODO: отримати з Fear & Greed Index API
-      global_news_sentiment: "neutral", // TODO: інтегрувати sentiment analysis API
-      political_risk_level: "medium", // TODO: визначити логіку оцінки ризиків
-      meme_market_trend: "stable", // TODO: аналізувати тренди мем-токенів
-      altcoin_trend: "neutral", // TODO: аналізувати загальний тренд альткоїнів
-      correlation_with_btc: 0.75, // TODO: розрахувати кореляцію з BTC
-      active_blockchains: ["Ethereum", "BSC", "Solana"], // TODO: визначити активні блокчейни
-      top_gainers: ["SOL", "AVAX", "MATIC"], // TODO: отримати з CoinGecko
-      top_losers: ["ADA", "DOT", "LINK"], // TODO: отримати з CoinGecko
-    };
-
     const prediction = await generatePrediction({
       tokenData,
-      marketData,
       language,
     });
 

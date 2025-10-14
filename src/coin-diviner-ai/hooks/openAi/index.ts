@@ -21,20 +21,17 @@ const openai = new OpenAI({
 
 /**
  * 🧙‍♂️ Генерація AI-прогнозу для криптовалюти
- * Використовує OpenAI для створення прогнозу на основі даних токена та ринку
- * @param tokenData - Дані про токен (ринкова капіталізація, обсяг торгів, соціальні метрики тощо)
- * @param marketData - Дані про ринок (тренди BTC, політичні фактори, активність мем-ринку тощо)
+ * Використовує OpenAI для створення прогнозу на основі даних токена
+ * @param tokenData - Дані про токен (ринкова капіталізація, обсяг торгів, історичні дані тощо)
  * @param language - Мова відповіді ("uk" або "en"), за замовчуванням "uk"
  * @returns IAiPrediction - Структурований прогноз з рекомендаціями та аналізом
  */
 export const generatePrediction = async ({
   tokenData,
-  marketData,
   language = "uk",
 }: IGeneratePredictionOptions): Promise<TAiPrediction> => {
   console.log("Generating AI prediction with options:", {
     tokenData,
-    marketData,
     language,
   });
   const systemPrompt =
@@ -68,7 +65,21 @@ export const generatePrediction = async ({
             - загальний настрій ринку (bullish, bearish),
             - геополітичні та економічні події (наприклад, вибори, регулювання, зміна ставок).
 
-          5. Якщо дані про ринок частково відсутні — роби обережний прогноз із нижчим confidence.
+          5. **Самостійно визначай та використовуй** на основі історичних даних токена та загальних знань про ринок:
+            - поточні ціни BTC та ETH (використовуй актуальні знання або оцінюй на основі ринкової динаміки),
+            - зміни BTC/ETH за 24 години (аналізуй тренди),
+            - кількість власників (holders) токена - оцінюй приблизно на основі ліквідності, обсягів та рангу,
+            - загальну ринкову капіталізацію криптовалют (оцінюй приблизно),
+            - домінування BTC на ринку (зазвичай 40-60%),
+            - індекс страху/жадібності (0-100, де 0-25 екстремальний страх, 25-45 страх, 45-55 нейтрально, 55-75 жадібність, 75-100 екстремальна жадібність),
+            - настрій новин (positive/neutral/negative) на основі динаміки ринку,
+            - рівень політичних ризиків (low/medium/high),
+            - тренд мем-токенів (growing/stable/cooling),
+            - тренд альткоїнів (up/down/neutral),
+            - кореляцію токена з BTC (0-1, аналізуй за історичними даними цін),
+            - активні блокчейни та топ-гейнери/лузери.
+
+          6. Якщо дані частково відсутні — роби обережний прогноз із нижчим confidence.
 
           ---
 
@@ -136,7 +147,21 @@ export const generatePrediction = async ({
             - global sentiment,
             - geopolitical and economic events (regulations, elections, interest rates).
 
-          5. If data is incomplete — make cautious predictions with lower confidence.
+          5. **Independently determine and use** based on token historical data and general market knowledge:
+            - current BTC and ETH prices (use recent knowledge or estimate based on market dynamics),
+            - BTC/ETH 24h changes (analyze trends),
+            - token holders count - estimate approximately based on liquidity, volume and rank,
+            - total cryptocurrency market capitalization (approximate estimation),
+            - BTC market dominance (typically 40-60%),
+            - fear & greed index (0-100, where 0-25 extreme fear, 25-45 fear, 45-55 neutral, 55-75 greed, 75-100 extreme greed),
+            - news sentiment (positive/neutral/negative) based on market dynamics,
+            - political risk level (low/medium/high),
+            - meme token trend (growing/stable/cooling),
+            - altcoin trend (up/down/neutral),
+            - token correlation with BTC (0-1, analyze from price history data),
+            - active blockchains and top gainers/losers.
+
+          6. If data is incomplete — make cautious predictions with lower confidence.
 
           ---
 
@@ -193,9 +218,8 @@ export const generatePrediction = async ({
         content: `
         Token data:
         ${JSON.stringify(tokenData, null, 2)}
-
-        Market data:
-        ${JSON.stringify(marketData, null, 2)}
+        
+        Проаналізуй токен на основі наданих даних та визнач всі необхідні ринкові показники самостійно.
         `,
       },
     ],
