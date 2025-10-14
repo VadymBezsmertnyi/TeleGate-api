@@ -11,7 +11,7 @@ import {
   authSchema,
 } from "./auth.schemas";
 import AuthModel from "./auth.model";
-import { verifyToken, verifyRefreshToken, setTokens } from "../../hooks/auth";
+import { verifyRefreshToken, setTokens, checkAuth } from "../../hooks/auth";
 import { returnError, ErrorCode } from "./auth.helps";
 import "./auth.swagger";
 
@@ -121,27 +121,8 @@ router.post("/register", async (req: Request, res: Response) => {
 
 router.get("/me", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return returnError(
-        res,
-        401,
-        "Missing or invalid authorization header",
-        ErrorCode.MISSING_AUTH_HEADER
-      );
-
-    const token = authHeader.substring(7);
-    if (!token)
-      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
-
-    const decoded = verifyToken(token);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired token",
-        ErrorCode.INVALID_TOKEN
-      );
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
 
     const user = await AuthModel.findById(decoded.userId);
     if (!user)
@@ -202,27 +183,8 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
 
 router.post("/create", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return returnError(
-        res,
-        401,
-        "Missing or invalid authorization header",
-        ErrorCode.MISSING_AUTH_HEADER
-      );
-
-    const token = authHeader.substring(7);
-    if (!token)
-      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
-
-    const decoded = verifyToken(token);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired token",
-        ErrorCode.INVALID_TOKEN
-      );
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
 
     const validationResult = createAuthSchema.safeParse(req.body);
     if (!validationResult.success)
@@ -271,27 +233,8 @@ router.post("/create", async (req: Request, res: Response) => {
 
 router.put("/update/:id", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return returnError(
-        res,
-        401,
-        "Missing or invalid authorization header",
-        ErrorCode.MISSING_AUTH_HEADER
-      );
-
-    const token = authHeader.substring(7);
-    if (!token)
-      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
-
-    const decoded = verifyToken(token);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired token",
-        ErrorCode.INVALID_TOKEN
-      );
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
 
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
@@ -350,27 +293,8 @@ router.put("/update/:id", async (req: Request, res: Response) => {
 
 router.delete("/delete/:id", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return returnError(
-        res,
-        401,
-        "Missing or invalid authorization header",
-        ErrorCode.MISSING_AUTH_HEADER
-      );
-
-    const token = authHeader.substring(7);
-    if (!token)
-      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
-
-    const decoded = verifyToken(token);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired token",
-        ErrorCode.INVALID_TOKEN
-      );
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
 
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
@@ -396,27 +320,8 @@ router.delete("/delete/:id", async (req: Request, res: Response) => {
 
 router.get("/get-all", async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return returnError(
-        res,
-        401,
-        "Missing or invalid authorization header",
-        ErrorCode.MISSING_AUTH_HEADER
-      );
-
-    const token = authHeader.substring(7);
-    if (!token)
-      return returnError(res, 401, "Missing token", ErrorCode.MISSING_TOKEN);
-
-    const decoded = verifyToken(token);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired token",
-        ErrorCode.INVALID_TOKEN
-      );
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
 
     const users = await AuthModel.find();
     const usersData = users.map((user) => ({
