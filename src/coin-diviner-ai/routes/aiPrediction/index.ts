@@ -26,11 +26,14 @@ import {
 
 // models
 import CryptoCoinModel from "../aggregator/aggregator.model";
+import PredictionModel from "./aiPrediction.model";
+import AuthModel from "../auth/auth.model";
 
 // hooks
 import AggregatorService from "../../hooks/aggregator";
 import DexScreenerService from "../../hooks/dexscreener";
 import { generatePrediction } from "../../hooks/openAi";
+import { checkAuth } from "../../hooks/auth";
 
 // swagger
 import "./aiPrediction.swagger";
@@ -39,7 +42,21 @@ dotenv.config();
 const router = Router();
 
 router.get("/generate", async (req: Request, res: Response) => {
+  let predictionId: string | null = null;
+
   try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
     const validationResult = predictionQueryParamsSchema.safeParse(req.query);
     if (!validationResult.success) {
       const errorResponse: TValidationError = {
@@ -60,6 +77,19 @@ router.get("/generate", async (req: Request, res: Response) => {
       const validatedError = notFoundErrorSchema.parse(errorResponse);
       return res.status(404).json(validatedError);
     }
+
+    const newPrediction = await PredictionModel.create({
+      userId: user._id,
+      coinId: cryptoCoin._id,
+      language: language || "uk",
+      status: "creating",
+    });
+
+    predictionId = newPrediction._id.toString();
+
+    await PredictionModel.findByIdAndUpdate(predictionId, {
+      status: "fetching_data",
+    });
 
     const [allPrices, priceHistoryData] = await Promise.all([
       AggregatorService.getAllPrices(coinId),
@@ -229,17 +259,41 @@ router.get("/generate", async (req: Request, res: Response) => {
       paprika_stats: paprikaStats,
     };
 
-    // TODO: Отримати дані користувача з БД (user_position: has_token, token_amount, token_buy_price)
-    // TODO: Для тестування дані користувача передаються як null - AI сам згенерує моковані значення
+    await PredictionModel.findByIdAndUpdate(predictionId, {
+      status: "generating",
+      tokenData,
+    });
 
     const prediction = await generatePrediction({
       tokenData,
-      language,
+      language: language || "uk",
     });
+    const updatedPrediction = await PredictionModel.findByIdAndUpdate(
+      predictionId,
+      {
+        status: "completed",
+        prediction,
+      },
+      { new: true }
+    );
+    if (!updatedPrediction) {
+      const errorResponse: TServerError = {
+        message: "Failed to save prediction",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
 
     const responseData: TPredictionResponse = {
       success: true,
-      data: prediction,
+      data: {
+        ...updatedPrediction,
+        _id: updatedPrediction._id.toString(),
+        createdAt: updatedPrediction.createdAt.toISOString(),
+        updatedAt: updatedPrediction.updatedAt.toISOString(),
+        userId: updatedPrediction.userId.toString(),
+        coinId: updatedPrediction.coinId.toString(),
+      },
     };
 
     const responseValidation = predictionResponseSchema.safeParse(responseData);
@@ -255,6 +309,13 @@ router.get("/generate", async (req: Request, res: Response) => {
     return res.status(200).json(responseValidation.data);
   } catch (error) {
     console.warn("Generate prediction error:", error);
+
+    if (predictionId)
+      await PredictionModel.findByIdAndUpdate(predictionId, {
+        status: "error",
+        error: String(error),
+      });
+
     const errorResponse: TServerError = {
       message: "Server error: " + error,
     };
