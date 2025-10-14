@@ -419,8 +419,8 @@ router.delete("/clear/:portfolioId", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    portfolio.purchases = [];
-    portfolio.sales = [];
+    portfolio.purchases.splice(0, portfolio.purchases.length);
+    portfolio.sales.splice(0, portfolio.sales.length);
     await portfolio.save();
 
     const responseData: TDeleteResponse = {
