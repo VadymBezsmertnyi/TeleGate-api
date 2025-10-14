@@ -262,20 +262,11 @@ router.get("/generate", async (req: Request, res: Response) => {
       paprika_stats: paprikaStats,
     };
 
-    await PredictionModel.findByIdAndUpdate(predictionId, {
-      status: "generating",
-      tokenData,
-    });
-
-    const prediction = await generatePrediction({
-      tokenData,
-      language: language || "uk",
-    });
     const updatedPrediction = await PredictionModel.findByIdAndUpdate(
       predictionId,
       {
-        status: "completed",
-        prediction,
+        status: "generating",
+        tokenData,
       },
       { new: true }
     ).lean();
@@ -286,6 +277,26 @@ router.get("/generate", async (req: Request, res: Response) => {
       const validatedError = serverErrorSchema.parse(errorResponse);
       return res.status(500).json(validatedError);
     }
+
+    // Асинхронно генерируем предсказание и обновляем запись в базе
+    (async () => {
+      try {
+        const prediction = await generatePrediction({
+          tokenData,
+          language: language || "uk",
+        });
+        await PredictionModel.findByIdAndUpdate(predictionId, {
+          status: "completed",
+          prediction,
+        });
+      } catch (asyncError) {
+        console.warn("Async prediction generation error:", asyncError);
+        await PredictionModel.findByIdAndUpdate(predictionId, {
+          status: "error",
+          error: String(asyncError),
+        });
+      }
+    })();
 
     const responseData: TPredictionResponse = {
       success: true,
