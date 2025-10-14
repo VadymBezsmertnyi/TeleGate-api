@@ -23,6 +23,36 @@ export interface ITokenData {
   verified_on_dexscreener?: boolean; // перевірка лістингу на DEX
   coingecko_rank?: number | null; // рейтинг з CoinGecko
   paprika_rank?: number | null; // рейтинг з CoinPaprika
+
+  // === Повна інформація про ціни з різних джерел ===
+  price_sources?: {
+    binance?: { price: number; updatedAt: string } | null; // ціна та час оновлення з Binance
+    dexscreener?: { price: number; updatedAt: string } | null; // ціна та час оновлення з DexScreener
+    coingecko?: { price: number; updatedAt: string } | null; // ціна та час оновлення з CoinGecko
+  };
+
+  // === Історичні дані ===
+  price_history?: {
+    prices?: Array<[number, number]>; // масив [timestamp, price]
+    market_caps?: Array<[number, number]>; // масив [timestamp, market_cap]
+    total_volumes?: Array<[number, number]>; // масив [timestamp, volume]
+  };
+
+  // === Детальна статистика з CoinPaprika ===
+  paprika_stats?: {
+    beta_value?: number | null; // бета-коефіцієнт волатильності
+    percent_change_15m?: number | null; // зміна за 15 хвилин
+    percent_change_30m?: number | null; // зміна за 30 хвилин
+    percent_change_1h?: number | null; // зміна за 1 годину
+    percent_change_6h?: number | null; // зміна за 6 годин
+    percent_change_12h?: number | null; // зміна за 12 годин
+    percent_change_30d?: number | null; // зміна за 30 днів
+    percent_change_1y?: number | null; // зміна за рік
+    ath_price?: number | null; // максимальна історична ціна
+    ath_date?: string | null; // дата досягнення ATH
+    percent_from_ath?: number | null; // відсток від ATH
+    volume_24h_change?: number | null; // зміна обсягу за 24 год (%)
+  };
 }
 
 export interface IMarketData {

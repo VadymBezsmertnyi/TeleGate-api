@@ -63,8 +63,8 @@ router.get("/generate", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    const priceData = await AggregatorService.getPrice(coinId);
-    const priceHistoryData = await AggregatorService.getPriceHistory(
+    const allPrices = await AggregatorService.getAllPrices(coinId);
+    const priceHistoryData = await AggregatorService.getAllPriceHistory(
       coinId,
       "7d"
     );
@@ -75,8 +75,12 @@ router.get("/generate", async (req: Request, res: Response) => {
     let market_cap: number | null = null;
     let volume_24h: number | null = null;
     let launch_date: string | null = null;
-    if (priceData) current_price_usd = priceData.price;
-
+    if (allPrices)
+      current_price_usd =
+        allPrices.binance?.price ||
+        allPrices.dexscreener?.price ||
+        allPrices.coingecko?.price ||
+        null;
     if (priceHistoryData?.coinpaprika?.data) {
       const paprikaData = priceHistoryData.coinpaprika.data;
       price_change_24h = paprikaData.quotes.USD.percent_change_24h;
@@ -104,6 +108,84 @@ router.get("/generate", async (req: Request, res: Response) => {
           geckoData.total_volumes[geckoData.total_volumes.length - 1][1];
     }
 
+    const priceSources = {
+      binance: allPrices?.binance?.price
+        ? {
+            price: allPrices.binance.price,
+            updatedAt:
+              allPrices.binance.updatedAt instanceof Date
+                ? allPrices.binance.updatedAt.toISOString()
+                : new Date().toISOString(),
+          }
+        : null,
+      dexscreener: allPrices?.dexscreener?.price
+        ? {
+            price: allPrices.dexscreener.price,
+            updatedAt:
+              allPrices.dexscreener.updatedAt instanceof Date
+                ? allPrices.dexscreener.updatedAt.toISOString()
+                : new Date().toISOString(),
+          }
+        : null,
+      coingecko: allPrices?.coingecko?.price
+        ? {
+            price: allPrices.coingecko.price,
+            updatedAt:
+              allPrices.coingecko.updatedAt instanceof Date
+                ? allPrices.coingecko.updatedAt.toISOString()
+                : new Date().toISOString(),
+          }
+        : null,
+    };
+
+    const priceHistory = priceHistoryData?.coingecko?.data
+      ? {
+          prices: priceHistoryData.coingecko.data.prices || undefined,
+          market_caps: priceHistoryData.coingecko.data.market_caps || undefined,
+          total_volumes:
+            priceHistoryData.coingecko.data.total_volumes || undefined,
+        }
+      : undefined;
+
+    const paprikaStats =
+      priceHistoryData?.coinpaprika?.data?.quotes?.USD &&
+      priceHistoryData?.coinpaprika?.data
+        ? {
+            beta_value: priceHistoryData.coinpaprika.data.beta_value || null,
+            percent_change_15m:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_15m ||
+              null,
+            percent_change_30m:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_30m ||
+              null,
+            percent_change_1h:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_1h ||
+              null,
+            percent_change_6h:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_6h ||
+              null,
+            percent_change_12h:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_12h ||
+              null,
+            percent_change_30d:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_30d ||
+              null,
+            percent_change_1y:
+              priceHistoryData.coinpaprika.data.quotes.USD.percent_change_1y ||
+              null,
+            ath_price:
+              priceHistoryData.coinpaprika.data.quotes.USD.ath_price || null,
+            ath_date:
+              priceHistoryData.coinpaprika.data.quotes.USD.ath_date || null,
+            percent_from_ath:
+              priceHistoryData.coinpaprika.data.quotes.USD
+                .percent_from_price_ath || null,
+            volume_24h_change:
+              priceHistoryData.coinpaprika.data.quotes.USD
+                .volume_24h_change_24h || null,
+          }
+        : undefined;
+
     const tokenData: ITokenData = {
       id: cryptoCoin._id.toString(),
       symbol: cryptoCoin.symbol,
@@ -126,6 +208,9 @@ router.get("/generate", async (req: Request, res: Response) => {
       verified_on_dexscreener: false, // TODO: перевірити через DexScreener API
       coingecko_rank: cryptoCoin.coinGeckoData?.market_cap_rank || null,
       paprika_rank: cryptoCoin.coinPaprikaData?.rank || null,
+      price_sources: priceSources,
+      price_history: priceHistory,
+      paprika_stats: paprikaStats,
     };
 
     // TODO: Отримати дані користувача з БД (user_position: has_token, token_amount, token_buy_price)
