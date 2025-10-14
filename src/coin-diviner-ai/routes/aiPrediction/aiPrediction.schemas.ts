@@ -31,3 +31,8 @@ export const predictionResponseSchema = z.object({
     .describe("Full prediction record from database")
     .nullable(),
 });
+
+export const predictionsListResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(predictionRecordSchema),
+});

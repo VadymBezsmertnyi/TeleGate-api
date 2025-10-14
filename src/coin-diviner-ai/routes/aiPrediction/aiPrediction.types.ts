@@ -1,5 +1,8 @@
 import z from "zod";
-import { predictionResponseSchema } from "./aiPrediction.schemas";
+import {
+  predictionResponseSchema,
+  predictionsListResponseSchema,
+} from "./aiPrediction.schemas";
 
 export type TPredictionQueryParams = {
   coinId: string;
@@ -7,3 +10,6 @@ export type TPredictionQueryParams = {
 };
 
 export type TPredictionResponse = z.infer<typeof predictionResponseSchema>;
+export type TPredictionsListResponse = z.infer<
+  typeof predictionsListResponseSchema
+>;
