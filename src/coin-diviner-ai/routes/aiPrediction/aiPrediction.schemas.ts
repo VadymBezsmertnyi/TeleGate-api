@@ -6,9 +6,19 @@ export const predictionQueryParamsSchema = z.object({
   language: z.enum(["uk", "en"]).optional().default("uk"),
 });
 
+export const predictionStatusSchema = z.enum([
+  "creating",
+  "fetching_data",
+  "generating_ai",
+  "completed",
+  "error",
+]);
+
 export const predictionResponseSchema = z.object({
   success: z.boolean(),
   data: aiPredictionSchema
     .describe("AI prediction data for the specified coin")
     .nullable(),
+  status: predictionStatusSchema.optional(),
+  message: z.string().optional(),
 });
