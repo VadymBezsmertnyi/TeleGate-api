@@ -107,7 +107,7 @@ app.use("/coin-diviner-ai/api/binance", coinDivinerAiBinanceRouter);
 app.use("/coin-diviner-ai/api/coingecko", coinDivinerAiCoingeckoRouter);
 app.use("/coin-diviner-ai/api/dexscreener", coinDivinerAiDexScreenerRouter);
 app.use("/coin-diviner-ai/api/aggregator", coinDivinerAiAggregatorRouter);
-app.use("/coin-diviner-ai/api/prediction", coinDivinerAiPredictionRouter);
+app.use("/coin-diviner-ai/api/ai-prediction", coinDivinerAiPredictionRouter);
 
 const startHelps = () => {
   try {
