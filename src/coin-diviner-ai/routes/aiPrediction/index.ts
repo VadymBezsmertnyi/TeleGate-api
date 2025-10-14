@@ -69,7 +69,8 @@ router.get("/generate", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { coinId, language }: TPredictionQueryParams = validationResult.data;
+    const { coinId, language = "uk" }: TPredictionQueryParams =
+      validationResult.data;
 
     const cryptoCoin = await CryptoCoinModel.findById(coinId);
     if (!cryptoCoin) {
@@ -83,7 +84,7 @@ router.get("/generate", async (req: Request, res: Response) => {
     const newPrediction = await PredictionModel.create({
       userId: user._id,
       coinId: cryptoCoin._id,
-      language: language || "uk",
+      language,
       status: "creating",
     });
 
@@ -277,7 +278,7 @@ router.get("/generate", async (req: Request, res: Response) => {
         prediction,
       },
       { new: true }
-    );
+    ).lean();
     if (!updatedPrediction) {
       const errorResponse: TServerError = {
         message: "Failed to save prediction",
@@ -291,10 +292,10 @@ router.get("/generate", async (req: Request, res: Response) => {
       data: {
         ...updatedPrediction,
         _id: updatedPrediction._id.toString(),
-        createdAt: updatedPrediction.createdAt.toISOString(),
-        updatedAt: updatedPrediction.updatedAt.toISOString(),
         userId: updatedPrediction.userId.toString(),
         coinId: updatedPrediction.coinId.toString(),
+        createdAt: updatedPrediction.createdAt.toISOString(),
+        updatedAt: updatedPrediction.updatedAt.toISOString(),
       },
     };
 
