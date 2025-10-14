@@ -19,9 +19,6 @@ const AggregatorService = {
     query: string,
     deepSearch: boolean = false
   ): Promise<TSearchResponse> => {
-    console.log(
-      `🔍 Searching for coins with query: "${query}", deepSearch: ${deepSearch}`
-    );
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -34,19 +31,14 @@ const AggregatorService = {
       });
 
       if (deepSearch && searchQueryRecord?.lastDeepSearch) {
-        if (searchQueryRecord.lastDeepSearch >= oneDayAgo) {
-          console.log(
-            "⏰ Deep search was done less than 24h ago, using cached"
-          );
+        if (searchQueryRecord.lastDeepSearch >= oneDayAgo)
           shouldSearchInDB = true;
-        }
       } else if (
         !deepSearch &&
         searchQueryRecord &&
         searchQueryRecord.lastSearched >= oneHourAgo
-      ) {
+      )
         shouldSearchInDB = true;
-      }
     } catch (error) {
       console.warn("❌ SearchQuery check failed:", error);
     }

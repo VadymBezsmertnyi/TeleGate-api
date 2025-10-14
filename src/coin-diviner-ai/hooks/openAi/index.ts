@@ -30,10 +30,6 @@ export const generatePrediction = async ({
   tokenData,
   language = "uk",
 }: IGeneratePredictionOptions): Promise<TAiPrediction> => {
-  console.log("Generating AI prediction with options:", {
-    tokenData,
-    language,
-  });
   const systemPrompt =
     language === "uk"
       ? `
@@ -226,6 +222,5 @@ export const generatePrediction = async ({
   });
 
   const result = JSON.parse(completion.choices[0].message.content || "{}");
-  console.log("AI Prediction Result:", result);
   return result;
 };

@@ -21,7 +21,6 @@ router.get(
     const { platform_id } = req.query;
     try {
       const coins = await CoinPaprikaService.getAllCoins(platform_id);
-      console.log("Coins fetched:", coins ? coins.length : 0);
       return res.status(200).json(coins);
     } catch (error) {
       return res.status(500).json({ message: "Server error: " + error });
