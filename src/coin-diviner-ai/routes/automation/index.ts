@@ -178,10 +178,10 @@ router.get("/list", async (req: Request, res: Response) => {
     const automations = await AutomationModel.find(filter)
       .sort({ createdAt: -1 })
       .lean();
-    const responseData: TAutomationListResponse = {
-      success: true,
-      data: automations.map((automation) => getDataAutomationData(automation)),
-    };
+    const data = automations
+      .map((automation) => getDataAutomationData(automation))
+      .filter((automation) => automation !== null);
+    const responseData: TAutomationListResponse = { success: true, data };
     const responseValidation =
       automationListResponseSchema.safeParse(responseData);
     if (!responseValidation.success) {
