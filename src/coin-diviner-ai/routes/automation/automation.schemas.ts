@@ -43,6 +43,10 @@ export const createAutomationSchema = z.object({
     .optional()
     .describe("Цільова ціна для спрацювання (необов'язково)"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
+  enabled_notifications: z
+    .array(z.enum(["push", "sms", "telegram"]))
+    .optional()
+    .describe("Увімкнені типи сповіщень"),
 });
 
 export const updateAutomationSchema = z.object({
@@ -50,6 +54,10 @@ export const updateAutomationSchema = z.object({
   isActive: z.boolean().optional().describe("Чи активна автоматизація"),
   target_price: z.number().positive().optional().describe("Нова цільова ціна"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
+  enabled_notifications: z
+    .array(z.enum(["push", "sms", "telegram"]))
+    .optional()
+    .describe("Увімкнені типи сповіщень"),
   continuation_price: z
     .number()
     .positive()
@@ -65,6 +73,10 @@ export const automationRecordSchema = z.object({
   target_price: z.number().nullable().optional().describe("Цільова ціна"),
   isActive: z.boolean().describe("Чи активна автоматизація"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
+  enabled_notifications: z
+    .array(z.enum(["push", "sms", "telegram"]))
+    .optional()
+    .describe("Увімкнені типи сповіщень"),
   prices: pricesSchema.describe("Ціни на момент створення по всіх сервісах"),
   notifications: notificationsSchema.describe("Статус відправки сповіщень"),
   continuation_price: z

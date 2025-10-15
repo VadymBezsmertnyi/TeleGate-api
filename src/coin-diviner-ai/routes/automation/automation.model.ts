@@ -49,6 +49,11 @@ const automationSM = new Schema(
     target_price: { type: Number, default: null },
     isActive: { type: Boolean, default: true },
     use_ai: { type: Boolean, default: false },
+    enabled_notifications: {
+      type: [String],
+      enum: ["push", "sms", "telegram"],
+      default: ["push"],
+    },
     prices: { type: pricesSM, required: true },
     notifications: { type: notificationsSM, default: {} },
     continuation_price: { type: Number, default: null },

@@ -64,8 +64,13 @@ router.post("/create", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { coinId, type, target_price }: TCreateAutomation =
-      validationResult.data;
+    const {
+      coinId,
+      type,
+      target_price,
+      use_ai,
+      enabled_notifications,
+    }: TCreateAutomation = validationResult.data;
 
     const cryptoCoin = await CryptoCoinModel.findById(coinId);
     if (!cryptoCoin) {
@@ -111,7 +116,8 @@ router.post("/create", async (req: Request, res: Response) => {
       coinId: cryptoCoin._id,
       type,
       target_price: target_price || null,
-      use_ai: validationResult.data.use_ai || false,
+      use_ai: use_ai || false,
+      enabled_notifications: enabled_notifications || ["push"],
       prices,
       isActive: true,
       notifications: {
@@ -237,6 +243,7 @@ router.put("/update", async (req: Request, res: Response) => {
       isActive,
       target_price,
       use_ai,
+      enabled_notifications,
       continuation_price,
     }: TUpdateAutomation = validationResult.data;
     const automation = await AutomationModel.findOne({
@@ -254,6 +261,8 @@ router.put("/update", async (req: Request, res: Response) => {
     if (isActive !== undefined) automation.isActive = isActive;
     if (target_price !== undefined) automation.target_price = target_price;
     if (use_ai !== undefined) automation.use_ai = use_ai;
+    if (enabled_notifications !== undefined)
+      automation.enabled_notifications = enabled_notifications;
     if (continuation_price !== undefined)
       automation.continuation_price = continuation_price;
 
