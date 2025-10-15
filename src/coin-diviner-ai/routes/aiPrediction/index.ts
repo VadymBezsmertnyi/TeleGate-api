@@ -30,6 +30,7 @@ import {
 import CryptoCoinModel from "../aggregator/aggregator.model";
 import PredictionModel from "./aiPrediction.model";
 import AuthModel from "../auth/auth.model";
+import PortfolioModel from "../portfolio/portfolio.model";
 
 // hooks
 import AggregatorService from "../../hooks/aggregator";
@@ -119,6 +120,72 @@ router.get("/generate", async (req: Request, res: Response) => {
       }
     }
 
+    const portfolio = await PortfolioModel.findOne({
+      userId: user._id,
+      coinId: cryptoCoin._id,
+    }).lean();
+
+    let userTransactions = null;
+    if (portfolio && portfolio.purchases && portfolio.purchases.length > 0) {
+      const purchases = portfolio.purchases.map((p) => ({
+        amount_usd: p.amount_usd,
+        amount_crypto: p.amount_crypto,
+        price_per_unit: p.price_per_unit,
+        date:
+          p.date instanceof Date
+            ? p.date.toISOString()
+            : new Date(p.date).toISOString(),
+      }));
+
+      const sales = (portfolio.sales || []).map((s) => ({
+        amount_usd: s.amount_usd,
+        amount_crypto: s.amount_crypto,
+        price_per_unit: s.price_per_unit,
+        date:
+          s.date instanceof Date
+            ? s.date.toISOString()
+            : new Date(s.date).toISOString(),
+      }));
+
+      const buyPrices = portfolio.purchases.map((p) => p.price_per_unit);
+      const averageBuyPrice =
+        buyPrices.reduce((sum: number, price: number) => sum + price, 0) /
+        buyPrices.length;
+      const minBuyPrice = Math.min(...buyPrices);
+      const maxBuyPrice = Math.max(...buyPrices);
+
+      const totalInvestedUsd = portfolio.purchases.reduce(
+        (sum: number, p) => sum + p.amount_usd,
+        0
+      );
+      const totalCryptoAmount = portfolio.purchases.reduce(
+        (sum: number, p) => sum + p.amount_crypto,
+        0
+      );
+
+      const totalSoldCrypto = (portfolio.sales || []).reduce(
+        (sum: number, s) => sum + s.amount_crypto,
+        0
+      );
+      const remainingCrypto = totalCryptoAmount - totalSoldCrypto;
+
+      userTransactions = {
+        has_positions: true,
+        total_purchases: portfolio.purchases.length,
+        total_sales: portfolio.sales?.length || 0,
+        purchases,
+        sales,
+        average_buy_price: averageBuyPrice,
+        min_buy_price: minBuyPrice,
+        max_buy_price: maxBuyPrice,
+        total_invested_usd: totalInvestedUsd,
+        total_crypto_amount: totalCryptoAmount,
+        remaining_crypto_amount: remainingCrypto,
+        current_profit_loss: null,
+        current_profit_loss_percent: null,
+      };
+    }
+
     let current_price_usd: number | null = null;
     let price_change_24h: number | null = null;
     let price_change_7d: number | null = null;
@@ -131,6 +198,26 @@ router.get("/generate", async (req: Request, res: Response) => {
         allPrices.dexscreener?.price ||
         allPrices.coingecko?.price ||
         null;
+
+    if (userTransactions && current_price_usd) {
+      const remainingCrypto = userTransactions.remaining_crypto_amount || 0;
+      const currentValue = remainingCrypto * current_price_usd;
+      const totalSoldValue = (portfolio?.sales || []).reduce(
+        (sum: number, s) => sum + s.amount_usd,
+        0
+      );
+      const totalInvested = userTransactions.total_invested_usd || 0;
+      const profitLoss = currentValue + totalSoldValue - totalInvested;
+      const profitLossPercent =
+        totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+
+      userTransactions = {
+        ...userTransactions,
+        current_profit_loss: profitLoss,
+        current_profit_loss_percent: profitLossPercent,
+      };
+    }
+
     if (priceHistoryData?.coinpaprika?.data) {
       const paprikaData = priceHistoryData.coinpaprika.data;
       price_change_24h = paprikaData.quotes.USD.percent_change_24h;
@@ -260,6 +347,7 @@ router.get("/generate", async (req: Request, res: Response) => {
       price_sources: priceSources,
       price_history: priceHistory,
       paprika_stats: paprikaStats,
+      user_transactions: userTransactions || undefined,
     };
 
     const updatedPrediction = await PredictionModel.findByIdAndUpdate(

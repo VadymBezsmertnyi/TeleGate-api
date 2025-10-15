@@ -53,6 +53,33 @@ export interface ITokenData {
     percent_from_ath?: number | null; // відсток від ATH
     volume_24h_change?: number | null; // зміна обсягу за 24 год (%)
   };
+
+  // === Транзакції користувача ===
+  user_transactions?: {
+    has_positions: boolean; // чи є у користувача транзакції з цією монетою
+    total_purchases: number; // кількість покупок
+    total_sales: number; // кількість продажів
+    purchases?: Array<{
+      amount_usd: number;
+      amount_crypto: number;
+      price_per_unit: number;
+      date: string;
+    }>;
+    sales?: Array<{
+      amount_usd: number;
+      amount_crypto: number;
+      price_per_unit: number;
+      date: string;
+    }>;
+    average_buy_price?: number | null; // середня ціна покупки
+    min_buy_price?: number | null; // мінімальна ціна покупки
+    max_buy_price?: number | null; // максимальна ціна покупки
+    total_invested_usd?: number | null; // загальна інвестована сума
+    total_crypto_amount?: number | null; // загальна кількість купленої криптовалюти
+    remaining_crypto_amount?: number | null; // залишок криптовалюти після продажів
+    current_profit_loss?: number | null; // поточний прибуток/збиток в USD
+    current_profit_loss_percent?: number | null; // поточний прибуток/збиток у %
+  };
 }
 
 export interface IGeneratePredictionOptions {
