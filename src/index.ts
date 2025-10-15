@@ -28,6 +28,7 @@ import coinDivinerAiDexScreenerRouter from "./coin-diviner-ai/routes/dexscreener
 import coinDivinerAiAggregatorRouter from "./coin-diviner-ai/routes/aggregator";
 import coinDivinerAiPredictionRouter from "./coin-diviner-ai/routes/aiPrediction";
 import coinDivinerAiPortfolioRouter from "./coin-diviner-ai/routes/portfolio";
+import coinDivinerAiAutomationRouter from "./coin-diviner-ai/routes/automation";
 
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
@@ -110,6 +111,7 @@ app.use("/coin-diviner-ai/api/dexscreener", coinDivinerAiDexScreenerRouter);
 app.use("/coin-diviner-ai/api/aggregator", coinDivinerAiAggregatorRouter);
 app.use("/coin-diviner-ai/api/ai-prediction", coinDivinerAiPredictionRouter);
 app.use("/coin-diviner-ai/api/portfolio", coinDivinerAiPortfolioRouter);
+app.use("/coin-diviner-ai/api/automation", coinDivinerAiAutomationRouter);
 
 const startHelps = () => {
   try {

@@ -77,7 +77,6 @@ router.post("/create", async (req: Request, res: Response) => {
     }
 
     const allPrices = await AggregatorService.getAllPrices(coinId);
-
     const prices = {
       binance: allPrices?.binance?.price
         ? {
@@ -107,7 +106,6 @@ router.post("/create", async (req: Request, res: Response) => {
           }
         : null,
     };
-
     const newAutomation = await AutomationModel.create({
       userId: user._id,
       coinId: cryptoCoin._id,
@@ -123,7 +121,6 @@ router.post("/create", async (req: Request, res: Response) => {
       },
       continuation_count: 0,
     });
-
     const automation = await AutomationModel.findById(newAutomation._id).lean();
     if (!automation) {
       const errorResponse: TServerError = {
@@ -137,7 +134,6 @@ router.post("/create", async (req: Request, res: Response) => {
       success: true,
       data: getDataAutomationData(automation),
     };
-
     const responseValidation = automationResponseSchema.safeParse(responseData);
     if (!responseValidation.success) {
       console.warn("❌ Response validation failed:", responseValidation.error);
@@ -175,31 +171,17 @@ router.get("/list", async (req: Request, res: Response) => {
     }
 
     const filter: any = { userId: user._id };
-
-    if (req.query.isActive !== undefined) {
+    if (req.query.isActive !== undefined)
       filter.isActive = req.query.isActive === "true";
-    }
-
-    if (req.query.coinId) {
-      filter.coinId = req.query.coinId;
-    }
+    if (req.query.coinId) filter.coinId = req.query.coinId;
 
     const automations = await AutomationModel.find(filter)
       .sort({ createdAt: -1 })
       .lean();
-
     const responseData: TAutomationListResponse = {
       success: true,
-      data: automations.map((automation) => ({
-        ...automation,
-        _id: automation._id.toString(),
-        userId: automation.userId.toString(),
-        coinId: automation.coinId.toString(),
-        createdAt: automation.createdAt.toISOString(),
-        updatedAt: automation.updatedAt.toISOString(),
-      })),
+      data: automations.map((automation) => getDataAutomationData(automation)),
     };
-
     const responseValidation =
       automationListResponseSchema.safeParse(responseData);
     if (!responseValidation.success) {
@@ -253,12 +235,10 @@ router.put("/update", async (req: Request, res: Response) => {
       target_price,
       continuation_price,
     }: TUpdateAutomation = validationResult.data;
-
     const automation = await AutomationModel.findOne({
       _id: automationId,
       userId: user._id,
     });
-
     if (!automation) {
       const errorResponse: TNotFoundError = {
         message: "Automation not found",
@@ -418,7 +398,6 @@ router.get("/by-id/:automationId", async (req: Request, res: Response) => {
       _id: automationId,
       userId: user._id,
     }).lean();
-
     if (!automation) {
       const errorResponse: TNotFoundError = {
         message: "Automation not found",
@@ -431,7 +410,6 @@ router.get("/by-id/:automationId", async (req: Request, res: Response) => {
       success: true,
       data: getDataAutomationData(automation),
     };
-
     const responseValidation = automationResponseSchema.safeParse(responseData);
     if (!responseValidation.success) {
       console.warn("❌ Response validation failed:", responseValidation.error);
@@ -488,7 +466,6 @@ router.post("/continue", async (req: Request, res: Response) => {
       _id: automationId,
       userId: user._id,
     });
-
     if (!automation) {
       const errorResponse: TNotFoundError = {
         message: "Automation not found",
@@ -500,16 +477,12 @@ router.post("/continue", async (req: Request, res: Response) => {
     const allPrices = await AggregatorService.getAllPrices(
       automation.coinId.toString()
     );
-
     const current_price =
       allPrices?.binance?.price ||
       allPrices?.dexscreener?.price ||
       allPrices?.coingecko?.price ||
       null;
-
-    if (current_price) {
-      automation.continuation_price = current_price;
-    }
+    if (current_price) automation.continuation_price = current_price;
 
     automation.continuation_count = (automation.continuation_count || 0) + 1;
     automation.isActive = true;
