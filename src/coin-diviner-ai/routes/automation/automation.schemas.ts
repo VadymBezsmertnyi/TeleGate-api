@@ -14,6 +14,7 @@ export const pricesSchema = z.object({
 export const notificationsSchema = z.object({
   push_sent: z.boolean().describe("Чи відправлено push-повідомлення"),
   sms_sent: z.boolean().describe("Чи відправлено SMS"),
+  telegram_sent: z.boolean().describe("Чи відправлено Telegram повідомлення"),
   push_sent_at: z
     .string()
     .nullable()
@@ -24,6 +25,11 @@ export const notificationsSchema = z.object({
     .nullable()
     .optional()
     .describe("Час відправлення SMS"),
+  telegram_sent_at: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Час відправлення Telegram повідомлення"),
 });
 
 export const createAutomationSchema = z.object({
@@ -31,13 +37,19 @@ export const createAutomationSchema = z.object({
   type: z
     .enum(["price_drop", "price_rise"])
     .describe("Тип автоматизації: падіння або піднімання"),
-  target_price: z.number().positive().describe("Цільова ціна для спрацювання"),
+  target_price: z
+    .number()
+    .positive()
+    .optional()
+    .describe("Цільова ціна для спрацювання (необов'язково)"),
+  use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
 });
 
 export const updateAutomationSchema = z.object({
   automationId: z.string().min(1).describe("ID автоматизації"),
   isActive: z.boolean().optional().describe("Чи активна автоматизація"),
   target_price: z.number().positive().optional().describe("Нова цільова ціна"),
+  use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   continuation_price: z
     .number()
     .positive()
@@ -50,8 +62,9 @@ export const automationRecordSchema = z.object({
   userId: z.string().describe("ID користувача"),
   coinId: z.string().describe("ID крипти"),
   type: z.enum(["price_drop", "price_rise"]).describe("Тип автоматизації"),
-  target_price: z.number().describe("Цільова ціна"),
+  target_price: z.number().nullable().optional().describe("Цільова ціна"),
   isActive: z.boolean().describe("Чи активна автоматизація"),
+  use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   prices: pricesSchema.describe("Ціни на момент створення по всіх сервісах"),
   notifications: notificationsSchema.describe("Статус відправки сповіщень"),
   continuation_price: z

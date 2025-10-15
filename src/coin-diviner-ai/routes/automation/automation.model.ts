@@ -21,8 +21,10 @@ const notificationsSM = new Schema(
   {
     push_sent: { type: Boolean, default: false },
     sms_sent: { type: Boolean, default: false },
+    telegram_sent: { type: Boolean, default: false },
     push_sent_at: { type: Date, default: null },
     sms_sent_at: { type: Date, default: null },
+    telegram_sent_at: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -44,8 +46,9 @@ const automationSM = new Schema(
       enum: ["price_drop", "price_rise"],
       required: true,
     },
-    target_price: { type: Number, required: true },
+    target_price: { type: Number, default: null },
     isActive: { type: Boolean, default: true },
+    use_ai: { type: Boolean, default: false },
     prices: { type: pricesSM, required: true },
     notifications: { type: notificationsSM, default: {} },
     continuation_price: { type: Number, default: null },

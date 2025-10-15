@@ -110,14 +110,17 @@ router.post("/create", async (req: Request, res: Response) => {
       userId: user._id,
       coinId: cryptoCoin._id,
       type,
-      target_price,
+      target_price: target_price || null,
+      use_ai: validationResult.data.use_ai || false,
       prices,
       isActive: true,
       notifications: {
         push_sent: false,
         sms_sent: false,
+        telegram_sent: false,
         push_sent_at: null,
         sms_sent_at: null,
+        telegram_sent_at: null,
       },
       continuation_count: 0,
     });
@@ -233,6 +236,7 @@ router.put("/update", async (req: Request, res: Response) => {
       automationId,
       isActive,
       target_price,
+      use_ai,
       continuation_price,
     }: TUpdateAutomation = validationResult.data;
     const automation = await AutomationModel.findOne({
@@ -249,6 +253,7 @@ router.put("/update", async (req: Request, res: Response) => {
 
     if (isActive !== undefined) automation.isActive = isActive;
     if (target_price !== undefined) automation.target_price = target_price;
+    if (use_ai !== undefined) automation.use_ai = use_ai;
     if (continuation_price !== undefined)
       automation.continuation_price = continuation_price;
 
