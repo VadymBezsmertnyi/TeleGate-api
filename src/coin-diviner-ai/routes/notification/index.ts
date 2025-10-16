@@ -27,8 +27,7 @@ router.get("/settings", async (req: Request, res: Response) => {
     let settings = await NotificationSettingsModel.findOne({
       userId: decoded.userId,
     });
-
-    if (!settings) {
+    if (!settings)
       settings = await NotificationSettingsModel.create({
         userId: decoded.userId,
         pushTokens: [],
@@ -38,17 +37,15 @@ router.get("/settings", async (req: Request, res: Response) => {
           telegram: false,
         },
       });
-    }
 
     const resultCheckZod = notificationSettingsSchema.safeParse(settings);
-    if (!resultCheckZod.success) {
+    if (!resultCheckZod.success)
       return returnNotificationError(
         res,
         405,
         "Data validation error",
         NotificationErrorCode.DATA_VALIDATION_ERROR
       );
-    }
 
     return res.status(200).json({ data: resultCheckZod.data });
   } catch (error) {
@@ -109,17 +106,15 @@ router.put("/settings", async (req: Request, res: Response) => {
       updateData,
       { new: true }
     );
-
     const resultCheckZod =
       notificationSettingsSchema.safeParse(updatedSettings);
-    if (!resultCheckZod.success) {
+    if (!resultCheckZod.success)
       return returnNotificationError(
         res,
         405,
         "Data validation error",
         NotificationErrorCode.DATA_VALIDATION_ERROR
       );
-    }
 
     return res.status(200).json({
       message: "Notification settings updated successfully",
@@ -142,7 +137,7 @@ router.post("/push-token", async (req: Request, res: Response) => {
     if ("message" in decoded) return res.status(401).json(decoded);
 
     const validationResult = addPushTokenSchema.safeParse(req.body);
-    if (!validationResult.success) {
+    if (!validationResult.success)
       return returnNotificationError(
         res,
         400,
@@ -150,13 +145,11 @@ router.post("/push-token", async (req: Request, res: Response) => {
         NotificationErrorCode.VALIDATION_ERROR,
         validationResult.error.issues
       );
-    }
 
     let settings = await NotificationSettingsModel.findOne({
       userId: decoded.userId,
     });
-
-    if (!settings) {
+    if (!settings)
       settings = await NotificationSettingsModel.create({
         userId: decoded.userId,
         pushTokens: [],
@@ -166,36 +159,34 @@ router.post("/push-token", async (req: Request, res: Response) => {
           telegram: false,
         },
       });
-    }
 
     const existingTokenIndex = settings.pushTokens.findIndex(
       (t) => t.token === validationResult.data.token
     );
-
     if (
       existingTokenIndex !== -1 &&
       settings.pushTokens &&
       settings.pushTokens.length > 0
     ) {
-      settings.pushTokens[existingTokenIndex] = {
-        ...settings.pushTokens[existingTokenIndex],
-        ...validationResult.data,
-      };
-    } else {
-      settings.pushTokens.push(validationResult.data as any);
-    }
+      settings.pushTokens[existingTokenIndex].token =
+        validationResult.data.token;
+      settings.pushTokens[existingTokenIndex].platform =
+        validationResult.data.platform;
+      if (validationResult.data.deviceId !== undefined)
+        settings.pushTokens[existingTokenIndex].deviceId =
+          validationResult.data.deviceId;
+    } else settings.pushTokens.push(validationResult.data as any);
 
     await settings.save();
 
     const resultCheckZod = notificationSettingsSchema.safeParse(settings);
-    if (!resultCheckZod.success) {
+    if (!resultCheckZod.success)
       return returnNotificationError(
         res,
         405,
         "Data validation error",
         NotificationErrorCode.DATA_VALIDATION_ERROR
       );
-    }
 
     return res.status(200).json({
       message: "Push token added successfully",
