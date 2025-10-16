@@ -161,19 +161,14 @@ router.post("/push-token", async (req: Request, res: Response) => {
     const existingTokenIndex = settings.pushTokens.findIndex(
       (t) => t.token === validationResult.data.token
     );
-    if (
-      existingTokenIndex !== -1 &&
-      settings.pushTokens &&
-      settings.pushTokens.length > 0
-    ) {
-      settings.pushTokens[existingTokenIndex].token =
-        validationResult.data.token;
+
+    if (existingTokenIndex !== -1)
       settings.pushTokens[existingTokenIndex].platform =
         validationResult.data.platform;
-      if (validationResult.data.deviceId !== undefined)
-        settings.pushTokens[existingTokenIndex].deviceId =
-          validationResult.data.deviceId;
-    } else settings.pushTokens.push(validationResult.data as any);
+    if (validationResult.data.deviceId !== undefined)
+      settings.pushTokens[existingTokenIndex].deviceId =
+        validationResult.data.deviceId;
+    else settings.pushTokens.push(validationResult.data as any);
 
     await settings.save();
 
