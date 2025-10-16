@@ -39,10 +39,14 @@ import { updateAllExpiredPhotos } from "./routes/bot-telegram/bot-telegram.helpe
 
 // firebase
 import { initializeFirebase } from "./helpers/firebase.helper";
+import { initializeCoinDivinerFirebase } from "./coin-diviner-ai/helpers/firebase.helper";
 
 // swagger
 import { specs } from "./config/swagger";
 import { updateUserSubscriptionsFromRevenueCat } from "./routes/revenuecat/revenuecat.helper";
+
+// Coin Diviner AI - main file
+import "./coin-diviner-ai";
 
 const app = express();
 
@@ -130,6 +134,12 @@ try {
   initializeFirebase(); // Initialize Firebase
 } catch (error) {
   console.warn("❌ Failed to initialize Firebase:", error);
+}
+
+try {
+  initializeCoinDivinerFirebase();
+} catch (error) {
+  console.warn("❌ Failed to initialize Coin Diviner AI Firebase:", error);
 }
 
 startHelps(); // Start bot and initial tasks
