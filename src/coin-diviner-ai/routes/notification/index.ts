@@ -1,12 +1,10 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import {
   notificationSettingsSchema,
   updateNotificationSettingsSchema,
   addPushTokenSchema,
   removePushTokenSchema,
-  sendNotificationSchema,
 } from "./notification.schemas";
 import NotificationSettingsModel from "./notification.model";
 import { checkAuth } from "../../hooks/auth";
@@ -253,114 +251,6 @@ router.delete("/push-token", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.warn("Remove push token error:", error);
-    return returnNotificationError(
-      res,
-      500,
-      "Server error",
-      NotificationErrorCode.SERVER_ERROR
-    );
-  }
-});
-
-router.post("/send", async (req: Request, res: Response) => {
-  try {
-    const decoded = checkAuth(req);
-    if ("message" in decoded) return res.status(401).json(decoded);
-
-    const validationResult = sendNotificationSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return returnNotificationError(
-        res,
-        400,
-        "Validation error",
-        NotificationErrorCode.VALIDATION_ERROR,
-        validationResult.error.issues
-      );
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(validationResult.data.userId)) {
-      return returnNotificationError(
-        res,
-        400,
-        "Invalid user ID",
-        NotificationErrorCode.INVALID_USER_ID
-      );
-    }
-
-    const settings = await NotificationSettingsModel.findOne({
-      userId: validationResult.data.userId,
-    });
-
-    if (!settings) {
-      return returnNotificationError(
-        res,
-        404,
-        "User notification settings not found",
-        NotificationErrorCode.SETTINGS_NOT_FOUND
-      );
-    }
-
-    const results: any = {};
-    const {
-      title: _title,
-      body: _body,
-      data: _data,
-      types,
-    } = validationResult.data;
-
-    for (const type of types) {
-      if (
-        !settings.enabledTypes?.[type as keyof typeof settings.enabledTypes]
-      ) {
-        results[type] = { sent: false, reason: "Type disabled by user" };
-        continue;
-      }
-
-      try {
-        switch (type) {
-          case "push":
-            if (settings.pushTokens.length > 0)
-              results.push = {
-                sent: true,
-                message: "Push notification prepared",
-                tokens: settings.pushTokens.length,
-              };
-            else results.push = { sent: false, reason: "No push tokens" };
-
-            break;
-          case "sms":
-            if (settings.smsPhone)
-              results.sms = {
-                sent: true,
-                message: "SMS notification prepared",
-                phone: settings.smsPhone,
-              };
-            else results.sms = { sent: false, reason: "No phone number" };
-
-            break;
-          case "telegram":
-            if (settings.telegramChatId)
-              results.telegram = {
-                sent: true,
-                message: "Telegram notification prepared",
-                chatId: settings.telegramChatId,
-              };
-            else
-              results.telegram = { sent: false, reason: "No telegram chat ID" };
-            break;
-        }
-      } catch (typeError) {
-        console.warn(`Send notification ${type} error:`, typeError);
-        results[type] = { sent: false, error: "Failed to send" };
-      }
-    }
-
-    return res.status(200).json({
-      message: "Notification processed",
-      results,
-    });
-  } catch (error) {
-    console.warn("Send notification error:", error);
     return returnNotificationError(
       res,
       500,
