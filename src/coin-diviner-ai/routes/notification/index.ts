@@ -1,129 +1,273 @@
 import { Router, Request, Response } from "express";
-
+import dotenv from "dotenv";
+import mongoose from "mongoose";
 import {
-  createNotificationSchema,
+  notificationSettingsSchema,
+  updateNotificationSettingsSchema,
+  addPushTokenSchema,
+  removePushTokenSchema,
   sendNotificationSchema,
-  updateNotificationSchema,
-  notificationResponseSchema,
-  notificationListResponseSchema,
-  deleteNotificationResponseSchema,
 } from "./notification.schemas";
-import {
-  notFoundErrorSchema,
-  serverErrorSchema,
-  validationErrorSchema,
-} from "../aggregator/aggregator.schemas";
-
-import type {
-  TCreateNotification,
-  TSendNotification,
-  TUpdateNotification,
-  TNotificationResponse,
-  TNotificationListResponse,
-  TDeleteNotificationResponse,
-} from "./notification.types";
-import type {
-  TNotFoundError,
-  TServerError,
-  TValidationError,
-} from "../aggregator/aggregator.types";
-
-import NotificationModel from "./notification.model";
-import AuthModel from "../auth/auth.model";
-
+import NotificationSettingsModel from "./notification.model";
 import { checkAuth } from "../../hooks/auth";
 import {
-  sendPushNotification,
-  sendSmsNotification,
-  sendTelegramNotification,
+  returnNotificationError,
+  NotificationErrorCode,
 } from "./notification.helpers";
-
 import "./notification.swagger";
 
+dotenv.config();
 const router = Router();
 
-router.post("/create", async (req: Request, res: Response) => {
+router.get("/settings", async (req: Request, res: Response) => {
   try {
     const decoded = checkAuth(req);
     if ("message" in decoded) return res.status(401).json(decoded);
 
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    const validationResult = createNotificationSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: validationResult.error.issues,
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
-    }
-
-    const { type, title, message, metadata }: TCreateNotification =
-      validationResult.data;
-
-    const notification = await NotificationModel.create({
-      userId: user._id,
-      type,
-      title,
-      message,
-      metadata: metadata || {},
+    let settings = await NotificationSettingsModel.findOne({
+      userId: decoded.userId,
     });
 
-    const notificationData = await NotificationModel.findById(
-      notification._id
-    ).lean();
-    if (!notificationData) {
-      const errorResponse: TServerError = {
-        message: "Failed to retrieve notification",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
+    if (!settings) {
+      settings = await NotificationSettingsModel.create({
+        userId: decoded.userId,
+        pushTokens: [],
+        enabledTypes: {
+          push: true,
+          sms: false,
+          telegram: false,
+        },
+      });
     }
 
-    const responseData: TNotificationResponse = {
-      success: true,
-      data: {
-        _id: notificationData._id.toString(),
-        userId: notificationData.userId.toString(),
-        type: notificationData.type,
-        status: notificationData.status,
-        title: notificationData.title,
-        message: notificationData.message,
-        metadata: notificationData.metadata,
-        sentAt: notificationData.sentAt?.toISOString(),
-        createdAt: notificationData.createdAt.toISOString(),
-        updatedAt: notificationData.updatedAt.toISOString(),
-      },
-    };
-
-    const responseValidation =
-      notificationResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
-      const errorResponse: TServerError = {
-        message: "Invalid response format",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
+    const resultCheckZod = notificationSettingsSchema.safeParse(settings);
+    if (!resultCheckZod.success) {
+      return returnNotificationError(
+        res,
+        405,
+        "Data validation error",
+        NotificationErrorCode.DATA_VALIDATION_ERROR
+      );
     }
 
-    return res.status(201).json(responseValidation.data);
+    return res.status(200).json({ data: resultCheckZod.data });
   } catch (error) {
-    console.warn("Create notification error:", error);
+    console.warn("Get notification settings error:", error);
+    return returnNotificationError(
+      res,
+      500,
+      "Server error",
+      NotificationErrorCode.SERVER_ERROR
+    );
+  }
+});
 
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
+router.put("/settings", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const validationResult = updateNotificationSettingsSchema.safeParse(
+      req.body
+    );
+    if (!validationResult.success)
+      return returnNotificationError(
+        res,
+        400,
+        "Validation error",
+        NotificationErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
+
+    let settings = await NotificationSettingsModel.findOne({
+      userId: decoded.userId,
+    });
+    if (!settings)
+      settings = await NotificationSettingsModel.create({
+        userId: decoded.userId,
+        pushTokens: [],
+        enabledTypes: {
+          push: true,
+          sms: false,
+          telegram: false,
+        },
+      });
+
+    const updateData: any = {};
+    if (validationResult.data.smsPhone !== undefined)
+      updateData.smsPhone = validationResult.data.smsPhone;
+    if (validationResult.data.telegramChatId !== undefined)
+      updateData.telegramChatId = validationResult.data.telegramChatId;
+    if (validationResult.data.enabledTypes)
+      updateData.enabledTypes = {
+        ...settings.enabledTypes,
+        ...validationResult.data.enabledTypes,
+      };
+
+    const updatedSettings = await NotificationSettingsModel.findByIdAndUpdate(
+      settings._id,
+      updateData,
+      { new: true }
+    );
+
+    const resultCheckZod =
+      notificationSettingsSchema.safeParse(updatedSettings);
+    if (!resultCheckZod.success) {
+      return returnNotificationError(
+        res,
+        405,
+        "Data validation error",
+        NotificationErrorCode.DATA_VALIDATION_ERROR
+      );
+    }
+
+    return res.status(200).json({
+      message: "Notification settings updated successfully",
+      data: resultCheckZod.data,
+    });
+  } catch (error) {
+    console.warn("Update notification settings error:", error);
+    return returnNotificationError(
+      res,
+      500,
+      "Server error",
+      NotificationErrorCode.SERVER_ERROR
+    );
+  }
+});
+
+router.post("/push-token", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const validationResult = addPushTokenSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return returnNotificationError(
+        res,
+        400,
+        "Validation error",
+        NotificationErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
+    }
+
+    let settings = await NotificationSettingsModel.findOne({
+      userId: decoded.userId,
+    });
+
+    if (!settings) {
+      settings = await NotificationSettingsModel.create({
+        userId: decoded.userId,
+        pushTokens: [],
+        enabledTypes: {
+          push: true,
+          sms: false,
+          telegram: false,
+        },
+      });
+    }
+
+    const existingTokenIndex = settings.pushTokens.findIndex(
+      (t) => t.token === validationResult.data.token
+    );
+
+    if (
+      existingTokenIndex !== -1 &&
+      settings.pushTokens &&
+      settings.pushTokens.length > 0
+    ) {
+      settings.pushTokens[existingTokenIndex] = {
+        ...settings.pushTokens[existingTokenIndex],
+        ...validationResult.data,
+      };
+    } else {
+      settings.pushTokens.push(validationResult.data as any);
+    }
+
+    await settings.save();
+
+    const resultCheckZod = notificationSettingsSchema.safeParse(settings);
+    if (!resultCheckZod.success) {
+      return returnNotificationError(
+        res,
+        405,
+        "Data validation error",
+        NotificationErrorCode.DATA_VALIDATION_ERROR
+      );
+    }
+
+    return res.status(200).json({
+      message: "Push token added successfully",
+      data: resultCheckZod.data,
+    });
+  } catch (error) {
+    console.warn("Add push token error:", error);
+    return returnNotificationError(
+      res,
+      500,
+      "Server error",
+      NotificationErrorCode.SERVER_ERROR
+    );
+  }
+});
+
+router.delete("/push-token", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const validationResult = removePushTokenSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return returnNotificationError(
+        res,
+        400,
+        "Validation error",
+        NotificationErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
+    }
+
+    const settings = await NotificationSettingsModel.findOne({
+      userId: decoded.userId,
+    });
+
+    if (!settings) {
+      return returnNotificationError(
+        res,
+        404,
+        "Settings not found",
+        NotificationErrorCode.SETTINGS_NOT_FOUND
+      );
+    }
+
+    const tokenIndex = settings.pushTokens.findIndex(
+      (t) => t.token === validationResult.data.token
+    );
+
+    if (tokenIndex === -1) {
+      return returnNotificationError(
+        res,
+        404,
+        "Push token not found",
+        NotificationErrorCode.PUSH_TOKEN_NOT_FOUND
+      );
+    }
+
+    settings.pushTokens.splice(tokenIndex, 1);
+    await settings.save();
+
+    return res.status(200).json({
+      message: "Push token removed successfully",
+    });
+  } catch (error) {
+    console.warn("Remove push token error:", error);
+    return returnNotificationError(
+      res,
+      500,
+      "Server error",
+      NotificationErrorCode.SERVER_ERROR
+    );
   }
 });
 
@@ -132,477 +276,107 @@ router.post("/send", async (req: Request, res: Response) => {
     const decoded = checkAuth(req);
     if ("message" in decoded) return res.status(401).json(decoded);
 
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
     const validationResult = sendNotificationSchema.safeParse(req.body);
     if (!validationResult.success) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: validationResult.error.issues,
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
+      return returnNotificationError(
+        res,
+        400,
+        "Validation error",
+        NotificationErrorCode.VALIDATION_ERROR,
+        validationResult.error.issues
+      );
     }
 
-    const { notificationId }: TSendNotification = validationResult.data;
+    if (!mongoose.Types.ObjectId.isValid(validationResult.data.userId)) {
+      return returnNotificationError(
+        res,
+        400,
+        "Invalid user ID",
+        NotificationErrorCode.INVALID_USER_ID
+      );
+    }
 
-    const notification = await NotificationModel.findOne({
-      _id: notificationId,
-      userId: user._id,
+    const settings = await NotificationSettingsModel.findOne({
+      userId: validationResult.data.userId,
     });
 
-    if (!notification) {
-      const errorResponse: TNotFoundError = {
-        message: "Notification not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
+    if (!settings) {
+      return returnNotificationError(
+        res,
+        404,
+        "User notification settings not found",
+        NotificationErrorCode.SETTINGS_NOT_FOUND
+      );
     }
 
-    try {
-      if (notification.type === "push") {
-        const pushToken = notification.metadata?.pushToken;
-        if (!pushToken) {
-          throw new Error("Push token is required for push notifications");
-        }
-        await sendPushNotification(
-          pushToken,
-          notification.title || "",
-          notification.message
-        );
-      } else if (notification.type === "sms") {
-        const phoneNumber = notification.metadata?.phoneNumber || user.phone;
-        if (!phoneNumber) {
-          throw new Error("Phone number is required for SMS notifications");
-        }
-        await sendSmsNotification(phoneNumber, notification.message);
-      } else if (notification.type === "telegram") {
-        const telegramChatId = notification.metadata?.telegramChatId;
-        if (!telegramChatId) {
-          throw new Error(
-            "Telegram chat ID is required for Telegram notifications"
-          );
-        }
-        await sendTelegramNotification(telegramChatId, notification.message);
+    const results: any = {};
+    const {
+      title: _title,
+      body: _body,
+      data: _data,
+      types,
+    } = validationResult.data;
+
+    for (const type of types) {
+      if (
+        !settings.enabledTypes?.[type as keyof typeof settings.enabledTypes]
+      ) {
+        results[type] = { sent: false, reason: "Type disabled by user" };
+        continue;
       }
 
-      notification.status = "sent";
-      notification.sentAt = new Date();
-      await notification.save();
-    } catch (sendError) {
-      notification.status = "failed";
-      notification.metadata = {
-        ...notification.metadata,
-        errorMessage: String(sendError),
-      };
-      await notification.save();
+      try {
+        switch (type) {
+          case "push":
+            if (settings.pushTokens.length > 0)
+              results.push = {
+                sent: true,
+                message: "Push notification prepared",
+                tokens: settings.pushTokens.length,
+              };
+            else results.push = { sent: false, reason: "No push tokens" };
 
-      const errorResponse: TServerError = {
-        message: "Failed to send notification: " + sendError,
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
+            break;
+          case "sms":
+            if (settings.smsPhone)
+              results.sms = {
+                sent: true,
+                message: "SMS notification prepared",
+                phone: settings.smsPhone,
+              };
+            else results.sms = { sent: false, reason: "No phone number" };
+
+            break;
+          case "telegram":
+            if (settings.telegramChatId)
+              results.telegram = {
+                sent: true,
+                message: "Telegram notification prepared",
+                chatId: settings.telegramChatId,
+              };
+            else
+              results.telegram = { sent: false, reason: "No telegram chat ID" };
+            break;
+        }
+      } catch (typeError) {
+        console.warn(`Send notification ${type} error:`, typeError);
+        results[type] = { sent: false, error: "Failed to send" };
+      }
     }
 
-    const notificationData = await NotificationModel.findById(
-      notification._id
-    ).lean();
-    if (!notificationData) {
-      const errorResponse: TServerError = {
-        message: "Failed to retrieve notification",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    const responseData: TNotificationResponse = {
-      success: true,
-      data: {
-        _id: notificationData._id.toString(),
-        userId: notificationData.userId.toString(),
-        type: notificationData.type,
-        status: notificationData.status,
-        title: notificationData.title,
-        message: notificationData.message,
-        metadata: notificationData.metadata,
-        sentAt: notificationData.sentAt?.toISOString(),
-        createdAt: notificationData.createdAt.toISOString(),
-        updatedAt: notificationData.updatedAt.toISOString(),
-      },
-    };
-
-    const responseValidation =
-      notificationResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
-      const errorResponse: TServerError = {
-        message: "Invalid response format",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    return res.status(200).json(responseValidation.data);
+    return res.status(200).json({
+      message: "Notification processed",
+      results,
+    });
   } catch (error) {
     console.warn("Send notification error:", error);
-
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
+    return returnNotificationError(
+      res,
+      500,
+      "Server error",
+      NotificationErrorCode.SERVER_ERROR
+    );
   }
 });
-
-router.get("/list", async (req: Request, res: Response) => {
-  try {
-    const decoded = checkAuth(req);
-    if ("message" in decoded) return res.status(401).json(decoded);
-
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    const { type, status, limit = "50" } = req.query;
-    const filter: any = { userId: user._id };
-
-    if (type && ["push", "sms", "telegram"].includes(type as string)) {
-      filter.type = type;
-    }
-
-    if (status && ["pending", "sent", "failed"].includes(status as string)) {
-      filter.status = status;
-    }
-
-    const limitNum = Math.min(parseInt(limit as string) || 50, 100);
-
-    const notifications = await NotificationModel.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(limitNum)
-      .lean();
-
-    const responseData: TNotificationListResponse = {
-      success: true,
-      data: notifications.map((notification) => ({
-        _id: notification._id.toString(),
-        userId: notification.userId.toString(),
-        type: notification.type,
-        status: notification.status,
-        title: notification.title,
-        message: notification.message,
-        metadata: notification.metadata,
-        sentAt: notification.sentAt?.toISOString(),
-        createdAt: notification.createdAt.toISOString(),
-        updatedAt: notification.updatedAt.toISOString(),
-      })),
-    };
-
-    const responseValidation =
-      notificationListResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
-      const errorResponse: TServerError = {
-        message: "Invalid response format",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    return res.status(200).json(responseValidation.data);
-  } catch (error) {
-    console.warn("Get notifications list error:", error);
-
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
-  }
-});
-
-router.get("/by-id/:notificationId", async (req: Request, res: Response) => {
-  try {
-    const decoded = checkAuth(req);
-    if ("message" in decoded) return res.status(401).json(decoded);
-
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    const { notificationId } = req.params;
-    if (!notificationId) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: [
-          {
-            code: "invalid_type",
-            message: "notificationId is required",
-            path: ["notificationId"],
-          },
-        ],
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
-    }
-
-    const notification = await NotificationModel.findOne({
-      _id: notificationId,
-      userId: user._id,
-    }).lean();
-
-    if (!notification) {
-      const errorResponse: TNotFoundError = {
-        message: "Notification not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    const responseData: TNotificationResponse = {
-      success: true,
-      data: {
-        _id: notification._id.toString(),
-        userId: notification.userId.toString(),
-        type: notification.type,
-        status: notification.status,
-        title: notification.title,
-        message: notification.message,
-        metadata: notification.metadata,
-        sentAt: notification.sentAt?.toISOString(),
-        createdAt: notification.createdAt.toISOString(),
-        updatedAt: notification.updatedAt.toISOString(),
-      },
-    };
-
-    const responseValidation =
-      notificationResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
-      const errorResponse: TServerError = {
-        message: "Invalid response format",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    return res.status(200).json(responseValidation.data);
-  } catch (error) {
-    console.warn("Get notification by id error:", error);
-
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
-  }
-});
-
-router.put("/update/:notificationId", async (req: Request, res: Response) => {
-  try {
-    const decoded = checkAuth(req);
-    if ("message" in decoded) return res.status(401).json(decoded);
-
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    const { notificationId } = req.params;
-    if (!notificationId) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: [
-          {
-            code: "invalid_type",
-            message: "notificationId is required",
-            path: ["notificationId"],
-          },
-        ],
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
-    }
-
-    const validationResult = updateNotificationSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: validationResult.error.issues,
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
-    }
-
-    const updateData: TUpdateNotification = validationResult.data;
-
-    const notification = await NotificationModel.findOne({
-      _id: notificationId,
-      userId: user._id,
-    });
-
-    if (!notification) {
-      const errorResponse: TNotFoundError = {
-        message: "Notification not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    if (updateData.status) notification.status = updateData.status;
-    if (updateData.title !== undefined) notification.title = updateData.title;
-    if (updateData.message) notification.message = updateData.message;
-    if (updateData.metadata)
-      notification.metadata = {
-        ...notification.metadata,
-        ...updateData.metadata,
-      };
-    if (updateData.sentAt) notification.sentAt = updateData.sentAt;
-
-    await notification.save();
-
-    const notificationData = await NotificationModel.findById(
-      notification._id
-    ).lean();
-    if (!notificationData) {
-      const errorResponse: TServerError = {
-        message: "Failed to retrieve notification",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    const responseData: TNotificationResponse = {
-      success: true,
-      data: {
-        _id: notificationData._id.toString(),
-        userId: notificationData.userId.toString(),
-        type: notificationData.type,
-        status: notificationData.status,
-        title: notificationData.title,
-        message: notificationData.message,
-        metadata: notificationData.metadata,
-        sentAt: notificationData.sentAt?.toISOString(),
-        createdAt: notificationData.createdAt.toISOString(),
-        updatedAt: notificationData.updatedAt.toISOString(),
-      },
-    };
-
-    const responseValidation =
-      notificationResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
-      const errorResponse: TServerError = {
-        message: "Invalid response format",
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-
-    return res.status(200).json(responseValidation.data);
-  } catch (error) {
-    console.warn("Update notification error:", error);
-
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
-  }
-});
-
-router.delete(
-  "/delete/:notificationId",
-  async (req: Request, res: Response) => {
-    try {
-      const decoded = checkAuth(req);
-      if ("message" in decoded) return res.status(401).json(decoded);
-
-      const user = await AuthModel.findById(decoded.userId);
-      if (!user) {
-        const errorResponse: TNotFoundError = {
-          message: "User not found",
-        };
-        const validatedError = notFoundErrorSchema.parse(errorResponse);
-        return res.status(404).json(validatedError);
-      }
-
-      const { notificationId } = req.params;
-      if (!notificationId) {
-        const errorResponse: TValidationError = {
-          message: "Validation error",
-          errors: [
-            {
-              code: "invalid_type",
-              message: "notificationId is required",
-              path: ["notificationId"],
-            },
-          ],
-        };
-        const validatedError = validationErrorSchema.parse(errorResponse);
-        return res.status(400).json(validatedError);
-      }
-
-      const notification = await NotificationModel.findOneAndDelete({
-        _id: notificationId,
-        userId: user._id,
-      });
-
-      if (!notification) {
-        const errorResponse: TNotFoundError = {
-          message: "Notification not found",
-        };
-        const validatedError = notFoundErrorSchema.parse(errorResponse);
-        return res.status(404).json(validatedError);
-      }
-
-      const responseData: TDeleteNotificationResponse = {
-        success: true,
-        message: "Notification deleted successfully",
-      };
-
-      const responseValidation =
-        deleteNotificationResponseSchema.safeParse(responseData);
-      if (!responseValidation.success) {
-        console.warn("Response validation failed:", responseValidation.error);
-        const errorResponse: TServerError = {
-          message: "Invalid response format",
-        };
-        const validatedError = serverErrorSchema.parse(errorResponse);
-        return res.status(500).json(validatedError);
-      }
-
-      return res.status(200).json(responseValidation.data);
-    } catch (error) {
-      console.warn("Delete notification error:", error);
-
-      const errorResponse: TServerError = {
-        message: "Server error: " + error,
-      };
-      const validatedError = serverErrorSchema.parse(errorResponse);
-      return res.status(500).json(validatedError);
-    }
-  }
-);
 
 export default router;

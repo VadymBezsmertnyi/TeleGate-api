@@ -1,24 +1,18 @@
 import { z } from "zod";
 import {
-  createNotificationSchema,
+  notificationSettingsSchema,
+  updateNotificationSettingsSchema,
+  addPushTokenSchema,
+  removePushTokenSchema,
   sendNotificationSchema,
-  updateNotificationSchema,
-  notificationRecordSchema,
-  notificationResponseSchema,
-  notificationListResponseSchema,
-  deleteNotificationResponseSchema,
-  notificationMetadataSchema,
+  pushTokenSchema,
 } from "./notification.schemas";
 
-export type TCreateNotification = z.infer<typeof createNotificationSchema>;
+export type TNotificationSettings = z.infer<typeof notificationSettingsSchema>;
+export type TUpdateNotificationSettings = z.infer<
+  typeof updateNotificationSettingsSchema
+>;
+export type TAddPushToken = z.infer<typeof addPushTokenSchema>;
+export type TRemovePushToken = z.infer<typeof removePushTokenSchema>;
 export type TSendNotification = z.infer<typeof sendNotificationSchema>;
-export type TUpdateNotification = z.infer<typeof updateNotificationSchema>;
-export type TNotificationRecord = z.infer<typeof notificationRecordSchema>;
-export type TNotificationResponse = z.infer<typeof notificationResponseSchema>;
-export type TNotificationListResponse = z.infer<
-  typeof notificationListResponseSchema
->;
-export type TDeleteNotificationResponse = z.infer<
-  typeof deleteNotificationResponseSchema
->;
-export type TNotificationMetadata = z.infer<typeof notificationMetadataSchema>;
+export type TPushToken = z.infer<typeof pushTokenSchema>;

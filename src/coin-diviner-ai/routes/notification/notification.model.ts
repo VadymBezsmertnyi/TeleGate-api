@@ -1,43 +1,41 @@
 import { Schema, model } from "mongoose";
 
-const notificationSM = new Schema(
+const pushTokenSM = new Schema(
+  {
+    token: { type: String, required: true },
+    platform: { type: String, enum: ["ios", "android", "web"], required: true },
+    deviceId: { type: String, required: false },
+  },
+  { _id: true }
+);
+
+const notificationSettingsSM = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
       ref: "coinDivinerAI-auth",
       required: true,
+      unique: true,
     },
-    type: {
-      type: String,
-      enum: ["push", "sms", "telegram"],
-      required: true,
+    pushTokens: [pushTokenSM],
+    smsPhone: { type: String, required: false },
+    telegramChatId: { type: String, required: false },
+    enabledTypes: {
+      push: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      telegram: { type: Boolean, default: false },
     },
-    status: {
-      type: String,
-      enum: ["pending", "sent", "failed"],
-      default: "pending",
-    },
-    title: { type: String, required: false },
-    message: { type: String, required: true },
-    metadata: {
-      pushToken: { type: String, required: false },
-      phoneNumber: { type: String, required: false },
-      telegramChatId: { type: String, required: false },
-      errorCode: { type: String, required: false },
-      errorMessage: { type: String, required: false },
-    },
-    sentAt: { type: Date, required: false },
   },
   {
     timestamps: true,
   }
 );
 
-notificationSM.index({ userId: 1 });
-notificationSM.index({ status: 1 });
-notificationSM.index({ type: 1 });
-notificationSM.index({ createdAt: -1 });
+notificationSettingsSM.index({ userId: 1 });
 
-const NotificationModel = model("coinDivinerAI-notification", notificationSM);
+const NotificationSettingsModel = model(
+  "coinDivinerAI-notification-settings",
+  notificationSettingsSM
+);
 
-export default NotificationModel;
+export default NotificationSettingsModel;
