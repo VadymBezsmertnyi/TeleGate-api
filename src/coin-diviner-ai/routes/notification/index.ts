@@ -162,13 +162,18 @@ router.post("/push-token", async (req: Request, res: Response) => {
       (t) => t.token === validationResult.data.token
     );
 
-    if (existingTokenIndex !== -1)
+    if (existingTokenIndex !== -1) {
       settings.pushTokens[existingTokenIndex].platform =
         validationResult.data.platform;
-    if (validationResult.data.deviceId !== undefined)
-      settings.pushTokens[existingTokenIndex].deviceId =
-        validationResult.data.deviceId;
-    else settings.pushTokens.push(validationResult.data as any);
+      if (validationResult.data.deviceId !== undefined)
+        settings.pushTokens[existingTokenIndex].deviceId =
+          validationResult.data.deviceId;
+      settings.pushTokens[existingTokenIndex].failureCount = 0;
+    } else
+      settings.pushTokens.push({
+        ...validationResult.data,
+        failureCount: 0,
+      });
 
     await settings.save();
 

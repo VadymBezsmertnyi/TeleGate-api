@@ -4,6 +4,7 @@ export const pushTokenSchema = z.object({
   token: z.string(),
   platform: z.enum(["ios", "android", "web"]),
   deviceId: z.string().optional(),
+  failureCount: z.number().default(0).optional(),
 });
 
 export const notificationSettingsSchema = z.object({

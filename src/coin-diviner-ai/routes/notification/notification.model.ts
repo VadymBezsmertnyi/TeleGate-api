@@ -5,6 +5,7 @@ const pushTokenSM = new Schema(
     token: { type: String, required: true },
     platform: { type: String, enum: ["ios", "android", "web"], required: true },
     deviceId: { type: String, required: false },
+    failureCount: { type: Number, default: 0 },
   },
   { _id: true }
 );
