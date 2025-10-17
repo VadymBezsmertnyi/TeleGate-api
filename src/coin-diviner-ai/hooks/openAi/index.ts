@@ -541,3 +541,77 @@ export const generatePrediction = async ({
   const result = JSON.parse(completion.choices[0].message.content || "{}");
   return result;
 };
+
+/**
+ * Генерує повідомлення про спрацювання автоматизації за допомогою OpenAI.
+ * @param coinSymbol - Символ криптовалюти (наприклад, "DISCO").
+ * @param currentPrice - Поточна ціна криптовалюти.
+ * @param triggerType - Тип тригера: "price_drop" або "price_rise".
+ * @param targetPrice - Цільова ціна або null, якщо не встановлена.
+ * @param notificationType - Тип повідомлення: "push", "sms" або "telegram".
+ * @returns Згенероване повідомлення як рядок.
+ */
+export const generateAutomationMessage = async (
+  coinSymbol: string,
+  currentPrice: number,
+  triggerType: "price_drop" | "price_rise",
+  targetPrice: number | null,
+  notificationType: "push" | "sms" | "telegram"
+): Promise<string> => {
+  try {
+    const triggerTypeUk =
+      triggerType === "price_rise" ? "піднімання" : "падіння";
+    const notificationTypeText =
+      notificationType === "push"
+        ? "коротке push-повідомлення"
+        : notificationType === "sms"
+        ? "коротке SMS"
+        : "середнє Telegram повідомлення";
+
+    const systemPrompt = `
+Ти — професійний аналітик криптовалют. Твоя задача — створити коротке, зрозуміле повідомлення про спрацювання автоматизації.
+
+Формат:
+- Для push та SMS: максимум 100-120 символів, лаконічно та інформативно
+- Для Telegram: максимум 200-250 символів, можна додати більше деталей
+
+Повідомлення має містити:
+1. Факт спрацювання (ціна ${
+      triggerTypeUk === "піднімання" ? "піднялася" : "впала"
+    })
+2. Поточну ціну
+${
+  targetPrice
+    ? `3. Цільову ціну (${targetPrice})`
+    : "3. Рекомендацію що робити далі"
+}
+
+Відповідай ТІЛЬКИ текстом повідомлення без зайвих пояснень.
+`;
+
+    const userPrompt = `
+Криптовалюта: ${coinSymbol}
+Поточна ціна: $${currentPrice}
+Тип тригера: ${triggerTypeUk}
+${targetPrice ? `Цільова ціна: $${targetPrice}` : "Цільова ціна не встановлена"}
+Тип повідомлення: ${notificationTypeText}
+
+Створи відповідне повідомлення.
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5-nano",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 150,
+    });
+
+    const message = completion.choices[0].message.content?.trim() || "";
+    return message;
+  } catch (error) {
+    console.warn("Error generating automation message:", error);
+    return "";
+  }
+};
