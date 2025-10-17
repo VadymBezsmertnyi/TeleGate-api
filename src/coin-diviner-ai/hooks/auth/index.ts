@@ -26,10 +26,13 @@ export const verifyToken = (token: string) => {
         exp: z.number(),
       })
       .safeParse(decoded);
-    if (!verify.success) return null;
+    if (!verify.success) return { error: "INVALID_TOKEN" as const };
     return verify.data;
-  } catch (error) {
-    return null;
+  } catch (error: any) {
+    if (error.name === "TokenExpiredError")
+      return { error: "EXPIRED_TOKEN" as const };
+
+    return { error: "INVALID_TOKEN" as const };
   }
 };
 
@@ -43,10 +46,13 @@ export const verifyRefreshToken = (token: string) => {
         exp: z.number(),
       })
       .safeParse(decoded);
-    if (!verify.success) return null;
+    if (!verify.success) return { error: "INVALID_REFRESH_TOKEN" as const };
     return verify.data;
-  } catch (error) {
-    return null;
+  } catch (error: any) {
+    if (error.name === "TokenExpiredError")
+      return { error: "EXPIRED_REFRESH_TOKEN" as const };
+
+    return { error: "INVALID_REFRESH_TOKEN" as const };
   }
 };
 
@@ -73,7 +79,7 @@ export const checkAuth = (
     const errorResponse: TValidationError = {
       message: "Missing or invalid authorization header",
       errors: [],
-      code: ErrorCode.INVALID_TOKEN,
+      code: ErrorCode.MISSING_AUTH_HEADER,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;
@@ -84,18 +90,24 @@ export const checkAuth = (
     const errorResponse: TValidationError = {
       message: "Missing token",
       errors: [],
-      code: ErrorCode.INVALID_TOKEN,
+      code: ErrorCode.MISSING_TOKEN,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;
   }
 
   const decoded = verifyToken(token);
-  if (!decoded) {
+  if (!decoded || "error" in decoded) {
+    const errorCode =
+      decoded && "error" in decoded && decoded.error === "EXPIRED_TOKEN"
+        ? ErrorCode.EXPIRED_TOKEN
+        : ErrorCode.INVALID_TOKEN;
+    const errorMessage =
+      errorCode === ErrorCode.EXPIRED_TOKEN ? "Token expired" : "Invalid token";
     const errorResponse: TValidationError = {
-      message: "Invalid or expired token",
+      message: errorMessage,
       errors: [],
-      code: ErrorCode.INVALID_TOKEN,
+      code: errorCode,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;

@@ -158,13 +158,19 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
 
     const { refreshToken } = validationResult.data;
     const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded)
-      return returnError(
-        res,
-        401,
-        "Invalid or expired refresh token",
-        ErrorCode.INVALID_REFRESH_TOKEN
-      );
+    if (!decoded || "error" in decoded) {
+      const errorCode =
+        decoded &&
+        "error" in decoded &&
+        decoded.error === "EXPIRED_REFRESH_TOKEN"
+          ? ErrorCode.EXPIRED_REFRESH_TOKEN
+          : ErrorCode.INVALID_REFRESH_TOKEN;
+      const errorMessage =
+        errorCode === ErrorCode.EXPIRED_REFRESH_TOKEN
+          ? "Refresh token expired"
+          : "Invalid refresh token";
+      return returnError(res, 401, errorMessage, errorCode);
+    }
 
     const user = await AuthModel.findById(decoded.userId);
     if (!user)
