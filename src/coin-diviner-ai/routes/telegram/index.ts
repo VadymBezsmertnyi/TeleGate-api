@@ -5,7 +5,10 @@ import {
   setWebhookSchema,
   telegramWebhookUpdateSchema,
 } from "./telegram.schemas";
-import { returnTelegramError } from "./telegram.helpers";
+import {
+  returnTelegramError,
+  updateTelegramUserData,
+} from "./telegram.helpers";
 import { TelegramErrorCode, TelegramWebhookUpdate } from "./telegram.types";
 import "./telegram.swagger";
 
@@ -14,6 +17,19 @@ const router = Router();
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN_COIN_DIVINER_AI || "";
 const bot = new Telegraf(botToken);
+
+bot.command("start", async (ctx) => {
+  console.warn("Команда /start від користувача:", {
+    userId: ctx.from?.id,
+    username: ctx.from?.username,
+    firstName: ctx.from?.first_name,
+    chatId: ctx.chat?.id,
+  });
+
+  await ctx.reply(
+    `Вітаємо в Coin Diviner AI! 🚀\n\nВаш Telegram успішно підключено до боту.`
+  );
+});
 
 bot.on("message", async (ctx) => {
   console.warn("Отримано повідомлення від Telegram:", {
@@ -71,6 +87,22 @@ router.post("/webhook", async (req: Request, res: Response) => {
         webhookData.message?.from?.id || webhookData.callback_query?.from?.id,
       callbackData: webhookData.callback_query?.data,
     });
+
+    const messageText = webhookData.message?.text;
+    const isStartCommand = messageText === "/start";
+
+    if (isStartCommand) {
+      const updateResult = await updateTelegramUserData(webhookData);
+      if (updateResult.success)
+        console.warn("Telegram user data оновлено:", {
+          userId: updateResult.userId,
+          message: updateResult.message,
+        });
+      else
+        console.warn("Не вдалося оновити Telegram user data:", {
+          message: updateResult.message,
+        });
+    }
 
     await bot.handleUpdate(req.body);
     return res.status(200).json({ message: "Webhook received" });
