@@ -180,7 +180,7 @@ export const checkPriceRise = async (
         automation.continuation_price) *
       100;
 
-    if (priceChangePercent >= 0.5)
+    if (priceChangePercent >= 0.1)
       return {
         triggered: true,
         automation,
@@ -196,7 +196,7 @@ export const checkPriceRise = async (
       automation,
       currentPrice,
       priceSource,
-      reason: "Корекція менше 0.5%, продовжуємо відстеження",
+      reason: "Корекція менше 0.1%, продовжуємо відстеження",
     };
   } catch (error) {
     console.warn("Error in checkPriceRise:", error);
