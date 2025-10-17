@@ -10,6 +10,16 @@ const pushTokenSM = new Schema(
   { _id: true }
 );
 
+const telegramUserSM = new Schema(
+  {
+    chatId: { type: String },
+    firstName: { type: String, required: false },
+    lastName: { type: String, required: false },
+    username: { type: String, required: false },
+  },
+  { _id: false }
+);
+
 const notificationSettingsSM = new Schema(
   {
     userId: {
@@ -20,7 +30,7 @@ const notificationSettingsSM = new Schema(
     },
     pushTokens: [pushTokenSM],
     smsPhone: { type: String, required: false },
-    telegramChatId: { type: String, required: false },
+    telegram: telegramUserSM,
     enabledTypes: {
       push: { type: Boolean, default: true },
       sms: { type: Boolean, default: false },
