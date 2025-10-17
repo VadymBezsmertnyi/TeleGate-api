@@ -55,8 +55,9 @@ export const updateTelegramUserData = async (
         message: "Chat ID not found in webhook data",
       };
 
+    const cleanUsername = username.replace("@", "");
     const notificationSettings = await NotificationSettingsModel.findOne({
-      "telegram.username": username,
+      "telegram.username": cleanUsername,
     });
     if (!notificationSettings)
       return {
@@ -78,7 +79,7 @@ export const updateTelegramUserData = async (
           chatId: chatId.toString(),
           firstName: firstName || "",
           lastName: lastName || "",
-          username,
+          username: cleanUsername,
         },
       },
       { new: true }
