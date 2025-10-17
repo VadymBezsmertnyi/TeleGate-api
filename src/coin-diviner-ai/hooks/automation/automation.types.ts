@@ -22,6 +22,7 @@ export interface IAutomationDocument extends Document {
     sms_sent_at: Date | null;
     telegram_sent_at: Date | null;
   };
+  last_checked_price: number | null;
   continuation_price: number | null;
   continuation_count: number;
   createdAt: Date;

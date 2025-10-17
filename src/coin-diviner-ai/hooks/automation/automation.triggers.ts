@@ -99,7 +99,6 @@ export const checkActiveAutomations = async (): Promise<
               ? "binance"
               : "coingecko"
           );
-
         if (triggerResult && triggerResult.triggered)
           triggeredAutomations.push(triggerResult);
       }
@@ -148,9 +147,12 @@ export const checkPriceRise = async (
       };
     }
 
-    if (!automation.continuation_price) {
+    const lastPrice =
+      automation.last_checked_price || automation.continuation_price;
+
+    if (!lastPrice) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
-        continuation_price: currentPrice,
+        last_checked_price: currentPrice,
       });
 
       return {
@@ -162,17 +164,24 @@ export const checkPriceRise = async (
       };
     }
 
-    if (currentPrice < automation.continuation_price)
-      return {
-        triggered: true,
-        automation,
-        currentPrice,
-        priceSource,
-        reason: `Ціна впала з ${automation.continuation_price} до ${currentPrice} (корекція після піднімання)`,
-      };
+    if (currentPrice < lastPrice) {
+      const priceChangePercent = ((lastPrice - currentPrice) / lastPrice) * 100;
+
+      if (priceChangePercent >= 0.5) {
+        return {
+          triggered: true,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Ціна впала з ${lastPrice} до ${currentPrice} (корекція -${priceChangePercent.toFixed(
+            2
+          )}%)`,
+        };
+      }
+    }
 
     await AutomationModel.findByIdAndUpdate(automation._id, {
-      continuation_price: currentPrice,
+      last_checked_price: currentPrice,
     });
 
     return {
@@ -221,9 +230,12 @@ export const checkPriceDrop = async (
         reason: "Ціна не досягла цільового значення",
       };
     }
-    if (!automation.continuation_price) {
+    const lastPrice =
+      automation.last_checked_price || automation.continuation_price;
+
+    if (!lastPrice) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
-        continuation_price: currentPrice,
+        last_checked_price: currentPrice,
       });
 
       return {
@@ -234,17 +246,24 @@ export const checkPriceDrop = async (
         reason: "Встановлено початкову ціну для відстеження",
       };
     }
-    if (currentPrice > automation.continuation_price)
-      return {
-        triggered: true,
-        automation,
-        currentPrice,
-        priceSource,
-        reason: `Ціна піднялася з ${automation.continuation_price} до ${currentPrice} (відскок після падіння)`,
-      };
+    if (currentPrice > lastPrice) {
+      const priceChangePercent = ((currentPrice - lastPrice) / lastPrice) * 100;
+
+      if (priceChangePercent >= 0.5) {
+        return {
+          triggered: true,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Ціна піднялася з ${lastPrice} до ${currentPrice} (відскок +${priceChangePercent.toFixed(
+            2
+          )}%)`,
+        };
+      }
+    }
 
     await AutomationModel.findByIdAndUpdate(automation._id, {
-      continuation_price: currentPrice,
+      last_checked_price: currentPrice,
     });
 
     return {

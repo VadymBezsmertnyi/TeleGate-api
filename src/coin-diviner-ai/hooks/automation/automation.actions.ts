@@ -71,10 +71,16 @@ export const executeAutomationActions = async (
       const notificationSettings = await NotificationSettingsModel.findOne({
         userId: automation.userId,
       }).lean();
+      const telegramMessage = generateTelegramMessage(
+        coin,
+        automation,
+        currentPrice
+      );
       await sendNotifications(
         user,
         automation,
         finalMessage,
+        telegramMessage,
         coin,
         notificationSettings
       );
@@ -115,6 +121,69 @@ export const executeAutomationActions = async (
   }
 };
 
+const generateTelegramMessage = (
+  coin: { name: string; symbol: string },
+  automation: {
+    type: string;
+    target_price: number | null;
+    last_checked_price?: number | null;
+    continuation_price?: number | null;
+    prices?: {
+      dexscreener?: { price: number } | null;
+      binance?: { price: number } | null;
+      coingecko?: { price: number } | null;
+    };
+  },
+  currentPrice: number
+): string => {
+  const priceInfo =
+    automation.prices?.dexscreener?.price ||
+    automation.prices?.binance?.price ||
+    automation.prices?.coingecko?.price;
+
+  if (automation.target_price) {
+    const priceChange =
+      ((currentPrice - automation.target_price) / automation.target_price) *
+      100;
+    const emoji = automation.type === "price_rise" ? "📈" : "📉";
+
+    return (
+      `${emoji} Спрацювання автоматизації\n\n` +
+      `💰 Монета: ${coin.name} (${coin.symbol})\n` +
+      `💵 Поточна ціна: $${currentPrice}\n` +
+      `🎯 Цільова ціна: $${automation.target_price}\n` +
+      `📊 Зміна: ${priceChange > 0 ? "+" : ""}${priceChange.toFixed(2)}%\n\n` +
+      `${
+        automation.type === "price_rise"
+          ? "✅ Ціна досягла цільового рівня піднімання!"
+          : "⚠️ Ціна досягла цільового рівня падіння!"
+      }`
+    );
+  } else {
+    const lastPrice =
+      automation.last_checked_price ||
+      automation.continuation_price ||
+      priceInfo;
+    const priceChange = lastPrice
+      ? ((currentPrice - lastPrice) / lastPrice) * 100
+      : 0;
+    const emoji = automation.type === "price_rise" ? "📉" : "📈";
+
+    return (
+      `${emoji} Спрацювання автоматизації\n\n` +
+      `💰 Монета: ${coin.name} (${coin.symbol})\n` +
+      `💵 Поточна ціна: $${currentPrice}\n` +
+      `📍 Попередня ціна: $${lastPrice || "N/A"}\n` +
+      `📊 Зміна: ${priceChange > 0 ? "+" : ""}${priceChange.toFixed(2)}%\n\n` +
+      `${
+        automation.type === "price_rise"
+          ? "⚠️ Зафіксовано корекцію після піднімання!"
+          : "✅ Зафіксовано відскок після падіння!"
+      }`
+    );
+  }
+};
+
 const sendNotifications = async (
   user: {
     _id: unknown;
@@ -125,6 +194,7 @@ const sendNotifications = async (
     userId: unknown;
   },
   message: string,
+  telegramMessage: string,
   coin: { name: string; symbol: string },
   notificationSettings: {
     pushTokens: { token: string; platform: string; failureCount: number }[];
@@ -151,7 +221,7 @@ const sendNotifications = async (
         if (phone) await sendSmsTurboSMS(message, phone);
       } else if (notificationType === "telegram") {
         const chatId = notificationSettings?.telegram?.chatId;
-        if (chatId) await sendMessageToChatId(chatId, message);
+        if (chatId) await sendMessageToChatId(chatId, telegramMessage);
       }
     } catch (error) {
       console.warn(

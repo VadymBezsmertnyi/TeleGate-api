@@ -508,7 +508,7 @@ router.post("/continue", async (req: Request, res: Response) => {
       allPrices?.dexscreener?.price ||
       allPrices?.coingecko?.price ||
       null;
-    if (current_price) automation.continuation_price = current_price;
+    if (current_price) automation.set("last_checked_price", current_price);
 
     automation.continuation_count = (automation.continuation_count || 0) + 1;
     automation.isActive = true;
