@@ -40,6 +40,7 @@ export const createAutomationSchema = z.object({
   target_price: z
     .number()
     .positive()
+    .nullable()
     .optional()
     .describe("Цільова ціна для спрацювання (необов'язково)"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
@@ -52,7 +53,12 @@ export const createAutomationSchema = z.object({
 export const updateAutomationSchema = z.object({
   automationId: z.string().min(1).describe("ID автоматизації"),
   isActive: z.boolean().optional().describe("Чи активна автоматизація"),
-  target_price: z.number().positive().optional().describe("Нова цільова ціна"),
+  target_price: z
+    .number()
+    .positive()
+    .nullable()
+    .optional()
+    .describe("Нова цільова ціна"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   enabled_notifications: z
     .array(z.enum(["push", "sms", "telegram"]))
@@ -61,6 +67,7 @@ export const updateAutomationSchema = z.object({
   continuation_price: z
     .number()
     .positive()
+    .nullable()
     .optional()
     .describe("Ціна при продовженні автоматизації"),
 });
