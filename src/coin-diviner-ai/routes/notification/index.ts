@@ -91,8 +91,13 @@ router.put("/settings", async (req: Request, res: Response) => {
     const updateData: any = {};
     if (validationResult.data.smsPhone !== undefined)
       updateData.smsPhone = validationResult.data.smsPhone;
-    if (validationResult.data.telegram !== undefined)
-      updateData.telegram = validationResult.data.telegram;
+    if (validationResult.data.telegram !== undefined) {
+      const telegram = { ...validationResult.data.telegram };
+      if (telegram.username)
+        telegram.username = telegram.username.replace(/^@/, "");
+
+      updateData.telegram = telegram;
+    }
     if (validationResult.data.enabledTypes)
       updateData.enabledTypes = {
         ...settings.enabledTypes,

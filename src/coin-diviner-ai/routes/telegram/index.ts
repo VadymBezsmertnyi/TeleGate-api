@@ -28,9 +28,37 @@ bot.command("start", async (ctx) => {
     chatId: ctx.chat?.id,
   });
 
-  await ctx.reply(
-    `Вітаємо в Coin Diviner AI! 🚀\n\nВаш Telegram успішно підключено до боту.`
-  );
+  try {
+    const webhookData = {
+      message: {
+        from: ctx.from,
+        chat: ctx.chat,
+      },
+    };
+
+    const updateResult = await updateTelegramUserData(webhookData as any);
+    if (updateResult.success) {
+      await ctx.reply(
+        `Вітаємо в Coin Diviner AI! 🚀\n\nВаш Telegram успішно підключено до боту.`
+      );
+      console.warn(
+        "Telegram user успішно оновлено та повідомлення відправлено:",
+        {
+          userId: updateResult.userId,
+        }
+      );
+    } else {
+      await ctx.reply(
+        `Помилка підключення ❌\n\nСпочатку додайте свій username в налаштуваннях додатку Coin Diviner AI.`
+      );
+      console.warn("Не вдалося оновити Telegram user:", updateResult.message);
+    }
+  } catch (error) {
+    console.warn("Помилка обробки команди /start:", error);
+    await ctx.reply(
+      `Виникла помилка ⚠️\n\nСпробуйте пізніше або зверніться до підтримки.`
+    );
+  }
 });
 
 bot.on("message", async (ctx) => {
@@ -89,22 +117,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
         webhookData.message?.from?.id || webhookData.callback_query?.from?.id,
       callbackData: webhookData.callback_query?.data,
     });
-
-    const messageText = webhookData.message?.text;
-    const isStartCommand = messageText === "/start";
-
-    if (isStartCommand) {
-      const updateResult = await updateTelegramUserData(webhookData);
-      if (updateResult.success)
-        console.warn("Telegram user data оновлено:", {
-          userId: updateResult.userId,
-          message: updateResult.message,
-        });
-      else
-        console.warn("Не вдалося оновити Telegram user data:", {
-          message: updateResult.message,
-        });
-    }
 
     await bot.handleUpdate(req.body);
     return res.status(200).json({ message: "Webhook received" });
