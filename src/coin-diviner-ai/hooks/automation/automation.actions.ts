@@ -53,13 +53,18 @@ export const executeAutomationActions = async (
         }
       }
 
-      const defaultMessage = automation.target_price
-        ? `${coin.symbol}: ${
-            automation.type === "price_rise" ? "Ціна піднялася" : "Ціна впала"
-          } до $${currentPrice} (цільова: $${automation.target_price})`
-        : `${coin.symbol}: ${
-            automation.type === "price_rise" ? "Ціна піднялася" : "Ціна впала"
-          } до $${currentPrice}`;
+      let defaultMessage = "";
+      if (automation.target_price) {
+        defaultMessage = `${coin.symbol}: ${
+          automation.type === "price_rise" ? "Ціна піднялася" : "Ціна впала"
+        } до $${currentPrice} (цільова: $${automation.target_price})`;
+      } else {
+        defaultMessage = `${coin.symbol}: ${
+          automation.type === "price_rise"
+            ? `Ціна впала до $${currentPrice} (корекція після піднімання)`
+            : `Ціна піднялася до $${currentPrice} (відскок після падіння)`
+        }`;
+      }
 
       const finalMessage = aiMessage || defaultMessage;
 
