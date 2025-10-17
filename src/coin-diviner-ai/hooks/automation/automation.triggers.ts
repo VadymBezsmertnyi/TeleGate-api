@@ -270,7 +270,7 @@ export const checkPriceDrop = async (
         automation.continuation_price) *
       100;
 
-    if (priceChangePercent >= 0.5) {
+    if (priceChangePercent >= 0.1) {
       return {
         triggered: true,
         automation,
@@ -287,7 +287,7 @@ export const checkPriceDrop = async (
       automation,
       currentPrice,
       priceSource,
-      reason: "Відскок менше 0.5%, продовжуємо відстеження",
+      reason: "Відскок менше 0.1%, продовжуємо відстеження",
     };
   } catch (error) {
     console.warn("Error in checkPriceDrop:", error);
