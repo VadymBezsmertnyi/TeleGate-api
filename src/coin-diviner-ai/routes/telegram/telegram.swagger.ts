@@ -139,3 +139,49 @@
  *                 details:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /telegram/check-connection:
+ *   get:
+ *     summary: Перевірити підключення Telegram
+ *     description: Перевіряє чи користувач підключив свій Telegram акаунт до бота. Повертає статус підключення та дані Telegram користувача
+ *     tags: [Coin Diviner AI - Telegram]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Статус підключення успішно отримано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 connected:
+ *                   type: boolean
+ *                   description: Чи підключено Telegram
+ *                   example: true
+ *                 telegram:
+ *                   type: object
+ *                   nullable: true
+ *                   properties:
+ *                     chatId:
+ *                       type: string
+ *                       example: 123456789
+ *                     firstName:
+ *                       type: string
+ *                       example: John
+ *                     lastName:
+ *                       type: string
+ *                       example: Doe
+ *                     username:
+ *                       type: string
+ *                       example: johndoe
+ *                 message:
+ *                   type: string
+ *                   example: Notification settings not found
+ *       401:
+ *         description: Відсутній або невірний токен авторизації
+ *       500:
+ *         description: Помилка сервера
+ */

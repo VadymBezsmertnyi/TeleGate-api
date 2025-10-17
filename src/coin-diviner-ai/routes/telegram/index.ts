@@ -10,6 +10,8 @@ import {
   updateTelegramUserData,
 } from "./telegram.helpers";
 import { TelegramErrorCode, TelegramWebhookUpdate } from "./telegram.types";
+import NotificationSettingsModel from "../notification/notification.model";
+import { checkAuth } from "../../hooks/auth";
 import "./telegram.swagger";
 
 dotenv.config();
@@ -155,6 +157,42 @@ router.post("/set-webhook", async (req: Request, res: Response) => {
       "Failed to set webhook",
       TelegramErrorCode.WEBHOOK_SETUP_FAILED,
       error instanceof Error ? error.message : error
+    );
+  }
+});
+
+router.get("/check-connection", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const notificationSettings = await NotificationSettingsModel.findOne({
+      userId: decoded.userId,
+    });
+
+    if (!notificationSettings) {
+      return res.status(200).json({
+        connected: false,
+        message: "Notification settings not found",
+      });
+    }
+
+    const isConnected =
+      notificationSettings.telegram &&
+      !!notificationSettings.telegram.chatId &&
+      !!notificationSettings.telegram.username;
+
+    return res.status(200).json({
+      connected: isConnected,
+      telegram: notificationSettings.telegram || null,
+    });
+  } catch (error) {
+    console.warn("Check connection error:", error);
+    return returnTelegramError(
+      res,
+      500,
+      "Server error",
+      TelegramErrorCode.SERVER_ERROR
     );
   }
 });
