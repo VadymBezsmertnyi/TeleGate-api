@@ -1,6 +1,6 @@
-import type { Types } from "mongoose";
+import type { Document, Types } from "mongoose";
 
-export interface IAutomation {
+export interface IAutomationDocument extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   coinId: Types.ObjectId;
@@ -28,25 +28,9 @@ export interface IAutomation {
   updatedAt: Date;
 }
 
-export interface IUser {
-  _id: Types.ObjectId;
-  email: string;
-  phone?: string;
-  isBlocked: boolean;
-  isVerified: boolean;
-  role: "user" | "admin";
-}
-
-export interface ICoinPrice {
-  coinId: string;
-  symbol: string;
-  currentPrice: number | null;
-  source: "binance" | "dexscreener" | "coingecko";
-}
-
 export interface ITriggerResult {
   triggered: boolean;
-  automation: IAutomation;
+  automation: IAutomationDocument;
   currentPrice: number;
   priceSource: "binance" | "dexscreener" | "coingecko";
   reason: string;
@@ -60,12 +44,4 @@ export interface IAutomationCheckResult {
     coingecko: number | null;
   };
   triggeredAutomations: ITriggerResult[];
-}
-
-export interface IAiAutomationMessage {
-  message: string;
-  coinSymbol: string;
-  currentPrice: number;
-  triggerType: "price_drop" | "price_rise";
-  targetPrice: number | null;
 }

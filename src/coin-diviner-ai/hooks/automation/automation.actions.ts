@@ -7,7 +7,7 @@ import { sendSmsTurboSMS } from "../../helpers/sms/sms.helpers";
 import { sendMessageToChatId } from "../../helpers/telegram/telegram.helpers";
 import { generateAutomationMessage } from "../openAi";
 
-import type { ITriggerResult, IUser } from "./automation.types";
+import type { ITriggerResult } from "./automation.types";
 
 export const executeAutomationActions = async (
   triggeredAutomations: ITriggerResult[]
@@ -64,7 +64,7 @@ export const executeAutomationActions = async (
         userId: automation.userId,
       }).lean();
       await sendNotifications(
-        user as IUser,
+        user,
         automation,
         finalMessage,
         coin,
@@ -108,7 +108,10 @@ export const executeAutomationActions = async (
 };
 
 const sendNotifications = async (
-  user: IUser,
+  user: {
+    _id: unknown;
+    phone?: string | null;
+  },
   automation: {
     enabled_notifications: ("push" | "sms" | "telegram")[];
     userId: unknown;

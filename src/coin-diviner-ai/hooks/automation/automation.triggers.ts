@@ -2,7 +2,7 @@ import AutomationModel from "../../routes/automation/automation.model";
 import AggregatorService from "../aggregator";
 
 import type {
-  IAutomation,
+  IAutomationDocument,
   ITriggerResult,
   IAutomationCheckResult,
 } from "./automation.types";
@@ -78,7 +78,7 @@ export const checkActiveAutomations = async (): Promise<
         let triggerResult: ITriggerResult | null = null;
         if (automation.type === "price_rise")
           triggerResult = await checkPriceRise(
-            automation as IAutomation,
+            automation as unknown as IAutomationDocument,
             currentPrice,
             prices.dexscreener
               ? "dexscreener"
@@ -88,7 +88,7 @@ export const checkActiveAutomations = async (): Promise<
           );
         else if (automation.type === "price_drop")
           triggerResult = await checkPriceDrop(
-            automation as IAutomation,
+            automation as unknown as IAutomationDocument,
             currentPrice,
             prices.dexscreener
               ? "dexscreener"
@@ -118,7 +118,7 @@ export const checkActiveAutomations = async (): Promise<
 };
 
 export const checkPriceRise = async (
-  automation: IAutomation,
+  automation: IAutomationDocument,
   currentPrice: number,
   priceSource: "binance" | "dexscreener" | "coingecko"
 ): Promise<ITriggerResult> => {
@@ -189,7 +189,7 @@ export const checkPriceRise = async (
 };
 
 export const checkPriceDrop = async (
-  automation: IAutomation,
+  automation: IAutomationDocument,
   currentPrice: number,
   priceSource: "binance" | "dexscreener" | "coingecko"
 ): Promise<ITriggerResult> => {
