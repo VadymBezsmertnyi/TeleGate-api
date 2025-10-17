@@ -266,7 +266,21 @@ router.put("/update", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    if (isActive !== undefined) automation.isActive = isActive;
+    if (isActive !== undefined) {
+      automation.isActive = isActive;
+      // При активації автоматизації скидаємо continuation_price та лічильник
+      if (isActive) {
+        automation.set("continuation_price", null);
+        automation.continuation_count = 0;
+        // Скидаємо статуси сповіщень
+        automation.notifications.push_sent = false;
+        automation.notifications.sms_sent = false;
+        automation.notifications.telegram_sent = false;
+        automation.set("notifications.push_sent_at", null);
+        automation.set("notifications.sms_sent_at", null);
+        automation.set("notifications.telegram_sent_at", null);
+      }
+    }
     if (target_price !== undefined)
       automation.set("target_price", target_price);
     if (use_ai !== undefined) automation.use_ai = use_ai;

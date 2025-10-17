@@ -18,6 +18,7 @@ export const executeAutomationActions = async (
   try {
     for (const trigger of triggeredAutomations) {
       const { automation, currentPrice } = trigger;
+      if (!automation.isActive) continue;
 
       const user = await AuthModel.findById(automation.userId).lean();
       if (!user) {
@@ -85,6 +86,7 @@ export const executeAutomationActions = async (
         coin,
         notificationSettings
       );
+      // Деактивуємо автоматизацію одразу після відправки
       await AutomationModel.findByIdAndUpdate(automation._id, {
         isActive: false,
         "notifications.push_sent": automation.enabled_notifications.includes(
