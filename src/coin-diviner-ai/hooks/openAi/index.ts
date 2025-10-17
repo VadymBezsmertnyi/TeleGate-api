@@ -104,10 +104,20 @@ export const generatePrediction = async ({
             - Вказуй конкретні сценарії (best case, worst case, most likely case)
             - Будь готовим рекомендувати агресивні стратегії для досвідчених трейдерів
 
-          3. Ураховуй **макротренди**:
+          3. Ураховуй **макротренди та геополітичну ситуацію**:
             - Тренд BTC та альткоїнів (чи зростають, чи падають)
             - Загальний настрій ринку (bullish, bearish)
-            - Геополітичні та економічні події (вибори, регулювання, зміна ставок)
+            - **Геополітичні фактори (КРИТИЧНО ВАЖЛИВО):**
+              * Військові конфлікти та міжнародна напруженість (негативно впливають на ризикові активи)
+              * Санкції та торгові війни між країнами (можуть стимулювати попит на криптовалюти як альтернативу)
+              * Вибори та зміни влади у ключових країнах (США, ЄС, Китай)
+              * Регулювання криптовалют урядами (позитивне чи негативне)
+              * Банківські кризи та нестабільність фінансової системи (зазвичай позитивно для крипти)
+              * Інфляція та економічні проблеми (стимулюють інтерес до криптовалют)
+              * Зміна монетарної політики центробанків (підвищення/зниження ставок ФРС, ЄЦБ)
+              * Енергетичні кризи (негативно впливають на mining і proof-of-work токени)
+            - Проаналізуй як КОНКРЕТНО поточні геополітичні події можуть вплинути на даний токен
+            - Оціни чи криптовалюта виступає як "безпечна гавань" чи "ризиковий актив" у поточних умовах
 
           4. **ДЕТАЛЬНИЙ ТЕХНІЧНИЙ АНАЛІЗ:**
             - Проаналізуй історичні дані цін (price_history)
@@ -136,9 +146,19 @@ export const generatePrediction = async ({
             - Домінування BTC на ринку (зазвичай 40-60%)
             - Індекс страху/жадібності (0-100)
             - Настрій новин (positive/neutral/negative)
-            - Рівень політичних ризиків (low/medium/high)
+            - **Рівень політичних ризиків (low/medium/high) - враховуй:**
+              * Поточні військові конфлікти у світі
+              * Стан санкційної політики та торгових війн
+              * Нові регуляції криптовалют у ключових юрисдикціях
+              * Стабільність світової фінансової системи
+              * Рівень глобальної інфляції та економічної невизначеності
+              * Монетарну політику центральних банків (ставки, QE/QT)
             - Тренд мем-токенів (growing/stable/cooling)
             - Кореляцію токена з BTC (0-1, аналізуй за історичними даними цін)
+            - **Геополітичний вплив на крипторинок (оцінюй на основі поточних подій):**
+              * Чи є активні конфлікти, що посилюють ризик-офф настрої
+              * Чи є банківські кризи, що збільшують довіру до децентралізації
+              * Чи є нові позитивні/негативні регуляторні рішення
 
           7. **ПІДВИЩЕННЯ ТОЧНОСТІ:**
             - Використовуй ВСІ доступні дані для аналізу
@@ -213,6 +233,13 @@ export const generatePrediction = async ({
           - Якщо користувач не володіє токеном — sell_now = false, sell_confidence = 0, фокусуйся тільки на BUY.
           - Для нових токенів (launch_date < 30 днів) — знижуй confidence на 20-30%.
           - Якщо токен не верифікований (verified_on_dexscreener = false) — підвищуй рівень ризику.
+          
+          - **ГЕОПОЛІТИЧНІ ПОДІЇ (ОБОВ'ЯЗКОВО ВРАХОВУЙ):**
+            * У полі political_impact детально опиши поточну геополітичну ситуацію та її вплив на токен
+            * Згадуй конкретні події: війни, санкції, регуляції, банківські кризи, рішення ФРС/ЄЦБ
+            * Поясни чи ці події збільшують чи зменшують привабливість криптовалют
+            * Для BTC/ETH - оцінюй чи вони поводяться як безпечна гавань чи ризикові активи
+            * Для альткоїнів/MEME - враховуй що геополітична нестабільність зазвичай ще сильніше впливає на них
 
           ---
 
@@ -307,10 +334,20 @@ export const generatePrediction = async ({
             - Specify concrete scenarios (best case, worst case, most likely case)
             - Be ready to recommend aggressive strategies for experienced traders
 
-          3. Consider **macro trends**:
+          3. Consider **macro trends and geopolitical situation**:
             - BTC and altcoin trend (rising or falling)
             - Overall market sentiment (bullish, bearish)
-            - Geopolitical and economic events (elections, regulations, rate changes)
+            - **Geopolitical factors (CRITICALLY IMPORTANT):**
+              * Military conflicts and international tensions (negatively affect risk assets)
+              * Sanctions and trade wars between countries (may stimulate demand for crypto as alternative)
+              * Elections and power changes in key countries (USA, EU, China)
+              * Government cryptocurrency regulations (positive or negative)
+              * Banking crises and financial system instability (usually positive for crypto)
+              * Inflation and economic problems (stimulate interest in cryptocurrencies)
+              * Central bank monetary policy changes (Fed, ECB rate increases/decreases)
+              * Energy crises (negatively affect mining and proof-of-work tokens)
+            - Analyze how SPECIFICALLY current geopolitical events may affect this token
+            - Assess whether cryptocurrency acts as "safe haven" or "risk asset" in current conditions
 
           4. **DETAILED TECHNICAL ANALYSIS:**
             - Analyze historical price data (price_history)
@@ -339,9 +376,19 @@ export const generatePrediction = async ({
             - BTC market dominance (typically 40-60%)
             - Fear & greed index (0-100)
             - News sentiment (positive/neutral/negative)
-            - Political risk level (low/medium/high)
+            - **Political risk level (low/medium/high) - consider:**
+              * Current military conflicts worldwide
+              * State of sanctions policy and trade wars
+              * New crypto regulations in key jurisdictions
+              * Global financial system stability
+              * Level of global inflation and economic uncertainty
+              * Central bank monetary policy (rates, QE/QT)
             - Meme token trend (growing/stable/cooling)
             - Token correlation with BTC (0-1, analyze from price history data)
+            - **Geopolitical impact on crypto market (assess based on current events):**
+              * Are there active conflicts intensifying risk-off sentiment
+              * Are there banking crises increasing trust in decentralization
+              * Are there new positive/negative regulatory decisions
 
           7. **IMPROVING ACCURACY:**
             - Use ALL available data for analysis
@@ -416,6 +463,13 @@ export const generatePrediction = async ({
           - If user has no token — sell_now = false, sell_confidence = 0, focus only on BUY.
           - For new tokens (launch_date < 30 days) — reduce confidence by 20-30%.
           - If token not verified (verified_on_dexscreener = false) — increase risk level.
+          
+          - **GEOPOLITICAL EVENTS (MANDATORY TO CONSIDER):**
+            * In political_impact field describe in detail current geopolitical situation and its impact on the token
+            * Mention specific events: wars, sanctions, regulations, banking crises, Fed/ECB decisions
+            * Explain whether these events increase or decrease cryptocurrency attractiveness
+            * For BTC/ETH - assess whether they behave as safe haven or risk assets
+            * For altcoins/MEME - consider that geopolitical instability usually affects them even more strongly
 
           ---
 
