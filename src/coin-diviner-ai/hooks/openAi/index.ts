@@ -219,6 +219,21 @@ export const generatePrediction = async ({
           ⚙️ **Результат повинен відповідати структурі:**
           ${JSON.stringify(AI_PREDICTION_SECTIONS, null, 2)}
 
+          ---
+
+          🚨 **КРИТИЧНО ВАЖЛИВО - ОБОВ'ЯЗКОВІ ПОЛЯ:**
+          Твоя відповідь ЗАВЖДИ має містити ВСІ секції зі схеми:
+          1. **user_position** - з усіма полями (has_token, token_amount, token_buy_price)
+          2. **forecast** - з усіма полями (next_rise_date, next_rise_in_days, next_fall_date, next_fall_in_days)
+          3. **recommendation** - з усіма полями (buy_now, buy_confidence, buy_message, sell_now, sell_confidence, sell_message)
+          4. **market_context** - з усіма полями (sentiment, btc_trend, altcoin_trend, political_impact, meme_factor, community_activity, news_sentiment, analysis_summary)
+          5. **risk_and_influence** - з усіма полями (risk_level, risk_factors, main_influences, confidence_level)
+          6. **summary** - з усіма полями (conclusion, generated_at)
+          
+          ❌ НЕПРИПУСТИМО пропускати будь-яку секцію або поле!
+          ✅ Якщо немає даних для заповнення: використовуй null (числа), "" (текст), [] (масиви), але секція МАЄ БУТИ ПРИСУТНЯ.
+          ✅ Всі секції мають бути на верхньому рівні JSON об'єкта, а НЕ всередині вкладеного поля "data" чи "prediction".
+
         `
       : `
           You are a professional crypto analyst and adventurer in the crypto world specializing in altcoins and MEME tokens.
@@ -406,6 +421,22 @@ export const generatePrediction = async ({
 
           ⚙️ **The structure must follow:**
           ${JSON.stringify(AI_PREDICTION_SECTIONS, null, 2)}
+
+          ---
+
+          🚨 **CRITICALLY IMPORTANT - REQUIRED FIELDS:**
+          Your response MUST ALWAYS contain ALL sections from the schema:
+          1. **user_position** - with all fields (has_token, token_amount, token_buy_price)
+          2. **forecast** - with all fields (next_rise_date, next_rise_in_days, next_fall_date, next_fall_in_days)
+          3. **recommendation** - with all fields (buy_now, buy_confidence, buy_message, sell_now, sell_confidence, sell_message)
+          4. **market_context** - with all fields (sentiment, btc_trend, altcoin_trend, political_impact, meme_factor, community_activity, news_sentiment, analysis_summary)
+          5. **risk_and_influence** - with all fields (risk_level, risk_factors, main_influences, confidence_level)
+          6. **summary** - with all fields (conclusion, generated_at)
+          
+          ❌ NEVER skip any section or field!
+          ✅ If no data available: use null (numbers), "" (text), [] (arrays), but the section MUST BE PRESENT.
+          ✅ All sections must be at the top level of JSON object, NOT inside nested "data" or "prediction" field.
+
         `;
 
   const completion = await openai.chat.completions.create({
