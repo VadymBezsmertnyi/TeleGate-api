@@ -64,18 +64,12 @@ export const updateAutomationSchema = z.object({
     .array(z.enum(["push", "sms", "telegram"]))
     .optional()
     .describe("Увімкнені типи сповіщень"),
-  last_checked_price: z
-    .number()
-    .positive()
-    .nullable()
-    .optional()
-    .describe("Остання перевірена ціна (системне поле)"),
   continuation_price: z
     .number()
     .positive()
     .nullable()
     .optional()
-    .describe("Ціна при продовженні автоматизації"),
+    .describe("Екстремальна ціна (максимум/мінімум) для продовження"),
 });
 
 export const automationRecordSchema = z.object({
@@ -92,16 +86,11 @@ export const automationRecordSchema = z.object({
     .describe("Увімкнені типи сповіщень"),
   prices: pricesSchema.describe("Ціни на момент створення по всіх сервісах"),
   notifications: notificationsSchema.describe("Статус відправки сповіщень"),
-  last_checked_price: z
-    .number()
-    .nullable()
-    .optional()
-    .describe("Остання перевірена ціна (системне поле)"),
   continuation_price: z
     .number()
     .nullable()
     .optional()
-    .describe("Ціна при продовженні"),
+    .describe("Екстремальна ціна (максимум/мінімум) для відстеження"),
   continuation_count: z.number().optional().describe("Кількість продовжень"),
   createdAt: z.string().describe("Час створення"),
   updatedAt: z.string().describe("Час оновлення"),

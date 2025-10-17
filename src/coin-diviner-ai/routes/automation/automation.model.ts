@@ -56,7 +56,6 @@ const automationSM = new Schema(
     },
     prices: { type: pricesSM, required: true },
     notifications: { type: notificationsSM, default: {} },
-    last_checked_price: { type: Number, default: null },
     continuation_price: { type: Number, default: null },
     continuation_count: { type: Number, default: 0 },
   },
