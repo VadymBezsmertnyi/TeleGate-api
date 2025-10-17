@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /coin-diviner-ai/api/telegram/webhook:
+ * /telegram/webhook:
  *   post:
  *     summary: Отримати оновлення від Telegram бота
  *     description: Ендпоінт для прийому вебхуків від Telegram Bot API. Обробляє всі вхідні повідомлення, команди та події від користувачів бота Coin Diviner AI
@@ -73,7 +73,7 @@
 
 /**
  * @swagger
- * /coin-diviner-ai/api/telegram/set-webhook:
+ * /telegram/set-webhook:
  *   post:
  *     summary: Встановити URL вебхука для Telegram бота
  *     description: Налаштовує URL вебхука для Telegram Bot API через метод setWebhook. Після налаштування всі оновлення від бота будуть надходити на вказану адресу
