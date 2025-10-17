@@ -147,12 +147,9 @@ export const checkPriceRise = async (
       };
     }
 
-    const lastPrice =
-      automation.last_checked_price || automation.continuation_price;
-
-    if (!lastPrice) {
+    if (!automation.continuation_price) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
-        last_checked_price: currentPrice,
+        continuation_price: currentPrice,
       });
 
       return {
@@ -160,36 +157,46 @@ export const checkPriceRise = async (
         automation,
         currentPrice,
         priceSource,
-        reason: "Встановлено початкову ціну для відстеження",
+        reason: "Встановлено початкову ціну для відстеження максимуму",
       };
     }
 
-    if (currentPrice < lastPrice) {
-      const priceChangePercent = ((lastPrice - currentPrice) / lastPrice) * 100;
+    if (currentPrice > automation.continuation_price) {
+      await AutomationModel.findByIdAndUpdate(automation._id, {
+        continuation_price: currentPrice,
+      });
 
-      if (priceChangePercent >= 0.5) {
-        return {
-          triggered: true,
-          automation,
-          currentPrice,
-          priceSource,
-          reason: `Ціна впала з ${lastPrice} до ${currentPrice} (корекція -${priceChangePercent.toFixed(
-            2
-          )}%)`,
-        };
-      }
+      return {
+        triggered: false,
+        automation,
+        currentPrice,
+        priceSource,
+        reason: `Оновлено максимум з ${automation.continuation_price} до ${currentPrice}`,
+      };
     }
 
-    await AutomationModel.findByIdAndUpdate(automation._id, {
-      last_checked_price: currentPrice,
-    });
+    const priceChangePercent =
+      ((automation.continuation_price - currentPrice) /
+        automation.continuation_price) *
+      100;
+
+    if (priceChangePercent >= 0.5)
+      return {
+        triggered: true,
+        automation,
+        currentPrice,
+        priceSource,
+        reason: `Ціна впала з максимуму ${
+          automation.continuation_price
+        } до ${currentPrice} (корекція -${priceChangePercent.toFixed(2)}%)`,
+      };
 
     return {
       triggered: false,
       automation,
       currentPrice,
       priceSource,
-      reason: "Ціна продовжує рости або стабільна, оновлено поточну ціну",
+      reason: "Корекція менше 0.5%, продовжуємо відстеження",
     };
   } catch (error) {
     console.warn("Error in checkPriceRise:", error);
@@ -230,12 +237,9 @@ export const checkPriceDrop = async (
         reason: "Ціна не досягла цільового значення",
       };
     }
-    const lastPrice =
-      automation.last_checked_price || automation.continuation_price;
-
-    if (!lastPrice) {
+    if (!automation.continuation_price) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
-        last_checked_price: currentPrice,
+        continuation_price: currentPrice,
       });
 
       return {
@@ -243,35 +247,47 @@ export const checkPriceDrop = async (
         automation,
         currentPrice,
         priceSource,
-        reason: "Встановлено початкову ціну для відстеження",
+        reason: "Встановлено початкову ціну для відстеження мінімуму",
       };
     }
-    if (currentPrice > lastPrice) {
-      const priceChangePercent = ((currentPrice - lastPrice) / lastPrice) * 100;
 
-      if (priceChangePercent >= 0.5) {
-        return {
-          triggered: true,
-          automation,
-          currentPrice,
-          priceSource,
-          reason: `Ціна піднялася з ${lastPrice} до ${currentPrice} (відскок +${priceChangePercent.toFixed(
-            2
-          )}%)`,
-        };
-      }
+    if (currentPrice < automation.continuation_price) {
+      await AutomationModel.findByIdAndUpdate(automation._id, {
+        continuation_price: currentPrice,
+      });
+
+      return {
+        triggered: false,
+        automation,
+        currentPrice,
+        priceSource,
+        reason: `Оновлено мінімум з ${automation.continuation_price} до ${currentPrice}`,
+      };
     }
 
-    await AutomationModel.findByIdAndUpdate(automation._id, {
-      last_checked_price: currentPrice,
-    });
+    const priceChangePercent =
+      ((currentPrice - automation.continuation_price) /
+        automation.continuation_price) *
+      100;
+
+    if (priceChangePercent >= 0.5) {
+      return {
+        triggered: true,
+        automation,
+        currentPrice,
+        priceSource,
+        reason: `Ціна піднялася з мінімуму ${
+          automation.continuation_price
+        } до ${currentPrice} (відскок +${priceChangePercent.toFixed(2)}%)`,
+      };
+    }
 
     return {
       triggered: false,
       automation,
       currentPrice,
       priceSource,
-      reason: "Ціна продовжує падати або стабільна, оновлено поточну ціну",
+      reason: "Відскок менше 0.5%, продовжуємо відстеження",
     };
   } catch (error) {
     console.warn("Error in checkPriceDrop:", error);

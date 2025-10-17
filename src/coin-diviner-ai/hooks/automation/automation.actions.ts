@@ -59,10 +59,11 @@ export const executeAutomationActions = async (
           automation.type === "price_rise" ? "Ціна піднялася" : "Ціна впала"
         } до $${currentPrice} (цільова: $${automation.target_price})`;
       } else {
+        const extremePrice = automation.continuation_price;
         defaultMessage = `${coin.symbol}: ${
           automation.type === "price_rise"
-            ? `Ціна впала до $${currentPrice} (корекція після піднімання)`
-            : `Ціна піднялася до $${currentPrice} (відскок після падіння)`
+            ? `Корекція до $${currentPrice} (з максимуму $${extremePrice})`
+            : `Відскок до $${currentPrice} (з мінімуму $${extremePrice})`
         }`;
       }
 
@@ -126,7 +127,6 @@ const generateTelegramMessage = (
   automation: {
     type: string;
     target_price: number | null;
-    last_checked_price?: number | null;
     continuation_price?: number | null;
     prices?: {
       dexscreener?: { price: number } | null;
@@ -160,25 +160,26 @@ const generateTelegramMessage = (
       }`
     );
   } else {
-    const lastPrice =
-      automation.last_checked_price ||
-      automation.continuation_price ||
-      priceInfo;
-    const priceChange = lastPrice
-      ? ((currentPrice - lastPrice) / lastPrice) * 100
+    const extremePrice = automation.continuation_price || priceInfo;
+    const priceChange = extremePrice
+      ? ((currentPrice - extremePrice) / extremePrice) * 100
       : 0;
     const emoji = automation.type === "price_rise" ? "📉" : "📈";
+    const extremeLabel =
+      automation.type === "price_rise" ? "максимум" : "мінімум";
 
     return (
       `${emoji} Спрацювання автоматизації\n\n` +
       `💰 Монета: ${coin.name} (${coin.symbol})\n` +
       `💵 Поточна ціна: $${currentPrice}\n` +
-      `📍 Попередня ціна: $${lastPrice || "N/A"}\n` +
+      `📍 ${extremeLabel.charAt(0).toUpperCase() + extremeLabel.slice(1)}: $${
+        extremePrice || "N/A"
+      }\n` +
       `📊 Зміна: ${priceChange > 0 ? "+" : ""}${priceChange.toFixed(2)}%\n\n` +
       `${
         automation.type === "price_rise"
-          ? "⚠️ Зафіксовано корекцію після піднімання!"
-          : "✅ Зафіксовано відскок після падіння!"
+          ? "⚠️ Зафіксовано корекцію від максимуму!"
+          : "✅ Зафіксовано відскок від мінімуму!"
       }`
     );
   }
