@@ -8,24 +8,30 @@ export const getDataAutomationData = (automation: any) => {
     ...automation,
     prices: {
       ...automation.prices,
-      binance: {
-        ...automation.prices?.binance,
-        updatedAt: automation.prices?.binance?.updatedAt
-          ? new Date(automation.prices.binance.updatedAt).toISOString()
-          : null,
-      },
-      dexscreener: {
-        ...automation.prices?.dexscreener,
-        updatedAt: automation.prices?.dexscreener?.updatedAt
-          ? new Date(automation.prices.dexscreener.updatedAt).toISOString()
-          : null,
-      },
-      coingecko: {
-        ...automation.prices?.coingecko,
-        updatedAt: automation.prices?.coingecko?.updatedAt
-          ? new Date(automation.prices.coingecko.updatedAt).toISOString()
-          : null,
-      },
+      binance: automation.prices?.binance
+        ? {
+            price: automation.prices.binance.price ?? null,
+            updatedAt: automation.prices.binance.updatedAt
+              ? new Date(automation.prices.binance.updatedAt).toISOString()
+              : null,
+          }
+        : null,
+      dexscreener: automation.prices?.dexscreener
+        ? {
+            price: automation.prices.dexscreener.price ?? null,
+            updatedAt: automation.prices.dexscreener.updatedAt
+              ? new Date(automation.prices.dexscreener.updatedAt).toISOString()
+              : null,
+          }
+        : null,
+      coingecko: automation.prices?.coingecko
+        ? {
+            price: automation.prices.coingecko.price ?? null,
+            updatedAt: automation.prices.coingecko.updatedAt
+              ? new Date(automation.prices.coingecko.updatedAt).toISOString()
+              : null,
+          }
+        : null,
     },
     notifications: {
       ...automation.notifications,
