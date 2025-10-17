@@ -25,6 +25,7 @@ import {
   TServerError,
   TValidationError,
 } from "../aggregator/aggregator.types";
+import { ErrorCode } from "../auth/auth.helps";
 
 // models
 import CryptoCoinModel from "../aggregator/aggregator.model";
@@ -65,6 +66,7 @@ router.get("/generate", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -504,6 +506,7 @@ router.get("/by-id/:predictionId", async (req: Request, res: Response) => {
             path: ["predictionId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);

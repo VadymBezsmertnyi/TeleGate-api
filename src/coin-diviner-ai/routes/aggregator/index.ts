@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
-import AggregatorService from "../../hooks/aggregator";
+
+// schemas
 import {
   searchQueryParamsSchema,
   priceQueryParamsSchema,
@@ -16,6 +17,8 @@ import {
   notFoundErrorSchema,
   serverErrorSchema,
 } from "./aggregator.schemas";
+
+// types
 import type {
   TSearchQueryParams,
   TPriceQueryParams,
@@ -31,6 +34,12 @@ import type {
   TNotFoundError,
   TServerError,
 } from "./aggregator.types";
+import { ErrorCode } from "../auth/auth.helps";
+
+// hooks
+import AggregatorService from "../../hooks/aggregator";
+
+// swagger
 import "./aggregator.swagger";
 
 dotenv.config();
@@ -43,6 +52,7 @@ router.get("/search", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -82,6 +92,7 @@ router.get("/price", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -127,6 +138,7 @@ router.get("/price-history", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -172,6 +184,7 @@ router.get("/all-prices", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -211,6 +224,7 @@ router.get("/all-price-history", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);

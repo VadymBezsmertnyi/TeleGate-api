@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 
+// schemas
 import {
   createAutomationSchema,
   updateAutomationSchema,
@@ -14,6 +15,7 @@ import {
   validationErrorSchema,
 } from "../aggregator/aggregator.schemas";
 
+// types
 import type {
   TCreateAutomation,
   TUpdateAutomation,
@@ -26,16 +28,20 @@ import type {
   TServerError,
   TValidationError,
 } from "../aggregator/aggregator.types";
+import { ErrorCode } from "../auth/auth.helps";
 
+// models
 import AutomationModel from "./automation.model";
 import CryptoCoinModel from "../aggregator/aggregator.model";
 import AuthModel from "../auth/auth.model";
 
+// hooks
 import AggregatorService from "../../hooks/aggregator";
 import { checkAuth } from "../../hooks/auth";
-
-import "./automation.swagger";
 import { getDataAutomationData } from "./automation.helps";
+
+// swagger
+import "./automation.swagger";
 
 dotenv.config();
 const router = Router();
@@ -59,6 +65,7 @@ router.post("/create", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -233,6 +240,7 @@ router.put("/update", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -332,6 +340,7 @@ router.delete("/delete/:automationId", async (req: Request, res: Response) => {
             path: ["automationId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -404,6 +413,7 @@ router.get("/by-id/:automationId", async (req: Request, res: Response) => {
             path: ["automationId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -472,6 +482,7 @@ router.post("/continue", async (req: Request, res: Response) => {
             path: ["automationId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);

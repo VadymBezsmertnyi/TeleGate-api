@@ -15,6 +15,7 @@ export enum ErrorCode {
   DATA_VALIDATION_ERROR = 1012,
   INVALID_USER_ID = 1013,
   SERVER_ERROR = 1014,
+  INVALID_PARAMS = 1015,
 }
 
 export const returnError = (

@@ -8,6 +8,7 @@ import { validationErrorSchema } from "../../routes/aggregator/aggregator.schema
 
 // types
 import { TValidationError } from "../../routes/aggregator/aggregator.types";
+import { ErrorCode } from "../../routes/auth/auth.helps";
 
 dotenv.config();
 
@@ -72,6 +73,7 @@ export const checkAuth = (
     const errorResponse: TValidationError = {
       message: "Missing or invalid authorization header",
       errors: [],
+      code: ErrorCode.INVALID_TOKEN,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;
@@ -82,6 +84,7 @@ export const checkAuth = (
     const errorResponse: TValidationError = {
       message: "Missing token",
       errors: [],
+      code: ErrorCode.INVALID_TOKEN,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;
@@ -92,6 +95,7 @@ export const checkAuth = (
     const errorResponse: TValidationError = {
       message: "Invalid or expired token",
       errors: [],
+      code: ErrorCode.INVALID_TOKEN,
     };
     const validatedError = validationErrorSchema.parse(errorResponse);
     return validatedError;

@@ -160,6 +160,7 @@ export const allPriceHistoryResponseSchema = z.object({
 export const validationErrorSchema = z.object({
   message: z.string(),
   errors: z.array(z.any()),
+  code: z.number(),
 });
 
 export const notFoundErrorSchema = z.object({

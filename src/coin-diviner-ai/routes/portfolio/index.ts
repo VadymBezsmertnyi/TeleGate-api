@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 
+// schemas
 import {
   createOrUpdatePortfolioSchema,
   addTransactionSchema,
@@ -13,6 +14,7 @@ import {
   validationErrorSchema,
 } from "../aggregator/aggregator.schemas";
 
+// types
 import type {
   TCreateOrUpdatePortfolio,
   TAddTransaction,
@@ -25,13 +27,17 @@ import type {
   TServerError,
   TValidationError,
 } from "../aggregator/aggregator.types";
+import { ErrorCode } from "../auth/auth.helps";
 
+// models
 import PortfolioModel from "./portfolio.model";
 import AuthModel from "../auth/auth.model";
 import CryptoCoinModel from "../aggregator/aggregator.model";
 
+// hooks
 import { checkAuth } from "../../hooks/auth";
 
+// swagger
 import "./portfolio.swagger";
 
 const router = Router();
@@ -55,6 +61,7 @@ router.post("/create-or-update", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -175,6 +182,7 @@ router.post("/add-purchase", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -285,6 +293,7 @@ router.post("/add-sale", async (req: Request, res: Response) => {
       const errorResponse: TValidationError = {
         message: "Validation error",
         errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -401,6 +410,7 @@ router.delete("/clear/:portfolioId", async (req: Request, res: Response) => {
             path: ["portfolioId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
@@ -541,6 +551,7 @@ router.get("/by-id/:portfolioId", async (req: Request, res: Response) => {
             path: ["portfolioId"],
           },
         ],
+        code: ErrorCode.INVALID_PARAMS,
       };
       const validatedError = validationErrorSchema.parse(errorResponse);
       return res.status(400).json(validatedError);
