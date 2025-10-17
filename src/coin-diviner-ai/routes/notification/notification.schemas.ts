@@ -7,12 +7,19 @@ export const pushTokenSchema = z.object({
   failureCount: z.number().default(0).optional(),
 });
 
+export const telegramUserSchema = z.object({
+  chatId: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  username: z.string().optional(),
+});
+
 export const notificationSettingsSchema = z.object({
   _id: z.any(),
   userId: z.any(),
   pushTokens: z.array(pushTokenSchema).default([]),
   smsPhone: z.string().nullable().optional(),
-  telegramChatId: z.string().nullable().optional(),
+  telegram: telegramUserSchema.optional(),
   enabledTypes: z
     .object({
       push: z.boolean().default(true),
@@ -30,7 +37,7 @@ export const notificationSettingsSchema = z.object({
 
 export const updateNotificationSettingsSchema = z.object({
   smsPhone: z.string().nullable().optional(),
-  telegramChatId: z.string().nullable().optional(),
+  telegram: telegramUserSchema.optional(),
   enabledTypes: z
     .object({
       push: z.boolean().optional(),

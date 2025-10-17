@@ -42,10 +42,21 @@
  *                       type: string
  *                       nullable: true
  *                       example: +380123456789
- *                     telegramChatId:
- *                       type: string
- *                       nullable: true
- *                       example: 123456789
+ *                     telegram:
+ *                       type: object
+ *                       properties:
+ *                         chatId:
+ *                           type: string
+ *                           example: 123456789
+ *                         firstName:
+ *                           type: string
+ *                           example: John
+ *                         lastName:
+ *                           type: string
+ *                           example: Doe
+ *                         username:
+ *                           type: string
+ *                           example: johndoe
  *                     enabledTypes:
  *                       type: object
  *                       properties:
@@ -101,10 +112,25 @@
  *                 type: string
  *                 nullable: true
  *                 example: +380123456789
- *               telegramChatId:
- *                 type: string
- *                 nullable: true
- *                 example: 123456789
+ *               telegram:
+ *                 type: object
+ *                 properties:
+ *                   chatId:
+ *                     type: string
+ *                     description: ID чату Telegram для відправки сповіщень
+ *                     example: 123456789
+ *                   firstName:
+ *                     type: string
+ *                     description: Ім'я користувача в Telegram
+ *                     example: John
+ *                   lastName:
+ *                     type: string
+ *                     description: Прізвище користувача в Telegram
+ *                     example: Doe
+ *                   username:
+ *                     type: string
+ *                     description: Username користувача в Telegram
+ *                     example: johndoe
  *               enabledTypes:
  *                 type: object
  *                 properties:

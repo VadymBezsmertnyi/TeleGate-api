@@ -91,8 +91,8 @@ router.put("/settings", async (req: Request, res: Response) => {
     const updateData: any = {};
     if (validationResult.data.smsPhone !== undefined)
       updateData.smsPhone = validationResult.data.smsPhone;
-    if (validationResult.data.telegramChatId !== undefined)
-      updateData.telegramChatId = validationResult.data.telegramChatId;
+    if (validationResult.data.telegram !== undefined)
+      updateData.telegram = validationResult.data.telegram;
     if (validationResult.data.enabledTypes)
       updateData.enabledTypes = {
         ...settings.enabledTypes,
