@@ -605,7 +605,7 @@ ${targetPrice ? `Цільова ціна: $${targetPrice}` : "Цільова ц�
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 150,
+      max_completion_tokens: 150,
     });
 
     const message = completion.choices[0].message.content?.trim() || "";
