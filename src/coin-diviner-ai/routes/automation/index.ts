@@ -259,12 +259,13 @@ router.put("/update", async (req: Request, res: Response) => {
     }
 
     if (isActive !== undefined) automation.isActive = isActive;
-    if (target_price !== undefined) automation.target_price = target_price;
+    if (target_price !== undefined)
+      automation.set("target_price", target_price);
     if (use_ai !== undefined) automation.use_ai = use_ai;
     if (enabled_notifications !== undefined)
       automation.enabled_notifications = enabled_notifications;
     if (continuation_price !== undefined)
-      automation.continuation_price = continuation_price;
+      automation.set("continuation_price", continuation_price);
 
     await automation.save();
 
