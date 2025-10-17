@@ -41,6 +41,9 @@ export const getDataAutomationData = (automation: any) => {
       sms_sent_at: automation.notifications.sms_sent_at
         ? new Date(automation.notifications.sms_sent_at).toISOString()
         : null,
+      telegram_sent_at: automation.notifications.telegram_sent_at
+        ? new Date(automation.notifications.telegram_sent_at).toISOString()
+        : null,
     },
     _id: automation._id.toString(),
     userId: automation.userId.toString(),
