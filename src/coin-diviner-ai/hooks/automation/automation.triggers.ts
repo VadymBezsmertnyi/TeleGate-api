@@ -7,6 +7,9 @@ import type {
   IAutomationCheckResult,
 } from "./automation.types";
 
+/**
+ * Перевіряє всі активні автоматизації та повертає список спрацьованих
+ */
 export const checkActiveAutomations = async (): Promise<
   IAutomationCheckResult[]
 > => {
@@ -117,6 +120,9 @@ export const checkActiveAutomations = async (): Promise<
   }
 };
 
+/**
+ * Перевіряє чи спрацювала автоматизація на піднімання ціни
+ */
 export const checkPriceRise = async (
   automation: IAutomationDocument,
   currentPrice: number,
@@ -188,6 +194,9 @@ export const checkPriceRise = async (
   }
 };
 
+/**
+ * Перевіряє чи спрацювала автоматизація на падіння ціни
+ */
 export const checkPriceDrop = async (
   automation: IAutomationDocument,
   currentPrice: number,

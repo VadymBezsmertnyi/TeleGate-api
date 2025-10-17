@@ -9,6 +9,9 @@ import { generateAutomationMessage } from "../openAi";
 
 import type { ITriggerResult } from "./automation.types";
 
+/**
+ * Виконує дії для спрацьованих автоматизацій: генерує повідомлення через AI та відправляє сповіщення
+ */
 export const executeAutomationActions = async (
   triggeredAutomations: ITriggerResult[]
 ): Promise<void> => {
