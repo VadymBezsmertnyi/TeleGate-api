@@ -91,7 +91,7 @@
  *                 type: string
  *                 format: uri
  *                 description: URL вебхука (має бути HTTPS). Telegram буде надсилати POST запити з оновленнями на цю адресу
- *                 example: https://telegate-api.herokuapp.com/coin-diviner-ai/api/telegram/webhook
+ *                 example: https://your-domain.com/coin-diviner-ai/api/telegram/webhook
  *     responses:
  *       200:
  *         description: Вебхук успішно встановлено
@@ -105,7 +105,7 @@
  *                   example: Вебхук встановлено успішно
  *                 webhookUrl:
  *                   type: string
- *                   example: https://telegate-api.herokuapp.com/coin-diviner-ai/api/telegram/webhook
+ *                   example: https://your-domain.com/coin-diviner-ai/api/telegram/webhook
  *       400:
  *         description: Помилка валідації
  *         content:
