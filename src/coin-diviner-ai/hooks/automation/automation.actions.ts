@@ -89,8 +89,7 @@ export const executeAutomationActions = async (
         finalMessage,
         telegramMessage,
         coin,
-        notificationSettings,
-        automation._id.toString()
+        notificationSettings
       );
       // Деактивуємо автоматизацію одразу після відправки
       await AutomationModel.findByIdAndUpdate(automation._id, {
@@ -217,8 +216,7 @@ const sendNotifications = async (
       firstName?: string | null;
       lastName?: string | null;
     } | null;
-  } | null,
-  automationId: string
+  } | null
 ): Promise<void> => {
   const notificationTitle = `Автоматизація: ${coin.symbol}`;
 
@@ -242,20 +240,12 @@ const sendNotifications = async (
               {
                 text: "📱 Перейти в Coin Diviner AI",
                 url: `${baseUrl}/redirect/coin-diviner-ai`,
-                callback_data: "close_menu",
               },
             ],
             [
               {
                 text: "💹 Перейти в Binance",
                 url: `${baseUrl}/redirect/binance`,
-                callback_data: "close_menu",
-              },
-            ],
-            [
-              {
-                text: "❌ Закрити меню",
-                callback_data: "close_menu",
               },
             ],
           ];
