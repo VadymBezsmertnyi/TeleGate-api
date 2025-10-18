@@ -87,8 +87,8 @@ bot.on("callback_query", async (ctx) => {
 
   try {
     if (callbackData === "close_menu") {
-      await ctx.editMessageReplyMarkup(undefined);
       await ctx.answerCbQuery("Меню закрито");
+      await ctx.editMessageReplyMarkup(undefined);
       return;
     }
 
@@ -98,6 +98,7 @@ bot.on("callback_query", async (ctx) => {
       const automation = await AutomationModel.findById(automationId);
       if (!automation) {
         await ctx.answerCbQuery("Автоматизацію не знайдено ❌");
+        await ctx.editMessageReplyMarkup(undefined);
         return;
       }
 
@@ -119,9 +120,15 @@ bot.on("callback_query", async (ctx) => {
     }
 
     await ctx.answerCbQuery();
+    await ctx.editMessageReplyMarkup(undefined);
   } catch (error) {
     console.warn("Error handling callback query:", error);
     await ctx.answerCbQuery("Виникла помилка ⚠️");
+    try {
+      await ctx.editMessageReplyMarkup(undefined);
+    } catch (e) {
+      console.warn("Failed to remove keyboard after error:", e);
+    }
   }
 });
 
