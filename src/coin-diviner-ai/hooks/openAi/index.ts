@@ -249,17 +249,74 @@ export const generatePrediction = async ({
           ---
 
           🚨 **КРИТИЧНО ВАЖЛИВО - ОБОВ'ЯЗКОВІ ПОЛЯ:**
-          Твоя відповідь ЗАВЖДИ має містити ВСІ секції зі схеми:
-          1. **user_position** - з усіма полями (has_token, token_amount, token_buy_price)
-          2. **forecast** - з усіма полями (next_rise_date, next_rise_in_days, next_fall_date, next_fall_in_days)
-          3. **recommendation** - з усіма полями (buy_now, buy_confidence, buy_message, sell_now, sell_confidence, sell_message)
-          4. **market_context** - з усіма полями (sentiment, btc_trend, altcoin_trend, political_impact, meme_factor, community_activity, news_sentiment, analysis_summary)
-          5. **risk_and_influence** - з усіма полями (risk_level, risk_factors, main_influences, confidence_level)
-          6. **summary** - з усіма полями (conclusion, generated_at)
           
-          ❌ НЕПРИПУСТИМО пропускати будь-яку секцію або поле!
-          ✅ Якщо немає даних для заповнення: використовуй null (числа), "" (текст), [] (масиви), але секція МАЄ БУТИ ПРИСУТНЯ.
-          ✅ Всі секції мають бути на верхньому рівні JSON об'єкта, а НЕ всередині вкладеного поля "data" чи "prediction".
+          ⚠️ УВАГА! Твоя відповідь ОБОВ'ЯЗКОВО має містити ТОЧНО 6 СЕКЦІЙ на верхньому рівні JSON:
+          
+          1. ✅ **user_position** (обов'язково!)
+             - has_token: boolean
+             - token_amount: number | null
+             - token_buy_price: number | null
+          
+          2. ✅ **forecast** (обов'язково!)
+             - next_rise_date: string | null
+             - next_rise_in_days: number | null
+             - next_fall_date: string | null
+             - next_fall_in_days: number | null
+          
+          3. ✅ **recommendation** (обов'язково!)
+             - buy_now: boolean
+             - buy_confidence: number (0-100)
+             - buy_message: string
+             - sell_now: boolean
+             - sell_confidence: number (0-100)
+             - sell_message: string
+          
+          4. ✅ **market_context** (обов'язково! НЕ ПРОПУСКАЙ!)
+             - sentiment: "bullish" | "bearish" | "neutral"
+             - btc_trend: "up" | "down" | "neutral"
+             - altcoin_trend: "up" | "down" | "neutral"
+             - political_impact: string (опис політичних факторів)
+             - meme_factor: string (опис мем-факторів)
+             - community_activity: "high" | "medium" | "low"
+             - news_sentiment: "positive" | "neutral" | "negative"
+             - analysis_summary: string (короткий огляд)
+          
+          5. ✅ **risk_and_influence** (обов'язково! НЕ ПРОПУСКАЙ!)
+             - risk_level: "low" | "medium" | "high"
+             - risk_factors: string[] (мінімум 3-5 пунктів)
+             - main_influences: string[] (мінімум 3-5 пунктів)
+             - confidence_level: number (0-100)
+          
+          6. ✅ **summary** (обов'язково! НЕ ПРОПУСКАЙ!)
+             - conclusion: string (детальний висновок 2-3 речення)
+             - generated_at: string (ISO дата, наприклад: "2025-10-18T12:00:00Z")
+          
+          ❌ ЗАБОРОНЕНО:
+          - Пропускати будь-яку з 6 секцій
+          - Залишати поля undefined
+          - Вкладати секції всередину інших полів (типу "data" або "prediction")
+          - Повертати JSON з меншою кількістю секцій
+          
+          ✅ ПРАВИЛЬНИЙ ФОРМАТ ВІДПОВІДІ:
+          {
+            "user_position": { ... },
+            "forecast": { ... },
+            "recommendation": { ... },
+            "market_context": { ... },  ← ОБОВ'ЯЗКОВО!
+            "risk_and_influence": { ... },  ← ОБОВ'ЯЗКОВО!
+            "summary": { ... }  ← ОБОВ'ЯЗКОВО!
+          }
+          
+          💡 Якщо немає повних даних:
+          - Числа → null
+          - Текст → "" (порожній рядок)
+          - Масиви → [] (порожній масив)
+          - Але СЕКЦІЯ МАЄ БУТИ В ВІДПОВІДІ!
+          
+          🎯 ПЕРЕД ВІДПРАВКОЮ ВІДПОВІДІ - ПЕРЕВІР:
+          ✓ Чи є всі 6 секцій?
+          ✓ Чи заповнені market_context, risk_and_influence, summary?
+          ✓ Чи всі поля присутні в кожній секції?
 
         `
       : `
@@ -479,17 +536,74 @@ export const generatePrediction = async ({
           ---
 
           🚨 **CRITICALLY IMPORTANT - REQUIRED FIELDS:**
-          Your response MUST ALWAYS contain ALL sections from the schema:
-          1. **user_position** - with all fields (has_token, token_amount, token_buy_price)
-          2. **forecast** - with all fields (next_rise_date, next_rise_in_days, next_fall_date, next_fall_in_days)
-          3. **recommendation** - with all fields (buy_now, buy_confidence, buy_message, sell_now, sell_confidence, sell_message)
-          4. **market_context** - with all fields (sentiment, btc_trend, altcoin_trend, political_impact, meme_factor, community_activity, news_sentiment, analysis_summary)
-          5. **risk_and_influence** - with all fields (risk_level, risk_factors, main_influences, confidence_level)
-          6. **summary** - with all fields (conclusion, generated_at)
           
-          ❌ NEVER skip any section or field!
-          ✅ If no data available: use null (numbers), "" (text), [] (arrays), but the section MUST BE PRESENT.
-          ✅ All sections must be at the top level of JSON object, NOT inside nested "data" or "prediction" field.
+          ⚠️ WARNING! Your response MUST contain EXACTLY 6 SECTIONS at the top level of JSON:
+          
+          1. ✅ **user_position** (mandatory!)
+             - has_token: boolean
+             - token_amount: number | null
+             - token_buy_price: number | null
+          
+          2. ✅ **forecast** (mandatory!)
+             - next_rise_date: string | null
+             - next_rise_in_days: number | null
+             - next_fall_date: string | null
+             - next_fall_in_days: number | null
+          
+          3. ✅ **recommendation** (mandatory!)
+             - buy_now: boolean
+             - buy_confidence: number (0-100)
+             - buy_message: string
+             - sell_now: boolean
+             - sell_confidence: number (0-100)
+             - sell_message: string
+          
+          4. ✅ **market_context** (mandatory! DO NOT SKIP!)
+             - sentiment: "bullish" | "bearish" | "neutral"
+             - btc_trend: "up" | "down" | "neutral"
+             - altcoin_trend: "up" | "down" | "neutral"
+             - political_impact: string (description of political factors)
+             - meme_factor: string (description of meme factors)
+             - community_activity: "high" | "medium" | "low"
+             - news_sentiment: "positive" | "neutral" | "negative"
+             - analysis_summary: string (brief overview)
+          
+          5. ✅ **risk_and_influence** (mandatory! DO NOT SKIP!)
+             - risk_level: "low" | "medium" | "high"
+             - risk_factors: string[] (minimum 3-5 points)
+             - main_influences: string[] (minimum 3-5 points)
+             - confidence_level: number (0-100)
+          
+          6. ✅ **summary** (mandatory! DO NOT SKIP!)
+             - conclusion: string (detailed conclusion 2-3 sentences)
+             - generated_at: string (ISO date, e.g.: "2025-10-18T12:00:00Z")
+          
+          ❌ FORBIDDEN:
+          - Skip any of the 6 sections
+          - Leave fields undefined
+          - Nest sections inside other fields (like "data" or "prediction")
+          - Return JSON with fewer sections
+          
+          ✅ CORRECT RESPONSE FORMAT:
+          {
+            "user_position": { ... },
+            "forecast": { ... },
+            "recommendation": { ... },
+            "market_context": { ... },  ← MANDATORY!
+            "risk_and_influence": { ... },  ← MANDATORY!
+            "summary": { ... }  ← MANDATORY!
+          }
+          
+          💡 If data is incomplete:
+          - Numbers → null
+          - Text → "" (empty string)
+          - Arrays → [] (empty array)
+          - But SECTION MUST BE IN RESPONSE!
+          
+          🎯 BEFORE SENDING RESPONSE - CHECK:
+          ✓ Are all 6 sections present?
+          ✓ Are market_context, risk_and_influence, summary filled?
+          ✓ Are all fields present in each section?
 
         `;
 
@@ -533,6 +647,16 @@ export const generatePrediction = async ({
         
         Проаналізуй токен на основі наданих даних та визнач всі необхідні ринкові показники самостійно.
         Будь максимально уважним, детальним та точним у своєму аналізі.
+        
+        ⚠️ КРИТИЧНО: Твоя відповідь ОБОВ'ЯЗКОВО має містити ВСІ 6 секцій:
+        1. user_position
+        2. forecast
+        3. recommendation
+        4. market_context ← НЕ ЗАБУДЬ!
+        5. risk_and_influence ← НЕ ЗАБУДЬ!
+        6. summary ← НЕ ЗАБУДЬ!
+        
+        Відповідай ТІЛЬКИ у форматі JSON з усіма секціями!
         `,
       },
     ],
