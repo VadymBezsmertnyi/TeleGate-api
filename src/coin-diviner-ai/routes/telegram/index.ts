@@ -88,17 +88,16 @@ bot.on("callback_query", async (ctx) => {
   try {
     if (callbackData === "close_menu") {
       await ctx.answerCbQuery("Меню закрито");
-      await ctx.editMessageReplyMarkup(undefined);
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
       return;
     }
 
     if (callbackData?.startsWith("reactivate_automation_")) {
       const automationId = callbackData.replace("reactivate_automation_", "");
-
       const automation = await AutomationModel.findById(automationId);
       if (!automation) {
         await ctx.answerCbQuery("Автоматизацію не знайдено ❌");
-        await ctx.editMessageReplyMarkup(undefined);
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
         return;
       }
 
@@ -115,17 +114,17 @@ bot.on("callback_query", async (ctx) => {
       await automation.save();
 
       await ctx.answerCbQuery("✅ Автоматизацію активовано!");
-      await ctx.editMessageReplyMarkup(undefined);
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
       return;
     }
 
     await ctx.answerCbQuery();
-    await ctx.editMessageReplyMarkup(undefined);
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (error) {
     console.warn("Error handling callback query:", error);
     await ctx.answerCbQuery("Виникла помилка ⚠️");
     try {
-      await ctx.editMessageReplyMarkup(undefined);
+      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
     } catch (e) {
       console.warn("Failed to remove keyboard after error:", e);
     }
