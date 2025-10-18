@@ -1,6 +1,6 @@
-import { Telegraf } from "telegraf";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraReplyMessage } from "telegraf/typings/telegram-types";
+import { botTelegramCoinDivinerAI } from "../../routes/telegram";
 
 export const sendMessageToChatId = async (
   chatIdWithUser: string,
@@ -8,8 +8,7 @@ export const sendMessageToChatId = async (
   inlineKeyboard?: InlineKeyboardButton[][]
 ) => {
   try {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN_COIN_DIVINER_AI || "";
-    const bot = new Telegraf(botToken);
+    const bot = botTelegramCoinDivinerAI;
     const options: ExtraReplyMessage = {};
     if (inlineKeyboard)
       options.reply_markup = {

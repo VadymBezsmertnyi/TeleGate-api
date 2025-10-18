@@ -18,7 +18,8 @@ dotenv.config();
 const router = Router();
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN_COIN_DIVINER_AI || "";
-const bot = new Telegraf(botToken);
+export const botTelegramCoinDivinerAI = new Telegraf(botToken);
+const bot = botTelegramCoinDivinerAI;
 
 bot.command("start", async (ctx) => {
   try {
@@ -54,10 +55,6 @@ bot.action("close_menu", async (ctx) => {
   } catch (error) {
     console.warn("Error closing menu:", error);
   }
-});
-
-bot.action("callback_data", async (ctx) => {
-  console.log("Callback data received:", ctx.callbackQuery);
 });
 
 router.post("/webhook", async (req: Request, res: Response) => {
