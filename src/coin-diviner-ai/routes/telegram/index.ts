@@ -9,7 +9,7 @@ import {
   returnTelegramError,
   updateTelegramUserData,
 } from "./telegram.helpers";
-import { TelegramErrorCode, TelegramWebhookUpdate } from "./telegram.types";
+import { TelegramErrorCode } from "./telegram.types";
 import NotificationSettingsModel from "../notification/notification.model";
 import { checkAuth } from "../../hooks/auth";
 import "./telegram.swagger";
@@ -21,13 +21,6 @@ const botToken = process.env.TELEGRAM_BOT_TOKEN_COIN_DIVINER_AI || "";
 const bot = new Telegraf(botToken);
 
 bot.command("start", async (ctx) => {
-  console.warn("Команда /start від користувача:", {
-    userId: ctx.from?.id,
-    username: ctx.from?.username,
-    firstName: ctx.from?.first_name,
-    chatId: ctx.chat?.id,
-  });
-
   try {
     const webhookData = {
       message: {
@@ -41,17 +34,10 @@ bot.command("start", async (ctx) => {
       await ctx.reply(
         `Вітаємо в Coin Diviner AI! 🚀\n\nВаш Telegram успішно підключено до боту.`
       );
-      console.warn(
-        "Telegram user успішно оновлено та повідомлення відправлено:",
-        {
-          userId: updateResult.userId,
-        }
-      );
     } else {
       await ctx.reply(
         `Помилка підключення ❌\n\nСпочатку додайте свій username в налаштуваннях додатку Coin Diviner AI.`
       );
-      console.warn("Не вдалося оновити Telegram user:", updateResult.message);
     }
   } catch (error) {
     console.warn("Помилка обробки команди /start:", error);
@@ -61,68 +47,17 @@ bot.command("start", async (ctx) => {
   }
 });
 
-bot.on("message", async (ctx) => {
-  console.warn("Отримано повідомлення від Telegram:", {
-    userId: ctx.from?.id,
-    username: ctx.from?.username,
-    firstName: ctx.from?.first_name,
-    chatId: ctx.chat?.id,
-    chatType: ctx.chat?.type,
-    text: "text" in ctx.message ? ctx.message.text : undefined,
-    messageId: ctx.message?.message_id,
-  });
-});
-
-bot.on("callback_query", async (ctx) => {
-  console.warn("=== CALLBACK_QUERY EVENT TRIGGERED ===");
-
-  const callbackData =
-    "data" in ctx.callbackQuery ? ctx.callbackQuery.data : undefined;
-
-  console.warn("Отримано callback query від Telegram:", {
-    callbackId: ctx.callbackQuery.id,
-    userId: ctx.from?.id,
-    username: ctx.from?.username,
-    data: callbackData,
-    messageId: ctx.callbackQuery.message?.message_id,
-    chatId: ctx.chat?.id,
-  });
-
+bot.action("close_menu", async (ctx) => {
   try {
-    if (callbackData === "close_menu") {
-      console.warn("Processing close_menu callback...");
-
-      await ctx.answerCbQuery("Меню закрито");
-      console.warn("Answer callback query sent");
-
-      const editResult = await ctx.editMessageReplyMarkup({
-        inline_keyboard: [],
-      });
-      console.warn("Menu edited successfully:", editResult);
-      return;
-    }
-
-    console.warn("Unknown callback_data, closing menu anyway");
-    await ctx.answerCbQuery();
+    await ctx.answerCbQuery("Меню закрито");
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (error) {
-    console.warn("Error handling callback query:", error);
-    try {
-      await ctx.answerCbQuery("Виникла помилка ⚠️");
-    } catch (e) {
-      console.warn("Failed to answer callback query:", e);
-    }
+    console.warn("Error closing menu:", error);
   }
 });
 
 router.post("/webhook", async (req: Request, res: Response) => {
   try {
-    console.warn("=== WEBHOOK RECEIVED ===", {
-      hasCallbackQuery: !!req.body.callback_query,
-      callbackData: req.body.callback_query?.data,
-      rawBody: JSON.stringify(req.body),
-    });
-
     if (!botToken) {
       return returnTelegramError(
         res,
@@ -133,8 +68,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     }
 
     const validationResult = telegramWebhookUpdateSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      console.warn("Webhook validation error:", validationResult.error.issues);
+    if (!validationResult.success)
       return returnTelegramError(
         res,
         400,
@@ -142,24 +76,8 @@ router.post("/webhook", async (req: Request, res: Response) => {
         TelegramErrorCode.VALIDATION_ERROR,
         validationResult.error.issues
       );
-    }
 
-    const webhookData: TelegramWebhookUpdate = validationResult.data;
-
-    console.warn("Telegram webhook отримано:", {
-      updateId: webhookData.update_id,
-      hasMessage: !!webhookData.message,
-      hasCallbackQuery: !!webhookData.callback_query,
-      messageText: webhookData.message?.text,
-      chatId: webhookData.message?.chat?.id,
-      userId:
-        webhookData.message?.from?.id || webhookData.callback_query?.from?.id,
-      callbackData: webhookData.callback_query?.data,
-    });
-
-    console.warn("Passing to bot.handleUpdate...");
     await bot.handleUpdate(req.body);
-    console.warn("bot.handleUpdate completed");
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {
     console.warn("Telegram webhook error:", error);
