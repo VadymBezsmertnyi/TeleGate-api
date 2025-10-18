@@ -241,14 +241,14 @@ const sendNotifications = async (
             [
               {
                 text: "📱 Перейти в Coin Diviner AI",
-                url: `${baseUrl}/api/redirect/coin-diviner-ai`,
+                url: `${baseUrl}/redirect/coin-diviner-ai`,
                 callback_data: "close_menu",
               },
             ],
             [
               {
                 text: "💹 Перейти в Binance",
-                url: `${baseUrl}/api/redirect/binance`,
+                url: `${baseUrl}/redirect/binance`,
                 callback_data: "close_menu",
               },
             ],
