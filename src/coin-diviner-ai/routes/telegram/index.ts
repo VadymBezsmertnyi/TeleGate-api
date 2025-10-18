@@ -56,6 +56,15 @@ bot.action("close_menu", async (ctx) => {
   }
 });
 
+bot.command("close_menu", async (ctx) => {
+  try {
+    await ctx.answerCbQuery("Меню закрито");
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch (error) {
+    console.warn("Error closing menu:", error);
+  }
+});
+
 router.post("/webhook", async (req: Request, res: Response) => {
   try {
     if (!botToken) {
