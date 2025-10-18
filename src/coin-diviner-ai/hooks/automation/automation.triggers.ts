@@ -1,5 +1,7 @@
 import AutomationModel from "../../routes/automation/automation.model";
 import AggregatorService from "../aggregator";
+import DexScreenerService from "../dexscreener";
+import CryptoCoinModel from "../../routes/aggregator/aggregator.model";
 
 import type {
   IAutomationDocument,
@@ -32,35 +34,63 @@ export const checkActiveAutomations = async (): Promise<
     >();
 
     for (const coinId of uniqueCoinIds) {
+      let dexscreenerPrice: number | null = null;
+      let binancePrice: number | null = null;
+      let coingeckoPrice: number | null = null;
+
       try {
-        const prices = await AggregatorService.getAllPrices(coinId);
-        coinPricesMap.set(coinId, {
-          binance: prices.binance?.price || null,
-          dexscreener: prices.dexscreener?.price || null,
-          coingecko: prices.coingecko?.price || null,
-        });
-      } catch (dexError) {
-        try {
-          const coingeckoPrice = await AggregatorService.getPrice(coinId);
-          coinPricesMap.set(coinId, {
-            binance: null,
-            dexscreener: null,
-            coingecko:
-              coingeckoPrice?.source === "coingecko"
-                ? coingeckoPrice.price
-                : null,
-          });
-        } catch (geckoError) {
-          console.warn(
-            `Failed to fetch prices for coin ${coinId}:`,
-            geckoError
-          );
+        const coin = await CryptoCoinModel.findById(coinId);
+        if (!coin) {
           coinPricesMap.set(coinId, {
             binance: null,
             dexscreener: null,
             coingecko: null,
           });
+          continue;
         }
+
+        const contractAddress =
+          coin.coinPaprikaData?.contract_address?.[0]?.address;
+        if (contractAddress || coin.symbol) {
+          try {
+            const dexResult = await DexScreenerService.search(
+              contractAddress || coin.symbol
+            );
+            if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+              const pair = dexResult.pairs[0];
+              const priceValue = parseFloat(pair.priceUsd || "0");
+              if (priceValue && priceValue > 0) {
+                dexscreenerPrice = priceValue;
+              }
+            }
+          } catch (dexError) {
+            console.warn(`DexScreener failed for ${coinId}:`, dexError);
+          }
+        }
+
+        if (dexscreenerPrice === null) {
+          try {
+            const allPrices = await AggregatorService.getAllPrices(coinId);
+            dexscreenerPrice = allPrices.dexscreener?.price || null;
+            binancePrice = allPrices.binance?.price || null;
+            coingeckoPrice = allPrices.coingecko?.price || null;
+          } catch (error) {
+            console.warn(`Failed to fetch all prices for ${coinId}:`, error);
+          }
+        }
+
+        coinPricesMap.set(coinId, {
+          binance: binancePrice,
+          dexscreener: dexscreenerPrice,
+          coingecko: coingeckoPrice,
+        });
+      } catch (error) {
+        console.warn(`Failed to fetch prices for coin ${coinId}:`, error);
+        coinPricesMap.set(coinId, {
+          binance: null,
+          dexscreener: null,
+          coingecko: null,
+        });
       }
     }
 
