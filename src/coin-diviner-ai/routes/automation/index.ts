@@ -79,6 +79,23 @@ router.post("/create", async (req: Request, res: Response) => {
       use_ai,
       enabled_notifications,
     }: TCreateAutomation = validationResult.data;
+    if (target_price && activation_price) {
+      const errorResponse: TValidationError = {
+        message:
+          "Не можна використовувати target_price та activation_price одночасно",
+        errors: [
+          {
+            code: "custom",
+            message:
+              "Не можна використовувати target_price та activation_price одночасно",
+            path: ["target_price", "activation_price"],
+          },
+        ],
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
 
     const cryptoCoin = await CryptoCoinModel.findById(coinId);
     if (!cryptoCoin) {
@@ -269,6 +286,29 @@ router.put("/update", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
+    const finalTargetPrice =
+      target_price !== undefined ? target_price : automation.target_price;
+    const finalActivationPrice =
+      activation_price !== undefined
+        ? activation_price
+        : automation.activation_price;
+    if (finalTargetPrice && finalActivationPrice) {
+      const errorResponse: TValidationError = {
+        message:
+          "Не можна використовувати target_price та activation_price одночасно",
+        errors: [
+          {
+            code: "custom",
+            message:
+              "Не можна використовувати target_price та activation_price одночасно",
+            path: ["target_price", "activation_price"],
+          },
+        ],
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
     if (isActive !== undefined) {
       automation.isActive = isActive;
       // При активації автоматизації скидаємо continuation_price та лічильник
