@@ -235,18 +235,19 @@ const sendNotifications = async (
         if (phone) await sendSmsTurboSMS(message, phone);
       } else if (notificationType === "telegram") {
         const chatId = notificationSettings?.telegram?.chatId;
-        if (chatId) {
+        const baseUrl = process.env.API_BASE_URL_COIN_DIVINER_AI || null;
+        if (chatId && baseUrl) {
           const inlineKeyboard: InlineKeyboardButton[][] = [
             [
               {
                 text: "📱 Перейти в Coin Diviner AI",
-                url: "coindivinerai://",
+                url: `${baseUrl}/redirect/coin-diviner-ai`,
               },
             ],
             [
               {
                 text: "💹 Перейти в Binance",
-                url: "binance://",
+                url: `${baseUrl}/redirect/binance`,
               },
             ],
             [
