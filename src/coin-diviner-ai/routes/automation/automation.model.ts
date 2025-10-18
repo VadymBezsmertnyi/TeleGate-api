@@ -47,6 +47,7 @@ const automationSM = new Schema(
       required: true,
     },
     target_price: { type: Number, default: null },
+    activation_price: { type: Number, default: null },
     isActive: { type: Boolean, default: true },
     use_ai: { type: Boolean, default: false },
     enabled_notifications: {

@@ -31,6 +31,8 @@
  *                 enum: [price_drop, price_rise]
  *               target_price:
  *                 type: number
+ *               activation_price:
+ *                 type: number
  *     responses:
  *       200:
  *         description: Автоматизацію створено
@@ -94,6 +96,8 @@
  *               isActive:
  *                 type: boolean
  *               target_price:
+ *                 type: number
+ *               activation_price:
  *                 type: number
  *               continuation_price:
  *                 type: number

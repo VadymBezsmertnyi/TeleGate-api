@@ -43,6 +43,12 @@ export const createAutomationSchema = z.object({
     .nullable()
     .optional()
     .describe("Цільова ціна для спрацювання (необов'язково)"),
+  activation_price: z
+    .number()
+    .positive()
+    .nullable()
+    .optional()
+    .describe("Ціна активації для початку відстеження continuation_price"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   enabled_notifications: z
     .array(z.enum(["push", "sms", "telegram"]))
@@ -59,6 +65,12 @@ export const updateAutomationSchema = z.object({
     .nullable()
     .optional()
     .describe("Нова цільова ціна"),
+  activation_price: z
+    .number()
+    .positive()
+    .nullable()
+    .optional()
+    .describe("Ціна активації для початку відстеження continuation_price"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   enabled_notifications: z
     .array(z.enum(["push", "sms", "telegram"]))
@@ -78,6 +90,7 @@ export const automationRecordSchema = z.object({
   coinId: z.string().describe("ID крипти"),
   type: z.enum(["price_drop", "price_rise"]).describe("Тип автоматизації"),
   target_price: z.number().nullable().optional().describe("Цільова ціна"),
+  activation_price: z.number().nullable().optional().describe("Ціна активації"),
   isActive: z.boolean().describe("Чи активна автоматизація"),
   use_ai: z.boolean().optional().describe("Чи задіювати ШІ для підказок"),
   enabled_notifications: z

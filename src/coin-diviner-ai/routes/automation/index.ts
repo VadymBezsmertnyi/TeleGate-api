@@ -75,6 +75,7 @@ router.post("/create", async (req: Request, res: Response) => {
       coinId,
       type,
       target_price,
+      activation_price,
       use_ai,
       enabled_notifications,
     }: TCreateAutomation = validationResult.data;
@@ -123,6 +124,7 @@ router.post("/create", async (req: Request, res: Response) => {
       coinId: cryptoCoin._id,
       type,
       target_price: target_price || null,
+      activation_price: activation_price || null,
       use_ai: use_ai || false,
       enabled_notifications: enabled_notifications || ["push"],
       prices,
@@ -250,6 +252,7 @@ router.put("/update", async (req: Request, res: Response) => {
       automationId,
       isActive,
       target_price,
+      activation_price,
       use_ai,
       enabled_notifications,
       continuation_price,
@@ -283,6 +286,8 @@ router.put("/update", async (req: Request, res: Response) => {
     }
     if (target_price !== undefined)
       automation.set("target_price", target_price);
+    if (activation_price !== undefined)
+      automation.set("activation_price", activation_price);
     if (use_ai !== undefined) automation.use_ai = use_ai;
     if (enabled_notifications !== undefined)
       automation.enabled_notifications = enabled_notifications;
