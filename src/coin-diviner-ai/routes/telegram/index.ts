@@ -117,6 +117,12 @@ bot.on("callback_query", async (ctx) => {
 
 router.post("/webhook", async (req: Request, res: Response) => {
   try {
+    console.warn("=== WEBHOOK RECEIVED ===", {
+      hasCallbackQuery: !!req.body.callback_query,
+      callbackData: req.body.callback_query?.data,
+      rawBody: JSON.stringify(req.body),
+    });
+
     if (!botToken) {
       return returnTelegramError(
         res,
@@ -151,7 +157,9 @@ router.post("/webhook", async (req: Request, res: Response) => {
       callbackData: webhookData.callback_query?.data,
     });
 
+    console.warn("Passing to bot.handleUpdate...");
     await bot.handleUpdate(req.body);
+    console.warn("bot.handleUpdate completed");
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {
     console.warn("Telegram webhook error:", error);
