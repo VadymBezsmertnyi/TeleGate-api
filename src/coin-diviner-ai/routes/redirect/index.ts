@@ -7,7 +7,7 @@ router.get("/coin-diviner-ai", (req: Request, res: Response) => {
 });
 
 router.get("/binance", (req: Request, res: Response) => {
-  res.redirect("binance://");
+  res.redirect("bnc://app.binance.com");
 });
 
 router.get("/coin-diviner-ai/coin/:coinId", (req: Request, res: Response) => {
