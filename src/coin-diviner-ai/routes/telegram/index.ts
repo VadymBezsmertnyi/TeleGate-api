@@ -11,7 +11,6 @@ import {
 } from "./telegram.helpers";
 import { TelegramErrorCode, TelegramWebhookUpdate } from "./telegram.types";
 import NotificationSettingsModel from "../notification/notification.model";
-import AutomationModel from "../automation/automation.model";
 import { checkAuth } from "../../hooks/auth";
 import "./telegram.swagger";
 
@@ -75,6 +74,8 @@ bot.on("message", async (ctx) => {
 });
 
 bot.on("callback_query", async (ctx) => {
+  console.warn("=== CALLBACK_QUERY EVENT TRIGGERED ===");
+
   const callbackData =
     "data" in ctx.callbackQuery ? ctx.callbackQuery.data : undefined;
 
@@ -83,50 +84,33 @@ bot.on("callback_query", async (ctx) => {
     userId: ctx.from?.id,
     username: ctx.from?.username,
     data: callbackData,
+    messageId: ctx.callbackQuery.message?.message_id,
+    chatId: ctx.chat?.id,
   });
 
   try {
     if (callbackData === "close_menu") {
+      console.warn("Processing close_menu callback...");
+
       await ctx.answerCbQuery("Меню закрито");
-      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+      console.warn("Answer callback query sent");
+
+      const editResult = await ctx.editMessageReplyMarkup({
+        inline_keyboard: [],
+      });
+      console.warn("Menu edited successfully:", editResult);
       return;
     }
 
-    if (callbackData?.startsWith("reactivate_automation_")) {
-      const automationId = callbackData.replace("reactivate_automation_", "");
-      const automation = await AutomationModel.findById(automationId);
-      if (!automation) {
-        await ctx.answerCbQuery("Автоматизацію не знайдено ❌");
-        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-        return;
-      }
-
-      automation.isActive = true;
-      automation.set("continuation_price", null);
-      automation.continuation_count = (automation.continuation_count || 0) + 1;
-      automation.notifications.push_sent = false;
-      automation.notifications.sms_sent = false;
-      automation.notifications.telegram_sent = false;
-      automation.set("notifications.push_sent_at", null);
-      automation.set("notifications.sms_sent_at", null);
-      automation.set("notifications.telegram_sent_at", null);
-
-      await automation.save();
-
-      await ctx.answerCbQuery("✅ Автоматизацію активовано!");
-      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-      return;
-    }
-
+    console.warn("Unknown callback_data, closing menu anyway");
     await ctx.answerCbQuery();
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   } catch (error) {
     console.warn("Error handling callback query:", error);
-    await ctx.answerCbQuery("Виникла помилка ⚠️");
     try {
-      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+      await ctx.answerCbQuery("Виникла помилка ⚠️");
     } catch (e) {
-      console.warn("Failed to remove keyboard after error:", e);
+      console.warn("Failed to answer callback query:", e);
     }
   }
 });
