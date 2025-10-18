@@ -6,6 +6,7 @@ export interface IAutomationDocument extends Document {
   coinId: Types.ObjectId;
   type: "price_drop" | "price_rise";
   target_price: number | null;
+  activation_price: number | null;
   isActive: boolean;
   use_ai: boolean;
   enabled_notifications: ("push" | "sms" | "telegram")[];

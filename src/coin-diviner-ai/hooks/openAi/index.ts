@@ -549,6 +549,7 @@ export const generatePrediction = async ({
  * @param triggerType - Тип тригера: "price_drop" або "price_rise".
  * @param targetPrice - Цільова ціна або null, якщо не встановлена.
  * @param notificationType - Тип повідомлення: "push", "sms" або "telegram".
+ * @param activationPrice - Ціна активації або null, якщо не встановлена.
  * @returns Згенероване повідомлення як рядок.
  */
 export const generateAutomationMessage = async (
@@ -556,7 +557,8 @@ export const generateAutomationMessage = async (
   currentPrice: number,
   triggerType: "price_drop" | "price_rise",
   targetPrice: number | null,
-  notificationType: "push" | "sms" | "telegram"
+  notificationType: "push" | "sms" | "telegram",
+  activationPrice?: number | null
 ): Promise<string> => {
   try {
     const triggerTypeUk =
@@ -583,6 +585,8 @@ export const generateAutomationMessage = async (
 ${
   targetPrice
     ? `3. Цільову ціну (${targetPrice})`
+    : activationPrice
+    ? `3. Ціну активації (${activationPrice}) та факт відстеження екстремумів`
     : "3. Рекомендацію що робити далі"
 }
 
@@ -593,7 +597,13 @@ ${
 Криптовалюта: ${coinSymbol}
 Поточна ціна: $${currentPrice}
 Тип тригера: ${triggerTypeUk}
-${targetPrice ? `Цільова ціна: $${targetPrice}` : "Цільова ціна не встановлена"}
+${
+  targetPrice
+    ? `Цільова ціна: $${targetPrice}`
+    : activationPrice
+    ? `Ціна активації: $${activationPrice} (відстеження після активації)`
+    : "Цільова ціна не встановлена"
+}
 Тип повідомлення: ${notificationTypeText}
 
 Створи відповідне повідомлення.

@@ -44,7 +44,8 @@ export const executeAutomationActions = async (
             currentPrice,
             automation.type,
             automation.target_price,
-            notificationType
+            notificationType,
+            automation.activation_price
           );
 
           if (message) {
@@ -61,10 +62,13 @@ export const executeAutomationActions = async (
         } до $${currentPrice} (цільова: $${automation.target_price})`;
       } else {
         const extremePrice = automation.continuation_price;
+        const activationInfo = automation.activation_price
+          ? ` (активація: $${automation.activation_price})`
+          : "";
         defaultMessage = `${coin.symbol}: ${
           automation.type === "price_rise"
-            ? `Корекція до $${currentPrice} (з максимуму $${extremePrice})`
-            : `Відскок до $${currentPrice} (з мінімуму $${extremePrice})`
+            ? `Корекція до $${currentPrice} (з максимуму $${extremePrice})${activationInfo}`
+            : `Відскок до $${currentPrice} (з мінімуму $${extremePrice})${activationInfo}`
         }`;
       }
 
@@ -129,6 +133,7 @@ const generateTelegramMessage = (
   automation: {
     type: string;
     target_price: number | null;
+    activation_price?: number | null;
     continuation_price?: number | null;
     prices?: {
       dexscreener?: { price: number } | null;
@@ -177,6 +182,9 @@ const generateTelegramMessage = (
       `📍 ${extremeLabel.charAt(0).toUpperCase() + extremeLabel.slice(1)}: $${
         extremePrice || "N/A"
       }\n` +
+      (automation.activation_price
+        ? `🎯 Ціна активації: $${automation.activation_price}\n`
+        : "") +
       `📊 Зміна: ${priceChange > 0 ? "+" : ""}${priceChange.toFixed(2)}%\n\n` +
       `${
         automation.type === "price_rise"

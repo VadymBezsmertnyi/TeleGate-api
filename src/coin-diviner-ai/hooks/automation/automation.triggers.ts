@@ -147,6 +147,31 @@ export const checkPriceRise = async (
       };
     }
 
+    if (automation.activation_price) {
+      if (currentPrice < automation.activation_price)
+        return {
+          triggered: false,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Очікування активації (поточна: ${currentPrice}, поріг: ${automation.activation_price})`,
+        };
+
+      if (!automation.continuation_price) {
+        await AutomationModel.findByIdAndUpdate(automation._id, {
+          continuation_price: currentPrice,
+        });
+
+        return {
+          triggered: false,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Активовано! Встановлено початкову ціну ${currentPrice} для відстеження максимуму`,
+        };
+      }
+    }
+
     if (!automation.continuation_price) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
         continuation_price: currentPrice,
@@ -237,6 +262,32 @@ export const checkPriceDrop = async (
         reason: "Ціна не досягла цільового значення",
       };
     }
+
+    if (automation.activation_price) {
+      if (currentPrice > automation.activation_price)
+        return {
+          triggered: false,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Очікування активації (поточна: ${currentPrice}, поріг: ${automation.activation_price})`,
+        };
+
+      if (!automation.continuation_price) {
+        await AutomationModel.findByIdAndUpdate(automation._id, {
+          continuation_price: currentPrice,
+        });
+
+        return {
+          triggered: false,
+          automation,
+          currentPrice,
+          priceSource,
+          reason: `Активовано! Встановлено початкову ціну ${currentPrice} для відстеження мінімуму`,
+        };
+      }
+    }
+
     if (!automation.continuation_price) {
       await AutomationModel.findByIdAndUpdate(automation._id, {
         continuation_price: currentPrice,
