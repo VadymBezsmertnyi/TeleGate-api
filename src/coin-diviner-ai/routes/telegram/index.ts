@@ -67,14 +67,13 @@ bot.command("close_menu", async (ctx) => {
 
 router.post("/webhook", async (req: Request, res: Response) => {
   try {
-    if (!botToken) {
+    if (!botToken)
       return returnTelegramError(
         res,
         500,
         "Bot token is missing",
         TelegramErrorCode.BOT_TOKEN_MISSING
       );
-    }
 
     const validationResult = telegramWebhookUpdateSchema.safeParse(req.body);
     if (!validationResult.success)
@@ -101,17 +100,16 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
 router.post("/set-webhook", async (req: Request, res: Response) => {
   try {
-    if (!botToken) {
+    if (!botToken)
       return returnTelegramError(
         res,
         500,
         "Bot token is missing",
         TelegramErrorCode.BOT_TOKEN_MISSING
       );
-    }
 
     const validationResult = setWebhookSchema.safeParse(req.body);
-    if (!validationResult.success) {
+    if (!validationResult.success)
       return returnTelegramError(
         res,
         400,
@@ -119,7 +117,6 @@ router.post("/set-webhook", async (req: Request, res: Response) => {
         TelegramErrorCode.VALIDATION_ERROR,
         validationResult.error.issues
       );
-    }
 
     const { webhookUrl } = validationResult.data;
 
@@ -149,13 +146,11 @@ router.get("/check-connection", async (req: Request, res: Response) => {
     const notificationSettings = await NotificationSettingsModel.findOne({
       userId: decoded.userId,
     });
-
-    if (!notificationSettings) {
+    if (!notificationSettings)
       return res.status(200).json({
         connected: false,
         message: "Notification settings not found",
       });
-    }
 
     const isConnected =
       notificationSettings.telegram &&
