@@ -8,6 +8,7 @@ import { sendMessageToChatId } from "../../helpers/telegram/telegram.helpers";
 import { generateAutomationMessage } from "../openAi";
 
 import type { ITriggerResult } from "./automation.types";
+import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 /**
  * Виконує дії для спрацьованих автоматизацій: генерує повідомлення через AI та відправляє сповіщення
@@ -88,7 +89,8 @@ export const executeAutomationActions = async (
         finalMessage,
         telegramMessage,
         coin,
-        notificationSettings
+        notificationSettings,
+        automation._id.toString()
       );
       // Деактивуємо автоматизацію одразу після відправки
       await AutomationModel.findByIdAndUpdate(automation._id, {
@@ -215,7 +217,8 @@ const sendNotifications = async (
       firstName?: string | null;
       lastName?: string | null;
     } | null;
-  } | null
+  } | null,
+  automationId: string
 ): Promise<void> => {
   const notificationTitle = `Автоматизація: ${coin.symbol}`;
 
@@ -232,7 +235,35 @@ const sendNotifications = async (
         if (phone) await sendSmsTurboSMS(message, phone);
       } else if (notificationType === "telegram") {
         const chatId = notificationSettings?.telegram?.chatId;
-        if (chatId) await sendMessageToChatId(chatId, telegramMessage);
+        if (chatId) {
+          const inlineKeyboard: InlineKeyboardButton[][] = [
+            [
+              {
+                text: "📱 Перейти в Coin Diviner AI",
+                url: "coindivinerai://",
+              },
+            ],
+            [
+              {
+                text: "💹 Перейти в Binance",
+                url: "binance://",
+              },
+            ],
+            [
+              {
+                text: "🔄 Активувати ще раз",
+                callback_data: `reactivate_automation_${automationId}`,
+              },
+            ],
+            [
+              {
+                text: "❌ Закрити меню",
+                callback_data: "close_menu",
+              },
+            ],
+          ];
+          await sendMessageToChatId(chatId, telegramMessage, inlineKeyboard);
+        }
       }
     } catch (error) {
       console.warn(

@@ -11,6 +11,7 @@ import {
 } from "./telegram.helpers";
 import { TelegramErrorCode, TelegramWebhookUpdate } from "./telegram.types";
 import NotificationSettingsModel from "../notification/notification.model";
+import AutomationModel from "../automation/automation.model";
 import { checkAuth } from "../../hooks/auth";
 import "./telegram.swagger";
 
@@ -74,12 +75,54 @@ bot.on("message", async (ctx) => {
 });
 
 bot.on("callback_query", async (ctx) => {
+  const callbackData =
+    "data" in ctx.callbackQuery ? ctx.callbackQuery.data : undefined;
+
   console.warn("Отримано callback query від Telegram:", {
     callbackId: ctx.callbackQuery.id,
     userId: ctx.from?.id,
     username: ctx.from?.username,
-    data: "data" in ctx.callbackQuery ? ctx.callbackQuery.data : undefined,
+    data: callbackData,
   });
+
+  try {
+    if (callbackData === "close_menu") {
+      await ctx.editMessageReplyMarkup(undefined);
+      await ctx.answerCbQuery("Меню закрито");
+      return;
+    }
+
+    if (callbackData?.startsWith("reactivate_automation_")) {
+      const automationId = callbackData.replace("reactivate_automation_", "");
+
+      const automation = await AutomationModel.findById(automationId);
+      if (!automation) {
+        await ctx.answerCbQuery("Автоматизацію не знайдено ❌");
+        return;
+      }
+
+      automation.isActive = true;
+      automation.set("continuation_price", null);
+      automation.continuation_count = (automation.continuation_count || 0) + 1;
+      automation.notifications.push_sent = false;
+      automation.notifications.sms_sent = false;
+      automation.notifications.telegram_sent = false;
+      automation.set("notifications.push_sent_at", null);
+      automation.set("notifications.sms_sent_at", null);
+      automation.set("notifications.telegram_sent_at", null);
+
+      await automation.save();
+
+      await ctx.answerCbQuery("✅ Автоматизацію активовано!");
+      await ctx.editMessageReplyMarkup(undefined);
+      return;
+    }
+
+    await ctx.answerCbQuery();
+  } catch (error) {
+    console.warn("Error handling callback query:", error);
+    await ctx.answerCbQuery("Виникла помилка ⚠️");
+  }
 });
 
 router.post("/webhook", async (req: Request, res: Response) => {
