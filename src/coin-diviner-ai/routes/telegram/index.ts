@@ -30,16 +30,15 @@ bot.command("start", async (ctx) => {
       },
     };
 
-    const updateResult = await updateTelegramUserData(webhookData as any);
-    if (updateResult.success) {
+    const updateResult = await updateTelegramUserData(webhookData);
+    if (updateResult.success)
       await ctx.reply(
         `Вітаємо в Coin Diviner AI! 🚀\n\nВаш Telegram успішно підключено до боту.`
       );
-    } else {
+    else
       await ctx.reply(
         `Помилка підключення ❌\n\nСпочатку додайте свій username в налаштуваннях додатку Coin Diviner AI.`
       );
-    }
   } catch (error) {
     console.warn("Помилка обробки команди /start:", error);
     await ctx.reply(
@@ -68,6 +67,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
         validationResult.error.issues
       );
 
+    console.log("Telegram webhook received:", req.body);
     await bot.handleUpdate(req.body);
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {
