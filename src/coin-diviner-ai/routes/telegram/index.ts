@@ -67,7 +67,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
         validationResult.error.issues
       );
 
-    console.log("Telegram webhook received:", req.body);
     await bot.handleUpdate(req.body);
     return res.status(200).json({ message: "Webhook received" });
   } catch (error) {

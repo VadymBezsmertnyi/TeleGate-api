@@ -32,10 +32,6 @@ export const updateTelegramUserData = async (
   webhookData: TelegramWebhookUpdate
 ): Promise<UpdateTelegramUserResult> => {
   try {
-    console.log(
-      "Webhook data received for updating Telegram user data:",
-      webhookData
-    );
     const username =
       webhookData.message?.from?.username ||
       webhookData.callback_query?.from?.username;
