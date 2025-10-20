@@ -4,6 +4,8 @@ import { Router, Request, Response } from "express";
 import {
   createOrUpdatePortfolioSchema,
   addTransactionSchema,
+  updateTransactionSchema,
+  deleteTransactionSchema,
   portfolioResponseSchema,
   portfolioListResponseSchema,
   deleteResponseSchema,
@@ -18,6 +20,8 @@ import {
 import type {
   TCreateOrUpdatePortfolio,
   TAddTransaction,
+  TUpdateTransaction,
+  TDeleteTransaction,
   TPortfolioResponse,
   TPortfolioListResponse,
   TDeleteResponse,
@@ -104,7 +108,7 @@ router.post("/create-or-update", async (req: Request, res: Response) => {
         sales: [],
       });
     } else {
-      portfolio.purchases.push(transaction as any);
+      portfolio.purchases.push(transaction);
       await portfolio.save();
     }
 
@@ -195,8 +199,7 @@ router.post("/add-purchase", async (req: Request, res: Response) => {
       price_per_unit,
       date: new Date(),
     };
-
-    portfolio.purchases.push(transaction as any);
+    portfolio.purchases.push(transaction);
     await portfolio.save();
 
     const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
@@ -286,8 +289,7 @@ router.post("/add-sale", async (req: Request, res: Response) => {
       price_per_unit,
       date: new Date(),
     };
-
-    portfolio.sales.push(transaction as any);
+    portfolio.sales.push(transaction);
     await portfolio.save();
 
     const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
@@ -519,6 +521,186 @@ router.get("/by-id/:portfolioId", async (req: Request, res: Response) => {
     return res.status(200).json(responseValidation.data);
   } catch (error) {
     console.warn("Get portfolio by id error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.patch("/update-transaction", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = updateTransactionSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const {
+      portfolioId,
+      transactionId,
+      transactionType,
+      amount_usd,
+      amount_crypto,
+      price_per_unit,
+    }: TUpdateTransaction = validationResult.data;
+    const portfolio = await PortfolioModel.findOne({
+      _id: portfolioId,
+      userId: user._id,
+    });
+    if (!portfolio) {
+      const errorResponse: TNotFoundError = {
+        message: "Portfolio not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const transactionsArray =
+      transactionType === "purchase" ? portfolio.purchases : portfolio.sales;
+    const transactionIndex = transactionsArray.findIndex(
+      (t) => t._id.toString() === transactionId
+    );
+    if (transactionIndex === -1) {
+      const errorResponse: TNotFoundError = {
+        message: "Transaction not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    transactionsArray[transactionIndex].amount_usd = amount_usd;
+    transactionsArray[transactionIndex].amount_crypto = amount_crypto;
+    transactionsArray[transactionIndex].price_per_unit = price_per_unit;
+
+    await portfolio.save();
+
+    const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
+    if (!portfolioData) {
+      const errorResponse: TServerError = {
+        message: "Failed to retrieve portfolio",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    const responseData: TPortfolioResponse = {
+      success: true,
+      data: getDataPortfolioData(portfolioData),
+    };
+    const responseValidation = portfolioResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Update transaction error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.delete("/delete-transaction", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = deleteTransactionSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { portfolioId, transactionId, transactionType }: TDeleteTransaction =
+      validationResult.data;
+    const portfolio = await PortfolioModel.findOne({
+      _id: portfolioId,
+      userId: user._id,
+    });
+    if (!portfolio) {
+      const errorResponse: TNotFoundError = {
+        message: "Portfolio not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const transactionsArray =
+      transactionType === "purchase" ? portfolio.purchases : portfolio.sales;
+    const transactionIndex = transactionsArray.findIndex(
+      (t) => t._id.toString() === transactionId
+    );
+    if (transactionIndex === -1) {
+      const errorResponse: TNotFoundError = {
+        message: "Transaction not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    transactionsArray.splice(transactionIndex, 1);
+    await portfolio.save();
+
+    const responseData: TDeleteResponse = {
+      success: true,
+      message: "Transaction deleted successfully",
+    };
+    const responseValidation = deleteResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Delete transaction error:", error);
 
     const errorResponse: TServerError = {
       message: "Server error: " + error,

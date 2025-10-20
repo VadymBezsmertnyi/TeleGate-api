@@ -100,6 +100,54 @@
  *           type: number
  *           description: Ціна за одиницю
  *
+ *     UpdateTransactionRequest:
+ *       type: object
+ *       required:
+ *         - portfolioId
+ *         - transactionId
+ *         - transactionType
+ *         - amount_usd
+ *         - amount_crypto
+ *         - price_per_unit
+ *       properties:
+ *         portfolioId:
+ *           type: string
+ *           description: ID портфоліо
+ *         transactionId:
+ *           type: string
+ *           description: ID транзакції
+ *         transactionType:
+ *           type: string
+ *           enum: [purchase, sale]
+ *           description: Тип транзакції
+ *         amount_usd:
+ *           type: number
+ *           description: Сума в доларах США
+ *         amount_crypto:
+ *           type: number
+ *           description: Кількість криптовалюти
+ *         price_per_unit:
+ *           type: number
+ *           description: Ціна за одиницю
+ *
+ *     DeleteTransactionRequest:
+ *       type: object
+ *       required:
+ *         - portfolioId
+ *         - transactionId
+ *         - transactionType
+ *       properties:
+ *         portfolioId:
+ *           type: string
+ *           description: ID портфоліо
+ *         transactionId:
+ *           type: string
+ *           description: ID транзакції
+ *         transactionType:
+ *           type: string
+ *           enum: [purchase, sale]
+ *           description: Тип транзакції
+ *
  *   securitySchemes:
  *     BearerAuth:
  *       type: http
@@ -315,6 +363,78 @@
  *         description: Не авторизовано
  *       404:
  *         description: Портфоліо не знайдено
+ *       500:
+ *         description: Помилка сервера
+ */
+
+/**
+ * @swagger
+ * /coin-diviner-ai/api/portfolio/update-transaction:
+ *   patch:
+ *     summary: Редагувати транзакцію в портфоліо
+ *     tags: [Portfolio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTransactionRequest'
+ *     responses:
+ *       200:
+ *         description: Транзакцію успішно оновлено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Portfolio'
+ *       400:
+ *         description: Помилка валідації
+ *       401:
+ *         description: Не авторизовано
+ *       404:
+ *         description: Портфоліо або транзакцію не знайдено
+ *       500:
+ *         description: Помилка сервера
+ */
+
+/**
+ * @swagger
+ * /coin-diviner-ai/api/portfolio/delete-transaction:
+ *   delete:
+ *     summary: Видалити транзакцію з портфоліо
+ *     tags: [Portfolio]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DeleteTransactionRequest'
+ *     responses:
+ *       200:
+ *         description: Транзакцію успішно видалено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Помилка валідації
+ *       401:
+ *         description: Не авторизовано
+ *       404:
+ *         description: Портфоліо або транзакцію не знайдено
  *       500:
  *         description: Помилка сервера
  */

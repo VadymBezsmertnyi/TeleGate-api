@@ -23,6 +23,21 @@ export const addTransactionSchema = z.object({
   price_per_unit: z.number().positive(),
 });
 
+export const updateTransactionSchema = z.object({
+  portfolioId: z.string().min(1),
+  transactionId: z.string().min(1),
+  transactionType: z.enum(["purchase", "sale"]),
+  amount_usd: z.number().positive(),
+  amount_crypto: z.number().positive(),
+  price_per_unit: z.number().positive(),
+});
+
+export const deleteTransactionSchema = z.object({
+  portfolioId: z.string().min(1),
+  transactionId: z.string().min(1),
+  transactionType: z.enum(["purchase", "sale"]),
+});
+
 export const portfolioRecordSchema = z.object({
   _id: z.string(),
   userId: z.string(),
