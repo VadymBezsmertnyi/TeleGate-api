@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cryptoCoinSchema } from "../aggregator/aggregator.schemas";
 
 export const transactionSchema = z.object({
   _id: z.string().optional(),
@@ -26,6 +27,7 @@ export const portfolioRecordSchema = z.object({
   _id: z.string(),
   userId: z.string(),
   coinId: z.string(),
+  coin: cryptoCoinSchema.optional().nullable(),
   purchases: z.array(transactionSchema),
   sales: z.array(transactionSchema),
   createdAt: z.string(),

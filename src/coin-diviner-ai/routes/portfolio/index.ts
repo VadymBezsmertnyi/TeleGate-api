@@ -36,6 +36,7 @@ import CryptoCoinModel from "../aggregator/aggregator.model";
 
 // hooks
 import { checkAuth } from "../../hooks/auth";
+import { getDataPortfolioData } from "./portfolio.helps";
 
 // swagger
 import "./portfolio.swagger";
@@ -118,27 +119,7 @@ router.post("/create-or-update", async (req: Request, res: Response) => {
 
     const responseData: TPortfolioResponse = {
       success: true,
-      data: {
-        _id: portfolioData._id.toString(),
-        userId: portfolioData.userId.toString(),
-        coinId: portfolioData.coinId.toString(),
-        purchases: portfolioData.purchases.map((p: any) => ({
-          _id: p._id?.toString(),
-          amount_usd: p.amount_usd,
-          amount_crypto: p.amount_crypto,
-          price_per_unit: p.price_per_unit,
-          date: p.date.toISOString(),
-        })),
-        sales: portfolioData.sales.map((s: any) => ({
-          _id: s._id?.toString(),
-          amount_usd: s.amount_usd,
-          amount_crypto: s.amount_crypto,
-          price_per_unit: s.price_per_unit,
-          date: s.date.toISOString(),
-        })),
-        createdAt: portfolioData.createdAt.toISOString(),
-        updatedAt: portfolioData.updatedAt.toISOString(),
-      },
+      data: getDataPortfolioData(portfolioData),
     };
 
     const responseValidation = portfolioResponseSchema.safeParse(responseData);
@@ -229,27 +210,7 @@ router.post("/add-purchase", async (req: Request, res: Response) => {
 
     const responseData: TPortfolioResponse = {
       success: true,
-      data: {
-        _id: portfolioData._id.toString(),
-        userId: portfolioData.userId.toString(),
-        coinId: portfolioData.coinId.toString(),
-        purchases: portfolioData.purchases.map((p: any) => ({
-          _id: p._id?.toString(),
-          amount_usd: p.amount_usd,
-          amount_crypto: p.amount_crypto,
-          price_per_unit: p.price_per_unit,
-          date: p.date.toISOString(),
-        })),
-        sales: portfolioData.sales.map((s: any) => ({
-          _id: s._id?.toString(),
-          amount_usd: s.amount_usd,
-          amount_crypto: s.amount_crypto,
-          price_per_unit: s.price_per_unit,
-          date: s.date.toISOString(),
-        })),
-        createdAt: portfolioData.createdAt.toISOString(),
-        updatedAt: portfolioData.updatedAt.toISOString(),
-      },
+      data: getDataPortfolioData(portfolioData),
     };
 
     const responseValidation = portfolioResponseSchema.safeParse(responseData);
@@ -340,27 +301,7 @@ router.post("/add-sale", async (req: Request, res: Response) => {
 
     const responseData: TPortfolioResponse = {
       success: true,
-      data: {
-        _id: portfolioData._id.toString(),
-        userId: portfolioData.userId.toString(),
-        coinId: portfolioData.coinId.toString(),
-        purchases: portfolioData.purchases.map((p: any) => ({
-          _id: p._id?.toString(),
-          amount_usd: p.amount_usd,
-          amount_crypto: p.amount_crypto,
-          price_per_unit: p.price_per_unit,
-          date: p.date.toISOString(),
-        })),
-        sales: portfolioData.sales.map((s: any) => ({
-          _id: s._id?.toString(),
-          amount_usd: s.amount_usd,
-          amount_crypto: s.amount_crypto,
-          price_per_unit: s.price_per_unit,
-          date: s.date.toISOString(),
-        })),
-        createdAt: portfolioData.createdAt.toISOString(),
-        updatedAt: portfolioData.updatedAt.toISOString(),
-      },
+      data: getDataPortfolioData(portfolioData),
     };
 
     const responseValidation = portfolioResponseSchema.safeParse(responseData);
@@ -474,33 +415,21 @@ router.get("/list", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    const portfolios = await PortfolioModel.find({ userId: user._id })
-      .sort({ createdAt: -1 })
-      .lean();
+    const view = req.query.view as string | undefined;
+    const shouldPopulateCoin = view === "all";
+    let query = PortfolioModel.find({ userId: user._id }).sort({
+      createdAt: -1,
+    });
+    if (shouldPopulateCoin) query = query.populate("coinId");
+
+    const portfolios = await query.lean();
+    const data = portfolios
+      .map((portfolio) => getDataPortfolioData(portfolio))
+      .filter((portfolio) => portfolio !== null);
 
     const responseData: TPortfolioListResponse = {
       success: true,
-      data: portfolios.map((portfolio) => ({
-        _id: portfolio._id.toString(),
-        userId: portfolio.userId.toString(),
-        coinId: portfolio.coinId.toString(),
-        purchases: portfolio.purchases.map((p: any) => ({
-          _id: p._id?.toString(),
-          amount_usd: p.amount_usd,
-          amount_crypto: p.amount_crypto,
-          price_per_unit: p.price_per_unit,
-          date: p.date.toISOString(),
-        })),
-        sales: portfolio.sales.map((s: any) => ({
-          _id: s._id?.toString(),
-          amount_usd: s.amount_usd,
-          amount_crypto: s.amount_crypto,
-          price_per_unit: s.price_per_unit,
-          date: s.date.toISOString(),
-        })),
-        createdAt: portfolio.createdAt.toISOString(),
-        updatedAt: portfolio.updatedAt.toISOString(),
-      })),
+      data,
     };
 
     const responseValidation =
@@ -560,7 +489,9 @@ router.get("/by-id/:portfolioId", async (req: Request, res: Response) => {
     const portfolio = await PortfolioModel.findOne({
       _id: portfolioId,
       userId: user._id,
-    }).lean();
+    })
+      .populate("coinId")
+      .lean();
 
     if (!portfolio) {
       const errorResponse: TNotFoundError = {
@@ -572,27 +503,7 @@ router.get("/by-id/:portfolioId", async (req: Request, res: Response) => {
 
     const responseData: TPortfolioResponse = {
       success: true,
-      data: {
-        _id: portfolio._id.toString(),
-        userId: portfolio.userId.toString(),
-        coinId: portfolio.coinId.toString(),
-        purchases: portfolio.purchases.map((p: any) => ({
-          _id: p._id?.toString(),
-          amount_usd: p.amount_usd,
-          amount_crypto: p.amount_crypto,
-          price_per_unit: p.price_per_unit,
-          date: p.date.toISOString(),
-        })),
-        sales: portfolio.sales.map((s: any) => ({
-          _id: s._id?.toString(),
-          amount_usd: s.amount_usd,
-          amount_crypto: s.amount_crypto,
-          price_per_unit: s.price_per_unit,
-          date: s.date.toISOString(),
-        })),
-        createdAt: portfolio.createdAt.toISOString(),
-        updatedAt: portfolio.updatedAt.toISOString(),
-      },
+      data: getDataPortfolioData(portfolio),
     };
 
     const responseValidation = portfolioResponseSchema.safeParse(responseData);
