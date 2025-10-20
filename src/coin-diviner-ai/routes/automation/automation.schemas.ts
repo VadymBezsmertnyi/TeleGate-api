@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cryptoCoinSchema } from "../aggregator/aggregator.schemas";
 
 export const priceSourceSchema = z.object({
   price: z.number().nullable().describe("Ціна на момент створення"),
@@ -88,6 +89,10 @@ export const automationRecordSchema = z.object({
   _id: z.string().describe("ID запису"),
   userId: z.string().describe("ID користувача"),
   coinId: z.string().describe("ID крипти"),
+  coin: cryptoCoinSchema
+    .optional()
+    .nullable()
+    .describe("Дані про криптовалюту"),
   type: z.enum(["price_drop", "price_rise"]).describe("Тип автоматизації"),
   target_price: z.number().nullable().optional().describe("Цільова ціна"),
   activation_price: z.number().nullable().optional().describe("Ціна активації"),

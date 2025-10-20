@@ -4,8 +4,14 @@ export const getDataAutomationData = (automation: any) => {
   if (!automation || typeof automation !== "object" || !automation._id)
     return null;
 
+  const coin =
+    automation.coinId && typeof automation.coinId === "object"
+      ? { ...automation.coinId }
+      : null;
+
   const responseData: TAutomationRecord = {
     ...automation,
+    coin,
     prices: {
       ...automation.prices,
       binance: automation.prices?.binance
@@ -47,7 +53,10 @@ export const getDataAutomationData = (automation: any) => {
     },
     _id: automation._id.toString(),
     userId: automation.userId.toString(),
-    coinId: automation.coinId.toString(),
+    coinId:
+      typeof automation.coinId === "object"
+        ? automation.coinId._id.toString()
+        : automation.coinId.toString(),
     createdAt: automation.createdAt.toISOString(),
     updatedAt: automation.updatedAt.toISOString(),
   };

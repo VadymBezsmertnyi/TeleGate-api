@@ -211,6 +211,7 @@ router.get("/list", async (req: Request, res: Response) => {
     if (req.query.coinId) filter.coinId = req.query.coinId;
 
     const automations = await AutomationModel.find(filter)
+      .populate("coinId")
       .sort({ createdAt: -1 })
       .lean();
     const data = automations
@@ -481,7 +482,9 @@ router.get("/by-id/:automationId", async (req: Request, res: Response) => {
     const automation = await AutomationModel.findOne({
       _id: automationId,
       userId: user._id,
-    }).lean();
+    })
+      .populate("coinId")
+      .lean();
     if (!automation) {
       const errorResponse: TNotFoundError = {
         message: "Automation not found",
