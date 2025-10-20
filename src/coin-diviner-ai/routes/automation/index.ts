@@ -210,10 +210,12 @@ router.get("/list", async (req: Request, res: Response) => {
       filter.isActive = req.query.isActive === "true";
     if (req.query.coinId) filter.coinId = req.query.coinId;
 
-    const automations = await AutomationModel.find(filter)
-      .populate("coinId")
-      .sort({ createdAt: -1 })
-      .lean();
+    const view = req.query.view as string | undefined;
+    const shouldPopulateCoin = view === "main";
+    let query = AutomationModel.find(filter).sort({ createdAt: -1 });
+    if (shouldPopulateCoin) query = query.populate("coinId");
+
+    const automations = await query.lean();
     const data = automations
       .map((automation) => getDataAutomationData(automation))
       .filter((automation) => automation !== null);

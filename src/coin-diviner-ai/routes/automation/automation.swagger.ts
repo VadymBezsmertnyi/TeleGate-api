@@ -65,6 +65,16 @@
  *         schema:
  *           type: string
  *         description: Фільтр по монеті
+ *       - in: query
+ *         name: view
+ *         schema:
+ *           type: string
+ *           enum: [main, all]
+ *         description: |
+ *           Режим відображення даних:
+ *           - main: з повними даними про криптовалюту (включає populate)
+ *           - all: тільки базові дані (без populate, швидший запит)
+ *         example: main
  *     responses:
  *       200:
  *         description: Список автоматизацій
