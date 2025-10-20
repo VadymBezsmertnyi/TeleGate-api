@@ -1,11 +1,16 @@
+import { isValidObjectId } from "mongoose";
 import { TAutomationRecord } from "./automation.types";
 
 export const getDataAutomationData = (automation: any) => {
   if (!automation || typeof automation !== "object" || !automation._id)
     return null;
 
+  const isObjectId =
+    automation.coinId &&
+    typeof automation.coinId === "object" &&
+    isValidObjectId(automation.coinId);
   const coin =
-    automation.coinId && typeof automation.coinId === "object"
+    automation.coinId && typeof automation.coinId === "object" && !isObjectId
       ? { ...automation.coinId }
       : null;
 

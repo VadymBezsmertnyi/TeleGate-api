@@ -1,10 +1,15 @@
+import { isValidObjectId } from "mongoose";
 import { TFavoriteRecord } from "./favorites.types";
 
 export const getDataFavoriteData = (favorite: any) => {
   if (!favorite || typeof favorite !== "object" || !favorite._id) return null;
 
+  const isObjectId =
+    favorite.coinId &&
+    typeof favorite.coinId === "object" &&
+    isValidObjectId(favorite.coinId);
   const coin =
-    favorite.coinId && typeof favorite.coinId === "object"
+    favorite.coinId && typeof favorite.coinId === "object" && !isObjectId
       ? {
           ...favorite.coinId,
           lastUpdatedCoinPaprika: favorite.coinId.lastUpdatedCoinPaprika
