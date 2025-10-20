@@ -211,7 +211,7 @@ router.get("/list", async (req: Request, res: Response) => {
     if (req.query.coinId) filter.coinId = req.query.coinId;
 
     const view = req.query.view as string | undefined;
-    const shouldPopulateCoin = view === "main";
+    const shouldPopulateCoin = view === "all";
     let query = AutomationModel.find(filter).sort({ createdAt: -1 });
     if (shouldPopulateCoin) query = query.populate("coinId");
 

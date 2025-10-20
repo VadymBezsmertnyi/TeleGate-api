@@ -72,9 +72,9 @@
  *           enum: [main, all]
  *         description: |
  *           Режим відображення даних:
- *           - main: з повними даними про криптовалюту (включає populate)
- *           - all: тільки базові дані (без populate, швидший запит)
- *         example: main
+ *           - main: тільки дані автоматизації (без populate, швидший запит)
+ *           - all: з повними даними про криптовалюту (включає populate)
+ *         example: all
  *     responses:
  *       200:
  *         description: Список автоматизацій
