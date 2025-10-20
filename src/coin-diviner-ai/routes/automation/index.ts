@@ -156,7 +156,9 @@ router.post("/create", async (req: Request, res: Response) => {
       },
       continuation_count: 0,
     });
-    const automation = await AutomationModel.findById(newAutomation._id).lean();
+    const automation = await AutomationModel.findById(newAutomation._id)
+      .populate("coinId")
+      .lean();
     if (!automation) {
       const errorResponse: TServerError = {
         message: "Failed to create automation",
@@ -339,9 +341,9 @@ router.put("/update", async (req: Request, res: Response) => {
 
     await automation.save();
 
-    const updatedAutomation = await AutomationModel.findById(
-      automationId
-    ).lean();
+    const updatedAutomation = await AutomationModel.findById(automationId)
+      .populate("coinId")
+      .lean();
     if (!updatedAutomation) {
       const errorResponse: TServerError = {
         message: "Failed to update automation",
@@ -581,9 +583,9 @@ router.post("/continue", async (req: Request, res: Response) => {
 
     await automation.save();
 
-    const updatedAutomation = await AutomationModel.findById(
-      automationId
-    ).lean();
+    const updatedAutomation = await AutomationModel.findById(automationId)
+      .populate("coinId")
+      .lean();
     if (!updatedAutomation) {
       const errorResponse: TServerError = {
         message: "Failed to continue automation",
