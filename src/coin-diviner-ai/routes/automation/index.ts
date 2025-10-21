@@ -414,7 +414,6 @@ router.delete("/delete/:automationId", async (req: Request, res: Response) => {
       _id: automationId,
       userId: user._id,
     });
-
     if (!automation) {
       const errorResponse: TNotFoundError = {
         message: "Automation not found",
