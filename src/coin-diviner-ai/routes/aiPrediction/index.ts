@@ -442,9 +442,25 @@ router.get("/list", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    const predictions = await PredictionModel.find({ userId: user._id })
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const coinId = req.query.coinId as string;
+
+    const query: any = { userId: user._id };
+    if (coinId) {
+      query.coinId = coinId;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [predictions, total] = await Promise.all([
+      PredictionModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      PredictionModel.countDocuments(query),
+    ]);
 
     const responseData: TPredictionsListResponse = {
       success: true,
@@ -456,6 +472,14 @@ router.get("/list", async (req: Request, res: Response) => {
         createdAt: prediction.createdAt.toISOString(),
         updatedAt: prediction.updatedAt.toISOString(),
       })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
     };
 
     const responseValidation =

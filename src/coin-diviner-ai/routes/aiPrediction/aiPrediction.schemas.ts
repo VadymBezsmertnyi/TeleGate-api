@@ -32,7 +32,17 @@ export const predictionResponseSchema = z.object({
     .nullable(),
 });
 
+export const paginationSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+  hasNextPage: z.boolean(),
+  hasPrevPage: z.boolean(),
+});
+
 export const predictionsListResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(predictionRecordSchema),
+  pagination: paginationSchema,
 });
