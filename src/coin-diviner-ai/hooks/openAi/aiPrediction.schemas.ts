@@ -13,6 +13,11 @@ export const aiPredictionSchema = z
         .nullable()
         .describe("Середня ціна покупки токена (USD)"),
     }),
+    ai_processing_time_ms: z
+      .number()
+      .describe("Час обробки AI в мілісекундах")
+      .default(0)
+      .optional(),
     forecast: z.object({
       next_rise_date: z
         .string()

@@ -30,6 +30,9 @@ export const generatePrediction = async ({
   tokenData,
   language = "uk",
 }: IGeneratePredictionOptions): Promise<TAiPrediction> => {
+  // Фіксуємо час початку обробки AI
+  const startTime = Date.now();
+
   const systemPrompt =
     language === "uk"
       ? `
@@ -861,6 +864,14 @@ export const generatePrediction = async ({
   });
 
   const result = JSON.parse(completion.choices[0].message.content || "{}");
+
+  // Фіксуємо час завершення обробки AI та додаємо до результату
+  const endTime = Date.now();
+  const processingTime = endTime - startTime;
+
+  // Додаємо час обробки до результату
+  result.ai_processing_time_ms = processingTime;
+
   return result;
 };
 
