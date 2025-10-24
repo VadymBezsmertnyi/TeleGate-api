@@ -158,6 +158,26 @@ export const generatePrediction = async ({
             - Домінування BTC на ринку (зазвичай 40-60%)
             - Індекс страху/жадібності (0-100)
             - Настрій новин (positive/neutral/negative)
+            - **МАКРОЕКОНОМІЧНІ ФАКТОРИ (КРИТИЧНО ВАЖЛИВО):**
+              * Процентна ставка ФРС (поточна та очікувані зміни)
+              * Індекс долара (DXY) - впливає на ризикові активи
+              * Ціна нафти WTI - індикатор глобальної економіки
+              * Зміни S&P 500 та NASDAQ - кореляція з крипто
+              * Рівень інфляції та безробіття
+              * VIX індекс - страх на ринках
+            - **РІНКОВІ МЕТРИКИ:**
+              * Загальна капіталізація криптовалют
+              * Загальний обсяг торгів за 24г
+              * Пропозиція стейблкоїнів (USDT, USDC)
+              * Ліквідації ф'ючерсів
+              * Рух великих інвесторів (whale movements)
+              * Майбутні події (халвінг, форки, ETF)
+            - **ТЕХНІЧНІ ІНДИКАТОРИ:**
+              * RSI (перекупленість/перепроданість)
+              * MACD (трендові сигнали)
+              * Середні ковзні (50-денна, 200-денна)
+              * Смуги Боллінджера
+              * Рівні підтримки та опору
             - **Рівень політичних ризиків (low/medium/high) - враховуй:**
               * Поточні військові конфлікти у світі
               * Стан санкційної політики та торгових війн
@@ -465,6 +485,26 @@ export const generatePrediction = async ({
             - BTC market dominance (typically 40-60%)
             - Fear & greed index (0-100)
             - News sentiment (positive/neutral/negative)
+            - **MACROECONOMIC FACTORS (CRITICALLY IMPORTANT):**
+              * Federal Reserve interest rate (current and expected changes)
+              * Dollar Index (DXY) - affects risk assets
+              * WTI oil price - global economy indicator
+              * S&P 500 and NASDAQ changes - crypto correlation
+              * Inflation and unemployment rates
+              * VIX index - market fear indicator
+            - **MARKET METRICS:**
+              * Total cryptocurrency market cap
+              * Total 24h trading volume
+              * Stablecoin supply (USDT, USDC)
+              * Futures liquidations
+              * Whale movements
+              * Upcoming events (halving, forks, ETF)
+            - **TECHNICAL INDICATORS:**
+              * RSI (overbought/oversold)
+              * MACD (trend signals)
+              * Moving averages (50-day, 200-day)
+              * Bollinger Bands
+              * Support and resistance levels
             - **Political risk level (low/medium/high) - consider:**
               * Current military conflicts worldwide
               * State of sanctions policy and trade wars
