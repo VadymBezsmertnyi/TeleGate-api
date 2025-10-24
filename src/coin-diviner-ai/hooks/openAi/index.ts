@@ -140,15 +140,46 @@ export const generatePrediction = async ({
             - Оціни ліквідність (liquidity_usd) - це ДУЖЕ важливий показник
             - Проаналізуй ринкову капіталізацію та її динаміку
 
-          5. **ПРОРАХУНКИ ТА ОЦІНКА ДОЦІЛЬНОСТІ:**
-            - Для кожної рекомендації (купівлі/продажу/докупки) ОБОВ'ЯЗКОВО:
+          5. **ПРОРАХУНКИ ТА ОЦІНКА ДОЦІЛЬНОСТІ (КРИТИЧНО ВАЖЛИВО):**
+            - Для кожної рекомендації (купівлі/продажу/докупки) ОБОВ'ЯЗКОВО враховуй ВСІ фактори:
+              
+              **МАКРОЕКОНОМІЧНІ ФАКТОРИ:**
+              * Ставка ФРС - високі ставки = негатив для ризикових активів
+              * DXY індекс - сильний долар = тиск на крипто
+              * Ціна нафти - високі ціни = інфляційні побоювання = позитив для BTC
+              * S&P 500/NASDAQ - кореляція з традиційними ринками
+              * VIX індекс - високий страх = можливість купівлі
+              * Інфляція - висока інфляція = позитив для крипто як hedge
+              
+              **РІНКОВІ МЕТРИКИ:**
+              * Fear & Greed Index - екстремальні значення = можливість реверсу
+              * BTC домінування - високе = менше інтересу до альткоїнів
+              * Загальна капіталізація - розмір ринку впливає на волатильність
+              * Стейблкоїни - висока пропозиція = готовність до торгівлі
+              * Ліквідації - високі = можливість відскоку
+              * Whale movements - активність великих інвесторів
+              * Майбутні події - халвінг, ETF, регуляції
+              
+              **ТЕХНІЧНІ ІНДИКАТОРИ:**
+              * RSI - перекупленість/перепроданість
+              * MACD - трендові сигнали
+              * Середні ковзні - довгострокові тренди
+              * Смуги Боллінджера - волатильність
+              * Рівні підтримки/опору - ключові ціни
+              
+              **ЗОЛОТО ТА КОРЕЛЯЦІЇ:**
+              * Ціна золота - конкуренція з BTC за статус "безпечної гавані"
+              * Кореляція золото-BTC - спільний рух при інфляції
+              * Аналітичні прогнози золота - вплив на крипто
+              
+              **ОБОВ'ЯЗКОВІ РОЗРАХУНКИ:**
               * Прорахуй конкретні цифри потенційного доходу/збитку
-              * Оціни ризик/винагороду (risk/reward ratio)
+              * Оціни ризик/винагороду (risk/reward ratio) з урахуванням ВСІХ факторів
               * Вкажи конкретні цільові ціни для продажу/купівлі
               * Оціни таймфрейм (коли очікується зміна ціни)
-              * Обґрунтуй чому саме зараз варто/не варто робити дію
-            - Враховуй комісії та проковзування при великих обсягах
-            - Для докупки - розрахуй нову середню ціну після докупки
+              * Обґрунтуй чому саме зараз варто/не варто робити дію з урахуванням макроекономіки
+              * Враховуй комісії та проковзування при великих обсягах
+              * Для докупки - розрахуй нову середню ціну після докупки
 
           6. **Самостійно визначай та використовуй** на основі історичних даних токена та загальних знань про ринок:
             - Поточні ціни BTC та ETH (використовуй актуальні знання або оцінюй на основі ринкової динаміки)
@@ -320,6 +351,32 @@ export const generatePrediction = async ({
                * impact_on_crypto: string (вплив на криптовалюти)
                * analyst_forecast: string (прогноз аналітиків)
                * correlation_with_btc: string (кореляція з BTC)
+             - macro_economic_factors: object (обов'язково!)
+               * fed_interest_rate: number | null (ставка ФРС %)
+               * dxy_index: number | null (індекс долара)
+               * oil_price: number | null (ціна нафти WTI)
+               * sp500_change: number | null (зміна S&P 500 %)
+               * nasdaq_change: number | null (зміна NASDAQ %)
+               * inflation_rate: number | null (інфляція %)
+               * unemployment_rate: number | null (безробіття %)
+               * vix_index: number | null (VIX індекс страху)
+             - market_metrics: object (обов'язково!)
+               * fear_greed_index: number | null (індекс страху/жадібності 0-100)
+               * btc_dominance: number | null (домінування BTC %)
+               * total_market_cap: number | null (загальна капіталізація USD)
+               * total_volume_24h: number | null (загальний обсяг 24г USD)
+               * stablecoin_supply: number | null (пропозиція стейблкоїнів USD)
+               * futures_liquidations: number | null (ліквідації ф'ючерсів USD)
+               * whale_movements: string (рух китів)
+               * upcoming_events: string[] (майбутні події)
+             - technical_indicators: object (обов'язково!)
+               * rsi: number | null (RSI індикатор)
+               * macd: number | null (MACD сигнал)
+               * moving_average_50: number | null (50-денна середня)
+               * moving_average_200: number | null (200-денна середня)
+               * bollinger_bands: string (смуги Боллінджера)
+               * support_levels: number[] (рівні підтримки)
+               * resistance_levels: number[] (рівні опору)
           
           5. ✅ **risk_and_influence** (обов'язково! НЕ ПРОПУСКАЙ!)
              - risk_level: "low" | "medium" | "high"
@@ -357,6 +414,8 @@ export const generatePrediction = async ({
           ✓ Чи є всі 6 секцій?
           ✓ Чи заповнені market_context, risk_and_influence, summary?
           ✓ Чи всі поля присутні в кожній секції?
+          ✓ Чи заповнені ВСІ обов'язкові об'єкти: gold_analysis, macro_economic_factors, market_metrics, technical_indicators?
+          ✓ Чи враховані ВСІ критичні фактори при формуванні buy_message та sell_message?
 
         `
       : `
@@ -467,15 +526,46 @@ export const generatePrediction = async ({
             - Evaluate liquidity (liquidity_usd) - this is a VERY important indicator
             - Analyze market capitalization and its dynamics
 
-          5. **CALCULATIONS AND ADVISABILITY ASSESSMENT:**
-            - For each recommendation (buy/sell/buy more) MANDATORY:
+          5. **CALCULATIONS AND ADVISABILITY ASSESSMENT (CRITICALLY IMPORTANT):**
+            - For each recommendation (buy/sell/buy more) MANDATORY consider ALL factors:
+              
+              **MACROECONOMIC FACTORS:**
+              * Fed interest rate - high rates = negative for risk assets
+              * DXY index - strong dollar = pressure on crypto
+              * Oil price - high prices = inflation fears = positive for BTC
+              * S&P 500/NASDAQ - correlation with traditional markets
+              * VIX index - high fear = buying opportunity
+              * Inflation - high inflation = positive for crypto as hedge
+              
+              **MARKET METRICS:**
+              * Fear & Greed Index - extreme values = reversal opportunity
+              * BTC dominance - high = less interest in altcoins
+              * Total market cap - market size affects volatility
+              * Stablecoin supply - high supply = readiness to trade
+              * Futures liquidations - high = potential bounce
+              * Whale movements - large investor activity
+              * Upcoming events - halving, ETF, regulations
+              
+              **TECHNICAL INDICATORS:**
+              * RSI - overbought/oversold conditions
+              * MACD - trend signals
+              * Moving averages - long-term trends
+              * Bollinger Bands - volatility
+              * Support/resistance levels - key prices
+              
+              **GOLD AND CORRELATIONS:**
+              * Gold price - competition with BTC for "safe haven" status
+              * Gold-BTC correlation - joint movement during inflation
+              * Gold analyst forecasts - impact on crypto
+              
+              **MANDATORY CALCULATIONS:**
               * Calculate concrete profit/loss figures
-              * Evaluate risk/reward ratio
+              * Evaluate risk/reward ratio considering ALL factors
               * Specify concrete target prices for sell/buy
               * Evaluate timeframe (when price change is expected)
-              * Justify why now is/isn't the right time for action
-            - Consider fees and slippage for large volumes
-            - For buying more - calculate new average price after purchase
+              * Justify why now is/isn't the right time considering macroeconomics
+              * Consider fees and slippage for large volumes
+              * For buying more - calculate new average price after purchase
 
           6. **Independently determine and use** based on token historical data and general market knowledge:
             - Current BTC and ETH prices (use recent knowledge or estimate based on market dynamics)
@@ -647,6 +737,32 @@ export const generatePrediction = async ({
                * impact_on_crypto: string (impact on cryptocurrencies)
                * analyst_forecast: string (analyst forecast)
                * correlation_with_btc: string (correlation with BTC)
+             - macro_economic_factors: object (mandatory!)
+               * fed_interest_rate: number | null (Fed interest rate %)
+               * dxy_index: number | null (Dollar Index)
+               * oil_price: number | null (WTI oil price)
+               * sp500_change: number | null (S&P 500 change %)
+               * nasdaq_change: number | null (NASDAQ change %)
+               * inflation_rate: number | null (inflation %)
+               * unemployment_rate: number | null (unemployment %)
+               * vix_index: number | null (VIX fear index)
+             - market_metrics: object (mandatory!)
+               * fear_greed_index: number | null (Fear & Greed Index 0-100)
+               * btc_dominance: number | null (BTC dominance %)
+               * total_market_cap: number | null (total market cap USD)
+               * total_volume_24h: number | null (total 24h volume USD)
+               * stablecoin_supply: number | null (stablecoin supply USD)
+               * futures_liquidations: number | null (futures liquidations USD)
+               * whale_movements: string (whale movements)
+               * upcoming_events: string[] (upcoming events)
+             - technical_indicators: object (mandatory!)
+               * rsi: number | null (RSI indicator)
+               * macd: number | null (MACD signal)
+               * moving_average_50: number | null (50-day moving average)
+               * moving_average_200: number | null (200-day moving average)
+               * bollinger_bands: string (Bollinger Bands position)
+               * support_levels: number[] (support levels)
+               * resistance_levels: number[] (resistance levels)
           
           5. ✅ **risk_and_influence** (mandatory! DO NOT SKIP!)
              - risk_level: "low" | "medium" | "high"
@@ -684,6 +800,8 @@ export const generatePrediction = async ({
           ✓ Are all 6 sections present?
           ✓ Are market_context, risk_and_influence, summary filled?
           ✓ Are all fields present in each section?
+          ✓ Are ALL mandatory objects filled: gold_analysis, macro_economic_factors, market_metrics, technical_indicators?
+          ✓ Are ALL critical factors considered when forming buy_message and sell_message?
 
         `;
 
