@@ -73,6 +73,39 @@ export const aiPredictionSchema = z
         analysis_summary: z
           .string()
           .describe("Коротке пояснення аналітичного стану ринку"),
+        gold_analysis: z
+          .object({
+            current_price: z
+              .number()
+              .nullable()
+              .describe("Поточна ціна золота в USD"),
+            price_change_24h: z
+              .number()
+              .nullable()
+              .describe("Зміна ціни золота за 24 години (%)"),
+            price_change_7d: z
+              .number()
+              .nullable()
+              .describe("Зміна ціни золота за 7 днів (%)"),
+            trend: z.enum(["up", "down", "neutral"]).describe("Тренд золота"),
+            impact_on_crypto: z
+              .string()
+              .describe("Вплив ціни золота на криптовалюти"),
+            analyst_forecast: z
+              .string()
+              .describe("Прогноз аналітиків щодо майбутнього золота"),
+            correlation_with_btc: z.string().describe("Кореляція золота з BTC"),
+          })
+          .default({
+            current_price: null,
+            price_change_24h: null,
+            price_change_7d: null,
+            trend: "neutral",
+            impact_on_crypto: "",
+            analyst_forecast: "",
+            correlation_with_btc: "",
+          })
+          .optional(),
       })
       .default({
         sentiment: "neutral",
@@ -83,6 +116,15 @@ export const aiPredictionSchema = z
         community_activity: "medium",
         news_sentiment: "neutral",
         analysis_summary: "",
+        gold_analysis: {
+          current_price: null,
+          price_change_24h: null,
+          price_change_7d: null,
+          trend: "neutral",
+          impact_on_crypto: "",
+          analyst_forecast: "",
+          correlation_with_btc: "",
+        },
       }),
     risk_and_influence: z
       .object({

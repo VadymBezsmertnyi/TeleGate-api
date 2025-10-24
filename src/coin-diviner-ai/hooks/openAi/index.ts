@@ -107,6 +107,18 @@ export const generatePrediction = async ({
           3. Ураховуй **макротренди та геополітичну ситуацію**:
             - Тренд BTC та альткоїнів (чи зростають, чи падають)
             - Загальний настрій ринку (bullish, bearish)
+            - **АНАЛІЗ ЦІНИ ЗОЛОТА (КРИТИЧНО ВАЖЛИВО):**
+              * Поточна ціна золота до долара (використовуй актуальні дані або оцінюй на основі ринкових трендів)
+              * Зміна ціни золота за 24 години та 7 днів
+              * Тренд золота (зростання/падіння/стабільність)
+              * Вплив ціни золота на криптовалюти:
+                - Золото як "безпечна гавань" конкурує з BTC за інвестиції
+                - Ріст золота часто супроводжується зростанням BTC, особливо під час інфляційних ризиків або ослаблення долара
+                - Проте у періоди загального відтоку капіталу з ризикових активів, криптовалюти можуть падати навіть при зростанні золота, оскільки інвестори надають перевагу традиційним «захисним» інструментам
+                - Падіння золота може вказувати на зростання ризикових активів (криптовалют)
+                - Аналітичні прогнози щодо майбутнього золота впливають на крипторинок
+              * Взаємозв'язок: великі крипти (BTC, ETH) → середні крипти → малі крипти
+              * Оціни як поточний стан золота впливає на даний токен
             - **Геополітичні фактори (КРИТИЧНО ВАЖЛИВО):**
               * Військові конфлікти та міжнародна напруженість (негативно впливають на ризикові активи)
               * Санкції та торгові війни між країнами (можуть стимулювати попит на криптовалюти як альтернативу)
@@ -280,6 +292,14 @@ export const generatePrediction = async ({
              - community_activity: "high" | "medium" | "low"
              - news_sentiment: "positive" | "neutral" | "negative"
              - analysis_summary: string (короткий огляд)
+             - gold_analysis: object (обов'язково!)
+               * current_price: number | null (поточна ціна золота в USD)
+               * price_change_24h: number | null (зміна за 24 години %)
+               * price_change_7d: number | null (зміна за 7 днів %)
+               * trend: "up" | "down" | "neutral" (тренд золота)
+               * impact_on_crypto: string (вплив на криптовалюти)
+               * analyst_forecast: string (прогноз аналітиків)
+               * correlation_with_btc: string (кореляція з BTC)
           
           5. ✅ **risk_and_influence** (обов'язково! НЕ ПРОПУСКАЙ!)
              - risk_level: "low" | "medium" | "high"
@@ -394,6 +414,18 @@ export const generatePrediction = async ({
           3. Consider **macro trends and geopolitical situation**:
             - BTC and altcoin trend (rising or falling)
             - Overall market sentiment (bullish, bearish)
+            - **GOLD PRICE ANALYSIS (CRITICALLY IMPORTANT):**
+              * Current gold price in USD (use recent data or estimate based on market trends)
+              * Gold price change over 24 hours and 7 days
+              * Gold trend (rising/falling/stable)
+              * Impact of gold price on cryptocurrencies:
+                - Gold as "safe haven" competes with BTC for investments
+                - Gold rise often accompanies BTC growth, especially during inflationary risks or dollar weakness
+                - However, during periods of general capital outflow from risk assets, cryptocurrencies may fall even with gold growth, as investors prefer traditional "defensive" instruments
+                - Gold decline may indicate growth in risk assets (cryptocurrencies)
+                - Analyst forecasts about gold future affect crypto market
+              * Correlation chain: large cryptos (BTC, ETH) → medium cryptos → small cryptos
+              * Assess how current gold state affects this token
             - **Geopolitical factors (CRITICALLY IMPORTANT):**
               * Military conflicts and international tensions (negatively affect risk assets)
               * Sanctions and trade wars between countries (may stimulate demand for crypto as alternative)
@@ -567,6 +599,14 @@ export const generatePrediction = async ({
              - community_activity: "high" | "medium" | "low"
              - news_sentiment: "positive" | "neutral" | "negative"
              - analysis_summary: string (brief overview)
+             - gold_analysis: object (mandatory!)
+               * current_price: number | null (current gold price in USD)
+               * price_change_24h: number | null (24h change %)
+               * price_change_7d: number | null (7d change %)
+               * trend: "up" | "down" | "neutral" (gold trend)
+               * impact_on_crypto: string (impact on cryptocurrencies)
+               * analyst_forecast: string (analyst forecast)
+               * correlation_with_btc: string (correlation with BTC)
           
           5. ✅ **risk_and_influence** (mandatory! DO NOT SKIP!)
              - risk_level: "low" | "medium" | "high"
