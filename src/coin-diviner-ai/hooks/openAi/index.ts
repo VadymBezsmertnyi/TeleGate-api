@@ -255,6 +255,7 @@ export const generatePrediction = async ({
             - news_sentiment: "positive", "neutral", "negative"
             - risk_level: "low", "medium", "high"
           3. Поля buy_confidence та sell_confidence — числа від 0 до 100.
+          4. ⚠️ УВАГА! Поле community_activity має бути в market_context, НЕ в recommendation!
           4. Поле conclusion — обов'язкове, детальний висновок (2–3 речення з конкретними рекомендаціями).
           5. generated_at — обов'язкове, у форматі ISO (поточна дата).
           6. Якщо дані відсутні: числові = null, текстові = "".
@@ -641,6 +642,7 @@ export const generatePrediction = async ({
             - news_sentiment: "positive", "neutral", "negative"
             - risk_level: "low", "medium", "high"
           3. buy_confidence / sell_confidence — integers 0–100.
+          4. ⚠️ ATTENTION! community_activity field must be in market_context, NOT in recommendation!
           4. conclusion — required, detailed summary (2-3 sentences with concrete recommendations).
           5. generated_at — required, ISO timestamp (current date).
           6. Missing numeric fields = null, missing text fields = "".
