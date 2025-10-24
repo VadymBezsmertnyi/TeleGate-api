@@ -16,8 +16,7 @@ export const aiPredictionSchema = z
     ai_processing_time_ms: z
       .number()
       .describe("Час обробки AI в мілісекундах")
-      .default(0)
-      .optional(),
+      .default(0),
     forecast: z.object({
       next_rise_date: z
         .string()
@@ -109,8 +108,7 @@ export const aiPredictionSchema = z
             impact_on_crypto: "",
             analyst_forecast: "",
             correlation_with_btc: "",
-          })
-          .optional(),
+          }),
         macro_economic_factors: z
           .object({
             fed_interest_rate: z
@@ -152,8 +150,7 @@ export const aiPredictionSchema = z
             inflation_rate: null,
             unemployment_rate: null,
             vix_index: null,
-          })
-          .optional(),
+          }),
         market_metrics: z
           .object({
             fear_greed_index: z
@@ -194,8 +191,7 @@ export const aiPredictionSchema = z
             futures_liquidations: null,
             whale_movements: "",
             upcoming_events: [],
-          })
-          .optional(),
+          }),
         technical_indicators: z
           .object({
             rsi: z.number().nullable().describe("RSI індикатор"),
@@ -222,8 +218,7 @@ export const aiPredictionSchema = z
             bollinger_bands: "",
             support_levels: [],
             resistance_levels: [],
-          })
-          .optional(),
+          }),
       })
       .default({
         sentiment: "neutral",
