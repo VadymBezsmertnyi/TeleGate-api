@@ -33,6 +33,13 @@ export const generatePrediction = async ({
   // Фіксуємо час початку обробки AI
   const startTime = Date.now();
 
+  // Отримуємо поточну дату та день тижня
+  const now = new Date();
+  const currentDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const currentDay = now.toLocaleDateString("uk-UA", { weekday: "long" }); // день тижня українською
+  const currentDayEn = now.toLocaleDateString("en-US", { weekday: "long" }); // день тижня англійською
+  const currentDateTime = now.toISOString();
+
   const systemPrompt =
     language === "uk"
       ? `
@@ -40,6 +47,12 @@ export const generatePrediction = async ({
           Спекулятивні криптовалюти — твоя пристрасть і улюблена ніша. Для спекулятивних токенів ти проводиш значно глибший аналіз:
           вивчаєш їхню історію, порівнюєш з подібними проектами, аналізуєш патерни успіху/провалу схожих токенів.
           Твоя задача — дати збалансований, детальний і ретельно прорахований аналітичний прогноз для даного токена.
+          
+          📅 **ПОТОЧНА ДАТА ТА ЧАС:**
+          - Сьогодні: ${currentDate} (${currentDay})
+          - Поточний час: ${currentDateTime}
+          - Враховуй день тижня при аналізі: вихідні (субота, неділя) зазвичай мають нижчу активність торгів
+          - Враховуй час доби: азійські, європейські та американські торгові сесії
           
           Будь МАКСИМАЛЬНО УВАЖНИМ та РЕТЕЛЬНИМ у аналізі. Досліджуй усі доступні дані глибоко.
 
@@ -184,7 +197,14 @@ export const generatePrediction = async ({
               * Враховуй комісії та проковзування при великих обсягах
               * Для докупки - розрахуй нову середню ціну після докупки
 
-          6. **Самостійно визначай та використовуй** на основі історичних даних токена та загальних знань про ринок:
+          6. **ВРАХУВАННЯ ДАТИ ТА ЧАСУ:**
+            - Поточна дата: ${currentDate} (${currentDay})
+            - Враховуй день тижня: вихідні (субота, неділя) = нижча активність торгів
+            - Враховуй час доби: азійська сесія (00:00-08:00 UTC), європейська (08:00-16:00 UTC), американська (16:00-00:00 UTC)
+            - Враховуй сезонність: кінець місяця/кварталу, святкові дні, вихідні
+            - При прогнозуванні дат враховуй робочі дні vs вихідні
+            
+          7. **Самостійно визначай та використовуй** на основі історичних даних токена та загальних знань про ринок:
             - Поточні ціни BTC та ETH (використовуй актуальні знання або оцінюй на основі ринкової динаміки)
             - Зміни BTC/ETH за 24 години (аналізуй тренди)
             - Кількість власників (holders) токена - оцінюй приблизно на основі ліквідності, обсягів та рангу
@@ -428,6 +448,12 @@ export const generatePrediction = async ({
           study their history, compare with similar projects, analyze success/failure patterns of comparable tokens.
           Your goal is to provide a balanced, detailed, and thoroughly calculated analytical forecast for the given token.
           
+          📅 **CURRENT DATE AND TIME:**
+          - Today: ${currentDate} (${currentDayEn})
+          - Current time: ${currentDateTime}
+          - Consider the day of the week in analysis: weekends (Saturday, Sunday) usually have lower trading activity
+          - Consider time of day: Asian, European and American trading sessions
+          
           Be MAXIMALLY ATTENTIVE and THOROUGH in your analysis. Research all available data deeply.
 
           Respond STRICTLY in JSON format according to the schema below.
@@ -571,7 +597,14 @@ export const generatePrediction = async ({
               * Consider fees and slippage for large volumes
               * For buying more - calculate new average price after purchase
 
-          6. **Independently determine and use** based on token historical data and general market knowledge:
+          6. **DATE AND TIME CONSIDERATION:**
+            - Current date: ${currentDate} (${currentDayEn})
+            - Consider day of week: weekends (Saturday, Sunday) = lower trading activity
+            - Consider time of day: Asian session (00:00-08:00 UTC), European (08:00-16:00 UTC), American (16:00-00:00 UTC)
+            - Consider seasonality: end of month/quarter, holidays, weekends
+            - When forecasting dates, consider business days vs weekends
+            
+          7. **Independently determine and use** based on token historical data and general market knowledge:
             - Current BTC and ETH prices (use recent knowledge or estimate based on market dynamics)
             - BTC/ETH 24h changes (analyze trends)
             - Token holders count - estimate approximately based on liquidity, volume and rank
