@@ -1,11 +1,7 @@
 import { TUserBalanceRecord } from "./user-balance.types";
 
 export const getDataUserBalanceData = (userBalance: any) => {
-  if (
-    !userBalance ||
-    typeof userBalance !== "object" ||
-    !userBalance._id
-  )
+  if (!userBalance || typeof userBalance !== "object" || !userBalance._id)
     return null;
 
   const responseData: TUserBalanceRecord = {
@@ -17,9 +13,11 @@ export const getDataUserBalanceData = (userBalance: any) => {
       type: t.type,
       amount: t.amount,
       description: t.description || "",
-      date:
-        t.date instanceof Date ? t.date.toISOString() : t.date,
+      date: t.date instanceof Date ? t.date.toISOString() : t.date,
     })),
+    portfolioTransactions: userBalance.portfolioTransactions
+      ? userBalance.portfolioTransactions.map((pt: any) => pt.toString())
+      : [],
     createdAt:
       userBalance.createdAt instanceof Date
         ? userBalance.createdAt.toISOString()

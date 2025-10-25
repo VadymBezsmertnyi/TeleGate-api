@@ -19,6 +19,7 @@ export const userBalanceRecordSchema = z.object({
   userId: z.string(),
   balance: z.number(),
   transactions: z.array(userBalanceTransactionSchema),
+  portfolioTransactions: z.array(z.string()).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

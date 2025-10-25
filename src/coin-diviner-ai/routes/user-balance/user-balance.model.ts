@@ -24,6 +24,12 @@ const userBalanceUserBalanceSM = new Schema(
     },
     balance: { type: Number, default: 0 },
     transactions: [userBalanceTransactionSM],
+    portfolioTransactions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "coinDivinerAI-portfolio",
+      },
+    ],
   },
   {
     timestamps: true,
