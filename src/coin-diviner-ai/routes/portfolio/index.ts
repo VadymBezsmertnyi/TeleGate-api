@@ -9,6 +9,8 @@ import {
   portfolioResponseSchema,
   portfolioListResponseSchema,
   deleteResponseSchema,
+  completePortfolioSchema,
+  updateCompletedPortfolioSchema,
 } from "./portfolio.schemas";
 import {
   notFoundErrorSchema,
@@ -25,6 +27,8 @@ import type {
   TPortfolioResponse,
   TPortfolioListResponse,
   TDeleteResponse,
+  TCompletePortfolio,
+  TUpdateCompletedPortfolio,
 } from "./portfolio.types";
 import type {
   TNotFoundError,
@@ -37,6 +41,7 @@ import { ErrorCode } from "../auth/auth.helps";
 import PortfolioModel from "./portfolio.model";
 import AuthModel from "../auth/auth.model";
 import CryptoCoinModel from "../aggregator/aggregator.model";
+import UserBalanceModel from "../user-balance/user-balance.model";
 
 // hooks
 import { checkAuth } from "../../hooks/auth";
@@ -419,7 +424,10 @@ router.get("/list", async (req: Request, res: Response) => {
 
     const view = req.query.view as string | undefined;
     const shouldPopulateCoin = view === "all";
-    let query = PortfolioModel.find({ userId: user._id }).sort({
+    let query = PortfolioModel.find({
+      userId: user._id,
+      $or: [{ status: "open" }, { status: { $exists: false } }],
+    }).sort({
       createdAt: -1,
     });
     if (shouldPopulateCoin) query = query.populate("coinId");
@@ -701,6 +709,240 @@ router.delete("/delete-transaction", async (req: Request, res: Response) => {
     return res.status(200).json(responseValidation.data);
   } catch (error) {
     console.warn("Delete transaction error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.post("/complete", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = completePortfolioSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { portfolioId, completionPrice }: TCompletePortfolio =
+      validationResult.data;
+
+    const portfolio = await PortfolioModel.findOne({
+      _id: portfolioId,
+      userId: user._id,
+      status: "open",
+    });
+
+    if (!portfolio) {
+      const errorResponse: TNotFoundError = {
+        message: "Open portfolio not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    portfolio.status = "completed";
+    portfolio.completionDate = new Date();
+    portfolio.completionPrice = completionPrice;
+    await portfolio.save();
+
+    let userBalance = await UserBalanceModel.findOne({ userId: user._id });
+    if (!userBalance) {
+      userBalance = await UserBalanceModel.create({
+        userId: user._id,
+        balance: 0,
+        transactions: [],
+        portfolioTransactions: [],
+      });
+    }
+
+    userBalance.portfolioTransactions.push(portfolio._id);
+    await userBalance.save();
+
+    const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
+    if (!portfolioData) {
+      const errorResponse: TServerError = {
+        message: "Failed to retrieve portfolio",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    const responseData: TPortfolioResponse = {
+      success: true,
+      data: getDataPortfolioData(portfolioData),
+    };
+
+    const responseValidation = portfolioResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Complete portfolio error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.patch("/update-completed", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = updateCompletedPortfolioSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { portfolioId, completionPrice }: TUpdateCompletedPortfolio =
+      validationResult.data;
+
+    const portfolio = await PortfolioModel.findOne({
+      _id: portfolioId,
+      userId: user._id,
+      status: "completed",
+    });
+
+    if (!portfolio) {
+      const errorResponse: TNotFoundError = {
+        message: "Completed portfolio not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    portfolio.completionPrice = completionPrice;
+    await portfolio.save();
+
+    const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
+    if (!portfolioData) {
+      const errorResponse: TServerError = {
+        message: "Failed to retrieve portfolio",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    const responseData: TPortfolioResponse = {
+      success: true,
+      data: getDataPortfolioData(portfolioData),
+    };
+
+    const responseValidation = portfolioResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Update completed portfolio error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.get("/completed", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const view = req.query.view as string | undefined;
+    const shouldPopulateCoin = view === "all";
+    let query = PortfolioModel.find({
+      userId: user._id,
+      status: "completed",
+    }).sort({
+      completionDate: -1,
+    });
+    if (shouldPopulateCoin) query = query.populate("coinId");
+
+    const portfolios = await query.lean();
+    const data = portfolios
+      .map((portfolio) => getDataPortfolioData(portfolio))
+      .filter((portfolio) => portfolio !== null);
+
+    const responseData: TPortfolioListResponse = {
+      success: true,
+      data,
+    };
+
+    const responseValidation =
+      portfolioListResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Get completed portfolios error:", error);
 
     const errorResponse: TServerError = {
       message: "Server error: " + error,

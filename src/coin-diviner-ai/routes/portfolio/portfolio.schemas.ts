@@ -45,6 +45,9 @@ export const portfolioRecordSchema = z.object({
   coin: cryptoCoinSchema.optional().nullable(),
   purchases: z.array(transactionSchema),
   sales: z.array(transactionSchema),
+  status: z.enum(["open", "completed"]).default("open"),
+  completionDate: z.string().nullable().default(null),
+  completionPrice: z.number().nullable().default(null),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -62,4 +65,14 @@ export const portfolioListResponseSchema = z.object({
 export const deleteResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+});
+
+export const completePortfolioSchema = z.object({
+  portfolioId: z.string().min(1),
+  completionPrice: z.number().positive(),
+});
+
+export const updateCompletedPortfolioSchema = z.object({
+  portfolioId: z.string().min(1),
+  completionPrice: z.number().positive(),
 });

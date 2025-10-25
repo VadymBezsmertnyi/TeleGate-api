@@ -24,6 +24,19 @@ const portfolioSM = new Schema(
     },
     purchases: [transactionSM],
     sales: [transactionSM],
+    status: {
+      type: String,
+      enum: ["open", "completed"],
+      default: "open",
+    },
+    completionDate: {
+      type: Date,
+      default: null,
+    },
+    completionPrice: {
+      type: Number,
+      default: null,
+    },
   },
   {
     timestamps: true,

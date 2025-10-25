@@ -9,6 +9,8 @@ import {
   deleteResponseSchema,
   transactionSchema,
   portfolioRecordSchema,
+  completePortfolioSchema,
+  updateCompletedPortfolioSchema,
 } from "./portfolio.schemas";
 
 export type TCreateOrUpdatePortfolio = z.infer<
@@ -24,3 +26,7 @@ export type TPortfolioListResponse = z.infer<
   typeof portfolioListResponseSchema
 >;
 export type TDeleteResponse = z.infer<typeof deleteResponseSchema>;
+export type TCompletePortfolio = z.infer<typeof completePortfolioSchema>;
+export type TUpdateCompletedPortfolio = z.infer<
+  typeof updateCompletedPortfolioSchema
+>;
