@@ -137,7 +137,19 @@ export const updateCompletedPortfolioSchema = z.object({
 export const portfolioStatsSchema = z.object({
   totalInvestedInOpenSessions: z
     .number()
-    .describe("Загальна сума вкладена в відкриті торгові сесії"),
+    .describe(
+      "Загальна сума вкладена в відкриті торгові сесії (тільки покупки)"
+    ),
+  totalReceivedFromOpenSessions: z
+    .number()
+    .describe(
+      "Загальна сума отримана з відкритих торгових сесій (тільки продажі)"
+    ),
+  totalProfitLossFromOpenSessions: z
+    .number()
+    .describe(
+      "Загальний прибуток/збиток від відкритих торгових сесій (продажі - покупки)"
+    ),
   totalProfitLossFromCompletedSessions: z
     .number()
     .describe("Загальний прибуток/збиток від завершених торгових сесій"),
