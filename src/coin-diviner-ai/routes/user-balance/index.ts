@@ -265,8 +265,12 @@ router.patch("/update-transaction", async (req: Request, res: Response) => {
       return res.status(400).json(validatedError);
     }
 
-    const { transactionId, type, amount, description }: TUpdateUserBalanceTransaction =
-      validationResult.data;
+    const {
+      transactionId,
+      type,
+      amount,
+      description,
+    }: TUpdateUserBalanceTransaction = validationResult.data;
 
     const userBalance = await UserBalanceModel.findOne({
       userId: user._id,
@@ -297,12 +301,9 @@ router.patch("/update-transaction", async (req: Request, res: Response) => {
     const oldType = oldTransaction.type;
 
     // Update transaction
-    userBalance.transactions[transactionIndex] = {
-      ...oldTransaction,
-      type,
-      amount,
-      description,
-    };
+    userBalance.transactions[transactionIndex].type = type;
+    userBalance.transactions[transactionIndex].amount = amount;
+    userBalance.transactions[transactionIndex].description = description;
 
     // Recalculate balance
     if (oldType === "deposit") {
@@ -413,7 +414,7 @@ router.delete("/delete-transaction", async (req: Request, res: Response) => {
     }
 
     const transaction = userBalance.transactions[transactionIndex];
-    
+
     // Recalculate balance
     if (transaction.type === "deposit") {
       userBalance.balance -= transaction.amount;
