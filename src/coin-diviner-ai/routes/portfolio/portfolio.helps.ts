@@ -7,7 +7,8 @@ import {
 } from "./portfolio.types";
 
 export const calculatePortfolioStats = (
-  portfolio: IPortfolioDocument | IPortfolioLean
+  portfolio: IPortfolioDocument | IPortfolioLean,
+  completionPriceOverride: number
 ): IPortfolioStats => {
   const totalPurchases = portfolio.purchases.reduce(
     (sum: number, purchase) => sum + purchase.amount_usd,
@@ -26,14 +27,7 @@ export const calculatePortfolioStats = (
     0
   );
 
-  // Додаємо суму отриману при завершенні
-  let finalTotalSales = totalSales;
-  if (portfolio.completionPrice && totalCryptoPurchased > 0) {
-    const completionSaleAmount =
-      totalCryptoPurchased * portfolio.completionPrice;
-    finalTotalSales += completionSaleAmount;
-  }
-
+  const finalTotalSales = totalSales + completionPriceOverride;
   const profitLoss = finalTotalSales - totalPurchases;
   const profitLossPercentage =
     totalPurchases > 0 ? (profitLoss / totalPurchases) * 100 : 0;

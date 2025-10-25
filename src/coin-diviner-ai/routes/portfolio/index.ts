@@ -765,8 +765,8 @@ router.post("/complete", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    // Calculate portfolio statistics
-    const stats = calculatePortfolioStats(portfolio);
+    // Calculate portfolio statistics with completionPrice
+    const stats = calculatePortfolioStats(portfolio, completionPrice);
 
     portfolio.status = "completed";
     portfolio.completionDate = new Date();
@@ -883,8 +883,8 @@ router.patch("/update-completed", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
-    // Recalculate portfolio statistics
-    const stats = calculatePortfolioStats(portfolio);
+    // Recalculate portfolio statistics with new completionPrice
+    const stats = calculatePortfolioStats(portfolio, completionPrice);
 
     portfolio.completionPrice = completionPrice;
     portfolio.totalPurchases = stats.totalPurchases;
