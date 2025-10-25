@@ -67,7 +67,6 @@ const portfolioSM = new Schema(
   }
 );
 
-portfolioSM.index({ userId: 1, coinId: 1 }, { unique: true });
 portfolioSM.index({ userId: 1 });
 portfolioSM.index({ coinId: 1 });
 

@@ -25,13 +25,22 @@ export const calculatePortfolioStats = (
     (sum: number, sale) => sum + sale.amount_crypto,
     0
   );
-  const profitLoss = totalSales - totalPurchases;
+
+  // Додаємо суму отриману при завершенні
+  let finalTotalSales = totalSales;
+  if (portfolio.completionPrice && totalCryptoPurchased > 0) {
+    const completionSaleAmount =
+      totalCryptoPurchased * portfolio.completionPrice;
+    finalTotalSales += completionSaleAmount;
+  }
+
+  const profitLoss = finalTotalSales - totalPurchases;
   const profitLossPercentage =
     totalPurchases > 0 ? (profitLoss / totalPurchases) * 100 : 0;
 
   return {
     totalPurchases,
-    totalSales,
+    totalSales: finalTotalSales,
     totalCryptoPurchased,
     totalCryptoSold,
     profitLoss,
