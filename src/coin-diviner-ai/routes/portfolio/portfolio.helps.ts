@@ -1,7 +1,49 @@
 import { isValidObjectId } from "mongoose";
-import { TPortfolioRecord } from "./portfolio.types";
+import {
+  IPortfolioDocument,
+  IPortfolioLean,
+  IPortfolioStats,
+  TPortfolioRecord,
+} from "./portfolio.types";
 
-export const getDataPortfolioData = (portfolio: any) => {
+export const calculatePortfolioStats = (
+  portfolio: IPortfolioDocument | IPortfolioLean
+): IPortfolioStats => {
+  const totalPurchases = portfolio.purchases.reduce(
+    (sum: number, purchase) => sum + purchase.amount_usd,
+    0
+  );
+  const totalSales = portfolio.sales.reduce(
+    (sum: number, sale) => sum + sale.amount_usd,
+    0
+  );
+  const totalCryptoPurchased = portfolio.purchases.reduce(
+    (sum: number, purchase) => sum + purchase.amount_crypto,
+    0
+  );
+  const totalCryptoSold = portfolio.sales.reduce(
+    (sum: number, sale) => sum + sale.amount_crypto,
+    0
+  );
+  const profitLoss = totalSales - totalPurchases;
+  const profitLossPercentage =
+    totalPurchases > 0 ? (profitLoss / totalPurchases) * 100 : 0;
+
+  return {
+    totalPurchases,
+    totalSales,
+    totalCryptoPurchased,
+    totalCryptoSold,
+    profitLoss,
+    profitLossPercentage,
+  };
+};
+
+export const getDataPortfolioData = (
+  portfolio: IPortfolioDocument | IPortfolioLean
+): TPortfolioRecord | null => {
+  if (!portfolio || typeof portfolio !== "object" || !portfolio._id)
+    return null;
   if (!portfolio || typeof portfolio !== "object" || !portfolio._id)
     return null;
 
@@ -13,16 +55,17 @@ export const getDataPortfolioData = (portfolio: any) => {
     portfolio.coinId && typeof portfolio.coinId === "object" && !isObjectId
       ? { ...portfolio.coinId }
       : null;
+  const coinId =
+    portfolio.coinId && typeof portfolio.coinId === "object" && isObjectId
+      ? portfolio.coinId._id.toString()
+      : portfolio.coinId.toString();
 
   const responseData: TPortfolioRecord = {
     ...portfolio,
     coin,
     _id: portfolio._id.toString(),
     userId: portfolio.userId.toString(),
-    coinId:
-      typeof portfolio.coinId === "object"
-        ? portfolio.coinId._id.toString()
-        : portfolio.coinId.toString(),
+    coinId,
     purchases: portfolio.purchases.map((p: any) => ({
       _id: p._id?.toString(),
       amount_usd: p.amount_usd,
@@ -45,6 +88,10 @@ export const getDataPortfolioData = (portfolio: any) => {
       portfolio.updatedAt instanceof Date
         ? portfolio.updatedAt.toISOString()
         : portfolio.updatedAt,
+    completionDate:
+      portfolio.completionDate instanceof Date
+        ? portfolio.completionDate.toISOString()
+        : portfolio.completionDate,
   };
 
   return responseData;

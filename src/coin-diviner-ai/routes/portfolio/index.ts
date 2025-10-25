@@ -45,43 +45,10 @@ import UserBalanceModel from "../user-balance/user-balance.model";
 
 // hooks
 import { checkAuth } from "../../hooks/auth";
-import { getDataPortfolioData } from "./portfolio.helps";
-
-// Helper function to calculate portfolio statistics
-const calculatePortfolioStats = (portfolio: any) => {
-  const totalPurchases = portfolio.purchases.reduce(
-    (sum: number, purchase: any) => sum + purchase.amount_usd,
-    0
-  );
-
-  const totalSales = portfolio.sales.reduce(
-    (sum: number, sale: any) => sum + sale.amount_usd,
-    0
-  );
-
-  const totalCryptoPurchased = portfolio.purchases.reduce(
-    (sum: number, purchase: any) => sum + purchase.amount_crypto,
-    0
-  );
-
-  const totalCryptoSold = portfolio.sales.reduce(
-    (sum: number, sale: any) => sum + sale.amount_crypto,
-    0
-  );
-
-  const profitLoss = totalSales - totalPurchases;
-  const profitLossPercentage =
-    totalPurchases > 0 ? (profitLoss / totalPurchases) * 100 : 0;
-
-  return {
-    totalPurchases,
-    totalSales,
-    totalCryptoPurchased,
-    totalCryptoSold,
-    profitLoss,
-    profitLossPercentage,
-  };
-};
+import {
+  getDataPortfolioData,
+  calculatePortfolioStats,
+} from "./portfolio.helps";
 
 // swagger
 import "./portfolio.swagger";
