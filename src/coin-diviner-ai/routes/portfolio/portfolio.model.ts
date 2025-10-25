@@ -37,6 +37,30 @@ const portfolioSM = new Schema(
       type: Number,
       default: null,
     },
+    totalPurchases: {
+      type: Number,
+      default: 0,
+    },
+    totalSales: {
+      type: Number,
+      default: 0,
+    },
+    totalCryptoPurchased: {
+      type: Number,
+      default: 0,
+    },
+    totalCryptoSold: {
+      type: Number,
+      default: 0,
+    },
+    profitLoss: {
+      type: Number,
+      default: 0,
+    },
+    profitLossPercentage: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

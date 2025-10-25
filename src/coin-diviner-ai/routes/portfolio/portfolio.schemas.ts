@@ -48,6 +48,12 @@ export const portfolioRecordSchema = z.object({
   status: z.enum(["open", "completed"]).default("open"),
   completionDate: z.string().nullable().default(null),
   completionPrice: z.number().nullable().default(null),
+  totalPurchases: z.number().default(0),
+  totalSales: z.number().default(0),
+  totalCryptoPurchased: z.number().default(0),
+  totalCryptoSold: z.number().default(0),
+  profitLoss: z.number().default(0),
+  profitLossPercentage: z.number().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

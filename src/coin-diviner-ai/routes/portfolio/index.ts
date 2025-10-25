@@ -47,6 +47,42 @@ import UserBalanceModel from "../user-balance/user-balance.model";
 import { checkAuth } from "../../hooks/auth";
 import { getDataPortfolioData } from "./portfolio.helps";
 
+// Helper function to calculate portfolio statistics
+const calculatePortfolioStats = (portfolio: any) => {
+  const totalPurchases = portfolio.purchases.reduce(
+    (sum: number, purchase: any) => sum + purchase.amount_usd,
+    0
+  );
+
+  const totalSales = portfolio.sales.reduce(
+    (sum: number, sale: any) => sum + sale.amount_usd,
+    0
+  );
+
+  const totalCryptoPurchased = portfolio.purchases.reduce(
+    (sum: number, purchase: any) => sum + purchase.amount_crypto,
+    0
+  );
+
+  const totalCryptoSold = portfolio.sales.reduce(
+    (sum: number, sale: any) => sum + sale.amount_crypto,
+    0
+  );
+
+  const profitLoss = totalSales - totalPurchases;
+  const profitLossPercentage =
+    totalPurchases > 0 ? (profitLoss / totalPurchases) * 100 : 0;
+
+  return {
+    totalPurchases,
+    totalSales,
+    totalCryptoPurchased,
+    totalCryptoSold,
+    profitLoss,
+    profitLossPercentage,
+  };
+};
+
 // swagger
 import "./portfolio.swagger";
 
@@ -760,9 +796,18 @@ router.post("/complete", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
+    // Calculate portfolio statistics
+    const stats = calculatePortfolioStats(portfolio);
+
     portfolio.status = "completed";
     portfolio.completionDate = new Date();
     portfolio.completionPrice = completionPrice;
+    portfolio.totalPurchases = stats.totalPurchases;
+    portfolio.totalSales = stats.totalSales;
+    portfolio.totalCryptoPurchased = stats.totalCryptoPurchased;
+    portfolio.totalCryptoSold = stats.totalCryptoSold;
+    portfolio.profitLoss = stats.profitLoss;
+    portfolio.profitLossPercentage = stats.profitLossPercentage;
     await portfolio.save();
 
     let userBalance = await UserBalanceModel.findOne({ userId: user._id });
@@ -856,7 +901,16 @@ router.patch("/update-completed", async (req: Request, res: Response) => {
       return res.status(404).json(validatedError);
     }
 
+    // Recalculate portfolio statistics
+    const stats = calculatePortfolioStats(portfolio);
+
     portfolio.completionPrice = completionPrice;
+    portfolio.totalPurchases = stats.totalPurchases;
+    portfolio.totalSales = stats.totalSales;
+    portfolio.totalCryptoPurchased = stats.totalCryptoPurchased;
+    portfolio.totalCryptoSold = stats.totalCryptoSold;
+    portfolio.profitLoss = stats.profitLoss;
+    portfolio.profitLossPercentage = stats.profitLossPercentage;
     await portfolio.save();
 
     const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
