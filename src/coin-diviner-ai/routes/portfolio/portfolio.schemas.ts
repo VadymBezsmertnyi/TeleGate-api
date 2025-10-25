@@ -3,32 +3,59 @@ import { cryptoCoinSchema } from "../aggregator/aggregator.schemas";
 
 export const transactionSchema = z.object({
   _id: z.string().optional().describe("Унікальний ідентифікатор транзакції"),
-  amount_usd: z.number().positive().describe("Сума в доларах США"),
-  amount_crypto: z.number().positive().describe("Кількість криптовалюти"),
+  amount_usd: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Сума в доларах США"),
+  amount_crypto: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Кількість криптовалюти"),
   price_per_unit: z
     .number()
     .positive()
+    .multipleOf(0.00000001)
     .describe("Ціна за одиницю криптовалюти"),
   date: z.string().describe("Дата транзакції в ISO форматі"),
 });
 
 export const createOrUpdatePortfolioSchema = z.object({
   coinId: z.string().min(1).describe("ID криптовалюти"),
-  amount_usd: z.number().positive().describe("Сума в доларах США"),
-  amount_crypto: z.number().positive().describe("Кількість криптовалюти"),
+  amount_usd: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Сума в доларах США"),
+  amount_crypto: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Кількість криптовалюти"),
   price_per_unit: z
     .number()
     .positive()
+    .multipleOf(0.00000001)
     .describe("Ціна за одиницю криптовалюти"),
 });
 
 export const addTransactionSchema = z.object({
   portfolioId: z.string().min(1).describe("ID портфоліо"),
-  amount_usd: z.number().positive().describe("Сума в доларах США"),
-  amount_crypto: z.number().positive().describe("Кількість криптовалюти"),
+  amount_usd: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Сума в доларах США"),
+  amount_crypto: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Кількість криптовалюти"),
   price_per_unit: z
     .number()
     .positive()
+    .multipleOf(0.00000001)
     .describe("Ціна за одиницю криптовалюти"),
 });
 
@@ -38,11 +65,20 @@ export const updateTransactionSchema = z.object({
   transactionType: z
     .enum(["purchase", "sale"])
     .describe("Тип транзакції: покупка або продаж"),
-  amount_usd: z.number().positive().describe("Сума в доларах США"),
-  amount_crypto: z.number().positive().describe("Кількість криптовалюти"),
+  amount_usd: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Сума в доларах США"),
+  amount_crypto: z
+    .number()
+    .positive()
+    .multipleOf(0.00000001)
+    .describe("Кількість криптовалюти"),
   price_per_unit: z
     .number()
     .positive()
+    .multipleOf(0.00000001)
     .describe("Ціна за одиницю криптовалюти"),
 });
 
