@@ -3,14 +3,14 @@ import { z } from "zod";
 export const userBalanceTransactionSchema = z.object({
   _id: z.string().optional(),
   type: z.enum(["deposit", "withdrawal"]),
-  amount: z.number().positive().multipleOf(0.00000001), // Підтримка 8 знаків після крапки
+  amount: z.number().positive(),
   description: z.string().optional().default(""),
   date: z.string(),
 });
 
 export const addUserBalanceTransactionSchema = z.object({
   type: z.enum(["deposit", "withdrawal"]),
-  amount: z.number().positive().multipleOf(0.00000001), // Підтримка 8 знаків після крапки
+  amount: z.number().positive(),
   description: z.string().optional().default(""),
 });
 
