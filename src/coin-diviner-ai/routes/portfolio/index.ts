@@ -931,86 +931,89 @@ router.patch("/update-completed", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/completed/:portfolioId", async (req: Request, res: Response) => {
-  try {
-    const decoded = checkAuth(req);
-    if ("message" in decoded) return res.status(401).json(decoded);
+router.delete(
+  "/completed/:portfolioId",
+  async (req: Request, res: Response) => {
+    try {
+      const decoded = checkAuth(req);
+      if ("message" in decoded) return res.status(401).json(decoded);
 
-    const user = await AuthModel.findById(decoded.userId);
-    if (!user) {
-      const errorResponse: TNotFoundError = {
-        message: "User not found",
+      const user = await AuthModel.findById(decoded.userId);
+      if (!user) {
+        const errorResponse: TNotFoundError = {
+          message: "User not found",
+        };
+        const validatedError = notFoundErrorSchema.parse(errorResponse);
+        return res.status(404).json(validatedError);
+      }
+
+      const { portfolioId } = req.params;
+      if (!portfolioId) {
+        const errorResponse: TValidationError = {
+          message: "Validation error",
+          errors: [
+            {
+              code: "invalid_type",
+              message: "portfolioId is required",
+              path: ["portfolioId"],
+            },
+          ],
+          code: ErrorCode.INVALID_PARAMS,
+        };
+        const validatedError = validationErrorSchema.parse(errorResponse);
+        return res.status(400).json(validatedError);
+      }
+
+      const portfolio = await PortfolioModel.findOne({
+        _id: portfolioId,
+        userId: user._id,
+        status: "completed",
+      });
+
+      if (!portfolio) {
+        const errorResponse: TNotFoundError = {
+          message: "Completed portfolio not found",
+        };
+        const validatedError = notFoundErrorSchema.parse(errorResponse);
+        return res.status(404).json(validatedError);
+      }
+
+      // Remove from user balance portfolio transactions
+      await UserBalanceModel.updateOne(
+        { userId: user._id },
+        { $pull: { portfolioTransactions: portfolio._id } }
+      );
+
+      // Delete the portfolio
+      await PortfolioModel.findByIdAndDelete(portfolioId);
+
+      const responseData: TDeleteResponse = {
+        success: true,
+        message: "Completed portfolio deleted successfully",
       };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
 
-    const { portfolioId } = req.params;
-    if (!portfolioId) {
-      const errorResponse: TValidationError = {
-        message: "Validation error",
-        errors: [
-          {
-            code: "invalid_type",
-            message: "portfolioId is required",
-            path: ["portfolioId"],
-          },
-        ],
-        code: ErrorCode.INVALID_PARAMS,
-      };
-      const validatedError = validationErrorSchema.parse(errorResponse);
-      return res.status(400).json(validatedError);
-    }
+      const responseValidation = deleteResponseSchema.safeParse(responseData);
+      if (!responseValidation.success) {
+        console.warn("Response validation failed:", responseValidation.error);
+        const errorResponse: TServerError = {
+          message: "Invalid response format",
+        };
+        const validatedError = serverErrorSchema.parse(errorResponse);
+        return res.status(500).json(validatedError);
+      }
 
-    const portfolio = await PortfolioModel.findOne({
-      _id: portfolioId,
-      userId: user._id,
-      status: "completed",
-    });
+      return res.status(200).json(responseValidation.data);
+    } catch (error) {
+      console.warn("Delete completed portfolio error:", error);
 
-    if (!portfolio) {
-      const errorResponse: TNotFoundError = {
-        message: "Completed portfolio not found",
-      };
-      const validatedError = notFoundErrorSchema.parse(errorResponse);
-      return res.status(404).json(validatedError);
-    }
-
-    // Remove from user balance portfolio transactions
-    await UserBalanceModel.updateOne(
-      { userId: user._id },
-      { $pull: { portfolioTransactions: portfolio._id } }
-    );
-
-    // Delete the portfolio
-    await PortfolioModel.findByIdAndDelete(portfolioId);
-
-    const responseData: TDeleteResponse = {
-      success: true,
-      message: "Completed portfolio deleted successfully",
-    };
-
-    const responseValidation = deleteResponseSchema.safeParse(responseData);
-    if (!responseValidation.success) {
-      console.warn("Response validation failed:", responseValidation.error);
       const errorResponse: TServerError = {
-        message: "Invalid response format",
+        message: "Server error: " + error,
       };
       const validatedError = serverErrorSchema.parse(errorResponse);
       return res.status(500).json(validatedError);
     }
-
-    return res.status(200).json(responseValidation.data);
-  } catch (error) {
-    console.warn("Delete completed portfolio error:", error);
-
-    const errorResponse: TServerError = {
-      message: "Server error: " + error,
-    };
-    const validatedError = serverErrorSchema.parse(errorResponse);
-    return res.status(500).json(validatedError);
   }
-});
+);
 
 router.get("/completed", async (req: Request, res: Response) => {
   try {
