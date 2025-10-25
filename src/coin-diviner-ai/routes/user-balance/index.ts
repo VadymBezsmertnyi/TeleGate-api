@@ -187,9 +187,26 @@ router.get("/get-balance", async (req: Request, res: Response) => {
       return res.status(200).json(responseValidation.data);
     }
 
+    const processedData = getDataUserBalanceData(userBalance);
+    // Очищуємо зайві строки (ObjectId) з БД, використовуючи оброблені дані
+    if (processedData && processedData.portfolioTransactions) {
+      const validPortfolioIds = processedData.portfolioTransactions.map(
+        (pt) => pt._id
+      );
+
+      if (
+        validPortfolioIds.length !== userBalance.portfolioTransactions.length
+      ) {
+        await UserBalanceModel.updateOne(
+          { _id: userBalance._id },
+          { portfolioTransactions: validPortfolioIds }
+        );
+      }
+    }
+
     const responseData: TUserBalanceResponse = {
       success: true,
-      data: getDataUserBalanceData(userBalance),
+      data: processedData,
     };
 
     const responseValidation =
