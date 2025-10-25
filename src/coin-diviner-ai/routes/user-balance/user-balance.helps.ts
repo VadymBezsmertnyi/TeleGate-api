@@ -1,6 +1,12 @@
-import { TUserBalanceRecord } from "./user-balance.types";
+import {
+  TUserBalanceRecord,
+  IUserBalanceDocument,
+  IUserBalanceLean,
+} from "./user-balance.types";
 
-export const getDataUserBalanceData = (userBalance: any) => {
+export const getDataUserBalanceData = (
+  userBalance: IUserBalanceDocument | IUserBalanceLean
+) => {
   if (!userBalance || typeof userBalance !== "object" || !userBalance._id)
     return null;
 
