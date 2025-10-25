@@ -63,3 +63,19 @@ export const userBalanceListResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(userBalanceRecordSchema),
 });
+
+export const updateUserBalanceTransactionSchema = z.object({
+  transactionId: z.string().min(1),
+  type: z.enum(["deposit", "withdrawal"]),
+  amount: z.number().positive(),
+  description: z.string().optional().default(""),
+});
+
+export const deleteUserBalanceTransactionSchema = z.object({
+  transactionId: z.string().min(1),
+});
+
+export const deleteResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});

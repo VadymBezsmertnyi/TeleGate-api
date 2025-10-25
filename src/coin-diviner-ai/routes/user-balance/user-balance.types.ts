@@ -4,8 +4,11 @@ import {
   userBalanceTransactionSchema,
   userBalanceRecordSchema,
   addUserBalanceTransactionSchema,
+  updateUserBalanceTransactionSchema,
+  deleteUserBalanceTransactionSchema,
   userBalanceResponseSchema,
   userBalanceListResponseSchema,
+  deleteResponseSchema,
 } from "./user-balance.schemas";
 
 /**
@@ -90,3 +93,10 @@ export type TUserBalanceResponse = z.infer<typeof userBalanceResponseSchema>;
 export type TUserBalanceListResponse = z.infer<
   typeof userBalanceListResponseSchema
 >;
+export type TUpdateUserBalanceTransaction = z.infer<
+  typeof updateUserBalanceTransactionSchema
+>;
+export type TDeleteUserBalanceTransaction = z.infer<
+  typeof deleteUserBalanceTransactionSchema
+>;
+export type TDeleteResponse = z.infer<typeof deleteResponseSchema>;

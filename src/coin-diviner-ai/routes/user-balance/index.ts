@@ -2,7 +2,10 @@ import { Router, Request, Response } from "express";
 
 import {
   addUserBalanceTransactionSchema,
+  updateUserBalanceTransactionSchema,
+  deleteUserBalanceTransactionSchema,
   userBalanceResponseSchema,
+  deleteResponseSchema,
 } from "./user-balance.schemas";
 import {
   notFoundErrorSchema,
@@ -12,7 +15,10 @@ import {
 
 import type {
   TAddUserBalanceTransaction,
+  TUpdateUserBalanceTransaction,
+  TDeleteUserBalanceTransaction,
   TUserBalanceResponse,
+  TDeleteResponse,
 } from "./user-balance.types";
 import type {
   TNotFoundError,
@@ -223,6 +229,220 @@ router.get("/get-balance", async (req: Request, res: Response) => {
     return res.status(200).json(responseValidation.data);
   } catch (error) {
     console.warn("Get balance error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.patch("/update-transaction", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = updateUserBalanceTransactionSchema.safeParse(
+      req.body
+    );
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { transactionId, type, amount, description }: TUpdateUserBalanceTransaction =
+      validationResult.data;
+
+    const userBalance = await UserBalanceModel.findOne({
+      userId: user._id,
+    });
+
+    if (!userBalance) {
+      const errorResponse: TNotFoundError = {
+        message: "User balance not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const transactionIndex = userBalance.transactions.findIndex(
+      (t) => t._id.toString() === transactionId
+    );
+
+    if (transactionIndex === -1) {
+      const errorResponse: TNotFoundError = {
+        message: "Transaction not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const oldTransaction = userBalance.transactions[transactionIndex];
+    const oldAmount = oldTransaction.amount;
+    const oldType = oldTransaction.type;
+
+    // Update transaction
+    userBalance.transactions[transactionIndex] = {
+      ...oldTransaction,
+      type,
+      amount,
+      description,
+    };
+
+    // Recalculate balance
+    if (oldType === "deposit") {
+      userBalance.balance -= oldAmount;
+    } else {
+      userBalance.balance += oldAmount;
+    }
+
+    if (type === "deposit") {
+      userBalance.balance += amount;
+    } else {
+      userBalance.balance -= amount;
+    }
+
+    await userBalance.save();
+
+    const userBalanceData = await UserBalanceModel.findById(
+      userBalance._id
+    ).lean();
+    if (!userBalanceData) {
+      const errorResponse: TServerError = {
+        message: "Failed to retrieve user balance",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    const responseData: TUserBalanceResponse = {
+      success: true,
+      data: getDataUserBalanceData(userBalanceData),
+    };
+
+    const responseValidation =
+      userBalanceResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Update transaction error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+router.delete("/delete-transaction", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const validationResult = deleteUserBalanceTransactionSchema.safeParse(
+      req.body
+    );
+    if (!validationResult.success) {
+      const errorResponse: TValidationError = {
+        message: "Validation error",
+        errors: validationResult.error.issues,
+        code: ErrorCode.INVALID_PARAMS,
+      };
+      const validatedError = validationErrorSchema.parse(errorResponse);
+      return res.status(400).json(validatedError);
+    }
+
+    const { transactionId }: TDeleteUserBalanceTransaction =
+      validationResult.data;
+
+    const userBalance = await UserBalanceModel.findOne({
+      userId: user._id,
+    });
+
+    if (!userBalance) {
+      const errorResponse: TNotFoundError = {
+        message: "User balance not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const transactionIndex = userBalance.transactions.findIndex(
+      (t) => t._id.toString() === transactionId
+    );
+
+    if (transactionIndex === -1) {
+      const errorResponse: TNotFoundError = {
+        message: "Transaction not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    const transaction = userBalance.transactions[transactionIndex];
+    
+    // Recalculate balance
+    if (transaction.type === "deposit") {
+      userBalance.balance -= transaction.amount;
+    } else {
+      userBalance.balance += transaction.amount;
+    }
+
+    // Remove transaction
+    userBalance.transactions.splice(transactionIndex, 1);
+    await userBalance.save();
+
+    const responseData: TDeleteResponse = {
+      success: true,
+      message: "Transaction deleted successfully",
+    };
+
+    const responseValidation = deleteResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Delete transaction error:", error);
 
     const errorResponse: TServerError = {
       message: "Server error: " + error,
