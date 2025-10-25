@@ -67,6 +67,9 @@ const portfolioSM = new Schema(
   }
 );
 
+portfolioSM.index({ userId: 1 });
+portfolioSM.index({ coinId: 1 });
+
 const PortfolioModel = model("coinDivinerAI-portfolio", portfolioSM);
 
 export default PortfolioModel;
