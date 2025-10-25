@@ -148,7 +148,15 @@ router.get("/get-balance", async (req: Request, res: Response) => {
 
     const userBalance = await UserBalanceModel.findOne({
       userId: user._id,
-    }).lean();
+    })
+      .populate({
+        path: "portfolioTransactions",
+        populate: {
+          path: "coinId",
+          select: "name symbol coinGeckoData",
+        },
+      })
+      .lean();
 
     if (!userBalance) {
       const emptyBalance = {
