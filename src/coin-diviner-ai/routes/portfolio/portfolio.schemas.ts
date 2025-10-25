@@ -141,6 +141,10 @@ export const portfolioStatsSchema = z.object({
   totalProfitLossFromCompletedSessions: z
     .number()
     .describe("Загальний прибуток/збиток від завершених торгових сесій"),
+  openSessionsCount: z.number().describe("Кількість відкритих торгових сесій"),
+  completedSessionsCount: z
+    .number()
+    .describe("Кількість завершених торгових сесій"),
 });
 
 export const portfolioStatsResponseSchema = z.object({

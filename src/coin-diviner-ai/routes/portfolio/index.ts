@@ -1008,7 +1008,7 @@ router.get("/stats", async (req: Request, res: Response) => {
     // Розраховуємо загальну суму вкладень у відкриті сесії
     let totalInvestedInOpenSessions = 0;
     for (const portfolio of openPortfolios) {
-      // Сума всіх покупок мінус сума всіх продажів
+      // Сума всіх покупок мінус сума всіх продажів (залишок інвестицій)
       const totalPurchases = portfolio.purchases.reduce(
         (sum, purchase) => sum + purchase.amount_usd,
         0
@@ -1017,7 +1017,11 @@ router.get("/stats", async (req: Request, res: Response) => {
         (sum, sale) => sum + sale.amount_usd,
         0
       );
-      totalInvestedInOpenSessions += totalPurchases - totalSales;
+      const remainingInvestment = totalPurchases - totalSales;
+
+      // Додаємо тільки позитивні залишки (коли ще є інвестиції)
+      if (remainingInvestment > 0)
+        totalInvestedInOpenSessions += remainingInvestment;
     }
 
     // Розраховуємо загальний прибуток/збиток від завершених сесій
@@ -1029,6 +1033,8 @@ router.get("/stats", async (req: Request, res: Response) => {
     const data = {
       totalInvestedInOpenSessions,
       totalProfitLossFromCompletedSessions,
+      openSessionsCount: openPortfolios.length,
+      completedSessionsCount: completedPortfolios.length,
     };
 
     const responseData: TPortfolioStatsResponse = {
