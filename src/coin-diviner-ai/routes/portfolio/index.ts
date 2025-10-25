@@ -11,6 +11,7 @@ import {
   deleteResponseSchema,
   completePortfolioSchema,
   updateCompletedPortfolioSchema,
+  portfolioStatsResponseSchema,
 } from "./portfolio.schemas";
 import {
   notFoundErrorSchema,
@@ -29,6 +30,7 @@ import type {
   TDeleteResponse,
   TCompletePortfolio,
   TUpdateCompletedPortfolio,
+  TPortfolioStatsResponse,
 } from "./portfolio.types";
 import type {
   TNotFoundError,
@@ -964,6 +966,90 @@ router.get("/completed", async (req: Request, res: Response) => {
     return res.status(200).json(responseValidation.data);
   } catch (error) {
     console.warn("Get completed portfolios error:", error);
+
+    const errorResponse: TServerError = {
+      message: "Server error: " + error,
+    };
+    const validatedError = serverErrorSchema.parse(errorResponse);
+    return res.status(500).json(validatedError);
+  }
+});
+
+// GET /portfolio/stats - отримати статистику по торгових сесіях
+router.get("/stats", async (req: Request, res: Response) => {
+  try {
+    const decoded = checkAuth(req);
+    if ("message" in decoded) return res.status(401).json(decoded);
+
+    const user = await AuthModel.findById(decoded.userId);
+    if (!user) {
+      const errorResponse: TNotFoundError = {
+        message: "User not found",
+      };
+      const validatedError = notFoundErrorSchema.parse(errorResponse);
+      return res.status(404).json(validatedError);
+    }
+
+    // Отримуємо відкриті торгові сесії
+    const openPortfolios = await PortfolioModel.find({
+      userId: user._id,
+      $or: [
+        { status: "open" },
+        { status: { $exists: false } }, // для старих записів без статусу
+      ],
+    }).lean();
+
+    // Отримуємо завершені торгові сесії
+    const completedPortfolios = await PortfolioModel.find({
+      userId: user._id,
+      status: "completed",
+    }).lean();
+
+    // Розраховуємо загальну суму вкладень у відкриті сесії
+    let totalInvestedInOpenSessions = 0;
+    for (const portfolio of openPortfolios) {
+      // Сума всіх покупок мінус сума всіх продажів
+      const totalPurchases = portfolio.purchases.reduce(
+        (sum, purchase) => sum + purchase.amount_usd,
+        0
+      );
+      const totalSales = portfolio.sales.reduce(
+        (sum, sale) => sum + sale.amount_usd,
+        0
+      );
+      totalInvestedInOpenSessions += totalPurchases - totalSales;
+    }
+
+    // Розраховуємо загальний прибуток/збиток від завершених сесій
+    let totalProfitLossFromCompletedSessions = 0;
+    for (const portfolio of completedPortfolios) {
+      totalProfitLossFromCompletedSessions += portfolio.profitLoss || 0;
+    }
+
+    const data = {
+      totalInvestedInOpenSessions,
+      totalProfitLossFromCompletedSessions,
+    };
+
+    const responseData: TPortfolioStatsResponse = {
+      success: true,
+      data,
+    };
+
+    const responseValidation =
+      portfolioStatsResponseSchema.safeParse(responseData);
+    if (!responseValidation.success) {
+      console.warn("Response validation failed:", responseValidation.error);
+      const errorResponse: TServerError = {
+        message: "Invalid response format",
+      };
+      const validatedError = serverErrorSchema.parse(errorResponse);
+      return res.status(500).json(validatedError);
+    }
+
+    return res.status(200).json(responseValidation.data);
+  } catch (error) {
+    console.warn("Get portfolio stats error:", error);
 
     const errorResponse: TServerError = {
       message: "Server error: " + error,

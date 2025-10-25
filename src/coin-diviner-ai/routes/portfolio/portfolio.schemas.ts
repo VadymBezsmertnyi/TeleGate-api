@@ -133,3 +133,17 @@ export const updateCompletedPortfolioSchema = z.object({
     .describe("ID завершеного портфоліо для оновлення"),
   completionPrice: z.number().positive().describe("Нова ціна завершення"),
 });
+
+export const portfolioStatsSchema = z.object({
+  totalInvestedInOpenSessions: z
+    .number()
+    .describe("Загальна сума вкладена в відкриті торгові сесії"),
+  totalProfitLossFromCompletedSessions: z
+    .number()
+    .describe("Загальний прибуток/збиток від завершених торгових сесій"),
+});
+
+export const portfolioStatsResponseSchema = z.object({
+  success: z.boolean(),
+  data: portfolioStatsSchema,
+});

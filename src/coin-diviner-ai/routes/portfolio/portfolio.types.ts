@@ -10,6 +10,8 @@ import {
   deleteResponseSchema,
   completePortfolioSchema,
   updateCompletedPortfolioSchema,
+  portfolioStatsSchema,
+  portfolioStatsResponseSchema,
 } from "./portfolio.schemas";
 
 export interface ITransactionDocument {
@@ -82,6 +84,10 @@ export type TDeleteResponse = z.infer<typeof deleteResponseSchema>;
 export type TCompletePortfolio = z.infer<typeof completePortfolioSchema>;
 export type TUpdateCompletedPortfolio = z.infer<
   typeof updateCompletedPortfolioSchema
+>;
+export type TPortfolioStats = z.infer<typeof portfolioStatsSchema>;
+export type TPortfolioStatsResponse = z.infer<
+  typeof portfolioStatsResponseSchema
 >;
 
 // Portfolio record type for API responses
