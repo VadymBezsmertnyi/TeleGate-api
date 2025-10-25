@@ -792,8 +792,21 @@ router.post("/complete", async (req: Request, res: Response) => {
     userBalance.portfolioTransactions.push(portfolio._id);
     await userBalance.save();
 
-    const portfolioData = await PortfolioModel.findById(portfolio._id).lean();
-    if (!portfolioData) {
+    // Створюємо новий пустий портфоліо для тієї ж криптовалюти
+    const newPortfolio = await PortfolioModel.create({
+      userId: user._id,
+      coinId: portfolio.coinId,
+      purchases: [],
+      sales: [],
+      status: "open",
+      totalPurchases: 0,
+      totalSales: 0,
+      totalCryptoPurchased: 0,
+      totalCryptoSold: 0,
+      profitLoss: 0,
+      profitLossPercentage: 0,
+    });
+    if (!newPortfolio) {
       const errorResponse: TServerError = {
         message: "Failed to retrieve portfolio",
       };
@@ -803,7 +816,7 @@ router.post("/complete", async (req: Request, res: Response) => {
 
     const responseData: TPortfolioResponse = {
       success: true,
-      data: getDataPortfolioData(portfolioData),
+      data: getDataPortfolioData(newPortfolio),
     };
 
     const responseValidation = portfolioResponseSchema.safeParse(responseData);
