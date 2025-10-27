@@ -154,9 +154,10 @@ const generateTelegramMessage = (
       ((currentPrice - automation.target_price) / automation.target_price) *
       100;
     const emoji = automation.type === "price_rise" ? "📈" : "📉";
+    const arrow = automation.type === "price_rise" ? "🔺" : "🔻";
 
     return (
-      `${emoji} Спрацювання автоматизації\n\n` +
+      `${emoji} Спрацювання автоматизації: ${coin.symbol}, ${arrow} ${currentPrice}\n\n` +
       `💰 Монета: ${coin.name} (${coin.symbol})\n` +
       `💵 Поточна ціна: $${currentPrice}\n` +
       `🎯 Цільова ціна: $${automation.target_price}\n` +
@@ -175,9 +176,10 @@ const generateTelegramMessage = (
     const emoji = automation.type === "price_rise" ? "📉" : "📈";
     const extremeLabel =
       automation.type === "price_rise" ? "максимум" : "мінімум";
+    const arrow = automation.type === "price_rise" ? "🔻" : "🔺";
 
     return (
-      `${emoji} Спрацювання автоматизації\n\n` +
+      `${emoji} Спрацювання автоматизації: ${coin.symbol}, ${arrow} ${currentPrice}\n\n` +
       `💰 Монета: ${coin.name} (${coin.symbol})\n` +
       `💵 Поточна ціна: $${currentPrice}\n` +
       `📍 ${extremeLabel.charAt(0).toUpperCase() + extremeLabel.slice(1)}: $${
