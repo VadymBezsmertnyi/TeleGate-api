@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getTokenPools, getPairById, searchPairs } from "dexscreener-sdk";
+import { IPairsResponse } from "./dexscreener.types";
 
 const BASE_URL = "https://api.dexscreener.com/latest/dex";
 
@@ -44,7 +45,7 @@ const DexScreenerService = {
    * Отримати дані за токеном через ID токена
    */
   getByTokenId: async (tokenId: string) =>
-    fetchFromDexScreener(`/tokens/${tokenId}`),
+    fetchFromDexScreener<IPairsResponse>(`/tokens/${tokenId}`),
 };
 
 export default DexScreenerService;
