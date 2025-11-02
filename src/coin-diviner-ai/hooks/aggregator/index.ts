@@ -14,11 +14,26 @@ import type {
   TAllPriceHistoryResponse,
 } from "../../routes/aggregator/aggregator.types";
 
+const isTokenAddress = (address: string): boolean => {
+  if (!address || typeof address !== "string") return false;
+
+  const trimmed = address.trim();
+  const evmRegex = /^0x[a-fA-F0-9]{40}$/;
+  if (evmRegex.test(trimmed)) return true;
+
+  const base58Regex = /^[1-9A-HJ-NP-Za-km-z]+$/;
+  if (base58Regex.test(trimmed) && trimmed.length >= 32 && trimmed.length <= 44)
+    return true;
+
+  return false;
+};
+
 const AggregatorService = {
   searchCoins: async (
     query: string,
     deepSearch: boolean = false
   ): Promise<TSearchResponse> => {
+    const originalQuery = query.trim();
     const normalizedQuery = query.toLowerCase().trim();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -55,11 +70,8 @@ const AggregatorService = {
         if (cachedCoins && cachedCoins.length > 0) {
           const results: TCryptoCoin[] = cachedCoins.map((coin) => {
             let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
-            if (coin.coinPaprikaData && coin.coinGeckoData) {
-              source = "both";
-            } else if (coin.coinGeckoData) {
-              source = "coingecko";
-            }
+            if (coin.coinPaprikaData && coin.coinGeckoData) source = "both";
+            else if (coin.coinGeckoData) source = "coingecko";
 
             return {
               _id: coin._id,
@@ -100,31 +112,49 @@ const AggregatorService = {
         CoinPaprikaService.search(query),
         CoinGeckoService.search(query),
       ]);
-
-      if (paprikaData.status === "fulfilled" && paprikaData.value?.currencies) {
+      if (paprikaData.status === "fulfilled" && paprikaData.value?.currencies)
         paprikaResults = paprikaData.value.currencies;
-      }
-      if (geckoData.status === "fulfilled" && geckoData.value?.coins) {
+      if (geckoData.status === "fulfilled" && geckoData.value?.coins)
         geckoResults = geckoData.value.coins;
-      }
     } else {
       try {
         const paprikaResult = await CoinPaprikaService.search(query);
-        if (paprikaResult && paprikaResult.currencies.length > 0) {
+        if (paprikaResult && paprikaResult.currencies.length > 0)
           paprikaResults = paprikaResult.currencies;
-        }
       } catch (error) {
         console.warn("❌ CoinPaprika search failed:", error);
       }
 
       if (paprikaResults.length === 0) {
-        try {
-          const geckoResult = await CoinGeckoService.search(query);
-          if (geckoResult && geckoResult.coins.length > 0) {
-            geckoResults = geckoResult.coins;
+        if (isTokenAddress(originalQuery)) {
+          try {
+            const dexResult = await DexScreenerService.getByTokenId(
+              originalQuery
+            );
+            if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+              const pair = dexResult.pairs[0];
+              const mockGeckoResult: TCoinGeckoData = {
+                id: pair.baseToken.address,
+                symbol: pair.baseToken.symbol,
+                name: pair.baseToken.name,
+                api_symbol: pair.baseToken.symbol,
+                market_cap_rank: null,
+                thumb: pair.info.imageUrl || "",
+                large: pair.info.imageUrl || "",
+              };
+              geckoResults.push(mockGeckoResult);
+            }
+          } catch (error) {
+            console.warn("❌ DexScreener getByTokenId failed:", error);
           }
-        } catch (error) {
-          console.warn("❌ CoinGecko search failed:", error);
+        } else {
+          try {
+            const geckoResult = await CoinGeckoService.search(query);
+            if (geckoResult && geckoResult.coins.length > 0)
+              geckoResults = geckoResult.coins;
+          } catch (error) {
+            console.warn("❌ CoinGecko search failed:", error);
+          }
         }
       }
     }
@@ -205,11 +235,8 @@ const AggregatorService = {
 
         const results: TCryptoCoin[] = savedCoins.map((coin) => {
           let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
-          if (coin.coinPaprikaData && coin.coinGeckoData) {
-            source = "both";
-          } else if (coin.coinGeckoData) {
-            source = "coingecko";
-          }
+          if (coin.coinPaprikaData && coin.coinGeckoData) source = "both";
+          else if (coin.coinGeckoData) source = "coingecko";
 
           return {
             _id: coin._id,
@@ -276,9 +303,10 @@ const AggregatorService = {
         coin.coinPaprikaData?.contract_address?.[0]?.address;
       if (contractAddress || coin.symbol) {
         try {
-          const dexResult = await DexScreenerService.search(
-            contractAddress || coin.symbol
-          );
+          const searchQuery = contractAddress || coin.symbol;
+          const dexResult = isTokenAddress(searchQuery)
+            ? await DexScreenerService.getByTokenId(searchQuery)
+            : await DexScreenerService.search(searchQuery);
           if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
             const pair = dexResult.pairs[0];
             return {
@@ -494,9 +522,10 @@ const AggregatorService = {
         coin.coinPaprikaData?.contract_address?.[0]?.address;
       if (contractAddress || coin.symbol) {
         try {
-          const dexResult = await DexScreenerService.search(
-            contractAddress || coin.symbol
-          );
+          const searchQuery = contractAddress || coin.symbol;
+          const dexResult = isTokenAddress(searchQuery)
+            ? await DexScreenerService.getByTokenId(searchQuery)
+            : await DexScreenerService.search(searchQuery);
           if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
             const pair = dexResult.pairs[0];
             response.dexscreener = {
