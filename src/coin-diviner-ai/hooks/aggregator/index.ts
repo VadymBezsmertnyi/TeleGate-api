@@ -70,10 +70,19 @@ const AggregatorService = {
 
         if (cachedCoins && cachedCoins.length > 0) {
           const results: TCryptoCoin[] = cachedCoins.map((coin) => {
-            const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] = [];
-            if (coin.coinPaprikaData) sources.push("coinpaprika");
-            if (coin.coinGeckoData) sources.push("coingecko");
-            if (coin.dexscreenerData) sources.push("dexscreener");
+            const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] =
+              coin.source && Array.isArray(coin.source)
+                ? (coin.source as (
+                    | "coinpaprika"
+                    | "coingecko"
+                    | "dexscreener"
+                  )[])
+                : [];
+            if (sources.length === 0) {
+              if (coin.coinPaprikaData) sources.push("coinpaprika");
+              if (coin.coinGeckoData) sources.push("coingecko");
+              if (coin.dexscreenerData) sources.push("dexscreener");
+            }
 
             return {
               _id: coin._id,
@@ -320,18 +329,17 @@ const AggregatorService = {
             paprika?.name || gecko?.name || dex?.baseToken.name || "";
           const symbol =
             paprika?.symbol || gecko?.symbol || dex?.baseToken.symbol || "";
-
-          const sources: string[] = [];
-          if (paprika) sources.push("coinpaprika");
-          if (gecko) sources.push("coingecko");
-          if (dex) sources.push("dexscreener");
+          const existingCoin = await CryptoCoinModel.findOne({ symbol, name });
+          const sources: Set<string> = new Set(existingCoin?.source || []);
+          if (paprika) sources.add("coinpaprika");
+          if (gecko) sources.add("coingecko");
+          if (dex) sources.add("dexscreener");
 
           const setData: any = {
             name,
             symbol,
-            source: sources,
+            source: Array.from(sources),
           };
-
           if (paprika) {
             setData.coinPaprikaData = paprika;
             setData.lastUpdatedCoinPaprika = new Date();
@@ -362,10 +370,15 @@ const AggregatorService = {
         });
 
         const results: TCryptoCoin[] = savedCoins.map((coin) => {
-          const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] = [];
-          if (coin.coinPaprikaData) sources.push("coinpaprika");
-          if (coin.coinGeckoData) sources.push("coingecko");
-          if (coin.dexscreenerData) sources.push("dexscreener");
+          const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] =
+            coin.source && Array.isArray(coin.source)
+              ? (coin.source as ("coinpaprika" | "coingecko" | "dexscreener")[])
+              : [];
+          if (sources.length === 0) {
+            if (coin.coinPaprikaData) sources.push("coinpaprika");
+            if (coin.coinGeckoData) sources.push("coingecko");
+            if (coin.dexscreenerData) sources.push("dexscreener");
+          }
 
           return {
             _id: coin._id,
