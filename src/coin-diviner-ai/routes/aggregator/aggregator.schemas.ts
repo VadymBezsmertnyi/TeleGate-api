@@ -43,18 +43,24 @@ export const dexScreenerInfoSchema = z.object({
   imageUrl: z.string().optional().nullable(),
   websites: z
     .array(
-      z.object({
-        url: z.string().optional().nullable(),
-      })
+      z
+        .object({
+          url: z.string().optional().nullable(),
+        })
+        .optional()
+        .nullable()
     )
     .optional()
     .nullable(),
   socials: z
     .array(
-      z.object({
-        platform: z.string().optional().nullable(),
-        handle: z.string().optional().nullable(),
-      })
+      z
+        .object({
+          platform: z.string().optional().nullable(),
+          handle: z.string().optional().nullable(),
+        })
+        .optional()
+        .nullable()
     )
     .optional()
     .nullable(),
