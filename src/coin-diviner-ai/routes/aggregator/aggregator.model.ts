@@ -106,7 +106,9 @@ const cryptoCoinSM = new Schema(
     coinPaprikaData: { type: coinPaprikaDataSM },
     coinGeckoData: { type: coinGeckoDataSM },
     dexscreenerData: { type: dexScreenerDataSM },
-    source: [{ type: String, enum: ["coinpaprika", "coingecko", "dexscreener"] }],
+    source: [
+      { type: String, enum: ["coinpaprika", "coingecko", "dexscreener"] },
+    ],
     lastUpdatedCoinPaprika: { type: Date },
     lastUpdatedCoinGecko: { type: Date },
     lastUpdatedDexScreener: { type: Date },
