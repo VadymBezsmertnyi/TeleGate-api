@@ -383,6 +383,10 @@ const AggregatorService = {
 
           const contractAddress = getContractAddress(paprika, gecko, dex);
           let existingCoin = null;
+
+          const normalizedSymbol = symbol.toLowerCase().trim();
+          const normalizedName = name.toLowerCase().trim();
+
           if (contractAddress) {
             const normalizedAddress = normalizeAddress(contractAddress);
 
@@ -393,10 +397,45 @@ const AggregatorService = {
                 },
                 { "dexscreenerData.baseToken.address": normalizedAddress },
                 { "coinGeckoData.id": normalizedAddress },
-                { symbol, name },
+                {
+                  $and: [
+                    {
+                      symbol: {
+                        $regex: new RegExp(`^${normalizedSymbol}$`, "i"),
+                      },
+                    },
+                    {
+                      name: { $regex: new RegExp(`^${normalizedName}$`, "i") },
+                    },
+                  ],
+                },
               ],
             });
-          } else existingCoin = await CryptoCoinModel.findOne({ symbol, name });
+          } else
+            existingCoin = await CryptoCoinModel.findOne({
+              $and: [
+                {
+                  symbol: { $regex: new RegExp(`^${normalizedSymbol}$`, "i") },
+                },
+                { name: { $regex: new RegExp(`^${normalizedName}$`, "i") } },
+              ],
+            });
+
+          if (!existingCoin && contractAddress) {
+            const normalizedAddress = normalizeAddress(contractAddress);
+            const coinsWithSameAddress = await CryptoCoinModel.find({
+              $or: [
+                {
+                  "coinPaprikaData.contract_address.address": normalizedAddress,
+                },
+                { "dexscreenerData.baseToken.address": normalizedAddress },
+                { "coinGeckoData.id": normalizedAddress },
+              ],
+            });
+
+            if (coinsWithSameAddress.length > 0)
+              existingCoin = coinsWithSameAddress[0];
+          }
 
           const sources: Set<string> = new Set(existingCoin?.source || []);
           if (paprika) sources.add("coinpaprika");
