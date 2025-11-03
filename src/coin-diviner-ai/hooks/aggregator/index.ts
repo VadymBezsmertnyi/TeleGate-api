@@ -526,24 +526,51 @@ const AggregatorService = {
         }
       }
 
-      const contractAddress =
-        coin.coinPaprikaData?.contract_address?.[0]?.address;
-      if (contractAddress || coin.symbol) {
+      if (coin.dexscreenerData?.baseToken?.address) {
         try {
-          const searchQuery = contractAddress || coin.symbol;
-          const dexResult = isTokenAddress(searchQuery)
-            ? await DexScreenerService.getByTokenId(searchQuery)
-            : await DexScreenerService.search(searchQuery);
+          const dexResult = await DexScreenerService.getByTokenId(
+            coin.dexscreenerData.baseToken.address
+          );
           if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
-            const pair = dexResult.pairs[0];
-            return {
-              symbol: coin.symbol,
-              price: parseFloat(pair.priceUsd || "0"),
-              source: "dexscreener" as const,
-            };
+            const pair = dexResult.pairs.find(
+              (p) =>
+                p.baseToken.address.toLowerCase() ===
+                coin.dexscreenerData!.baseToken.address.toLowerCase()
+            );
+            if (pair)
+              return {
+                symbol: coin.symbol,
+                price: parseFloat(pair.priceUsd || "0"),
+                source: "dexscreener" as const,
+              };
           }
         } catch (error) {
-          console.warn("❌ DexScreener search failed:", error);
+          console.warn("❌ DexScreener getByTokenId failed:", error);
+        }
+      }
+
+      const contractAddress =
+        coin.coinPaprikaData?.contract_address?.[0]?.address;
+      if (contractAddress && isTokenAddress(contractAddress)) {
+        try {
+          const dexResult = await DexScreenerService.getByTokenId(
+            contractAddress
+          );
+          if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+            const pair = dexResult.pairs.find(
+              (p) =>
+                p.baseToken.address.toLowerCase() ===
+                contractAddress.toLowerCase()
+            );
+            if (pair)
+              return {
+                symbol: coin.symbol,
+                price: parseFloat(pair.priceUsd || "0"),
+                source: "dexscreener" as const,
+              };
+          }
+        } catch (error) {
+          console.warn("❌ DexScreener getByTokenId failed:", error);
         }
       }
 
@@ -745,21 +772,56 @@ const AggregatorService = {
         }
       }
 
+      if (coin.dexscreenerData?.baseToken?.address) {
+        try {
+          const dexResult = await DexScreenerService.getByTokenId(
+            coin.dexscreenerData.baseToken.address
+          );
+          if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+            const pair = dexResult.pairs.find(
+              (p) =>
+                p.baseToken.address.toLowerCase() ===
+                coin.dexscreenerData!.baseToken.address.toLowerCase()
+            );
+            if (pair)
+              response.dexscreener = {
+                price: parseFloat(pair.priceUsd || "0"),
+                updatedAt: new Date(),
+                error: null,
+              };
+          }
+        } catch (error: any) {
+          response.dexscreener = {
+            price: null,
+            updatedAt: new Date(),
+            error: error.message || "Failed to fetch from DexScreener",
+          };
+        }
+      }
+
       const contractAddress =
         coin.coinPaprikaData?.contract_address?.[0]?.address;
-      if (contractAddress || coin.symbol) {
+      if (
+        !response.dexscreener &&
+        contractAddress &&
+        isTokenAddress(contractAddress)
+      ) {
         try {
-          const searchQuery = contractAddress || coin.symbol;
-          const dexResult = isTokenAddress(searchQuery)
-            ? await DexScreenerService.getByTokenId(searchQuery)
-            : await DexScreenerService.search(searchQuery);
+          const dexResult = await DexScreenerService.getByTokenId(
+            contractAddress
+          );
           if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
-            const pair = dexResult.pairs[0];
-            response.dexscreener = {
-              price: parseFloat(pair.priceUsd || "0"),
-              updatedAt: new Date(),
-              error: null,
-            };
+            const pair = dexResult.pairs.find(
+              (p) =>
+                p.baseToken.address.toLowerCase() ===
+                contractAddress.toLowerCase()
+            );
+            if (pair)
+              response.dexscreener = {
+                price: parseFloat(pair.priceUsd || "0"),
+                updatedAt: new Date(),
+                error: null,
+              };
           }
         } catch (error: any) {
           response.dexscreener = {

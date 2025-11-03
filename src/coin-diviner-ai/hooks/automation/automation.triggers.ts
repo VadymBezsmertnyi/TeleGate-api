@@ -49,33 +49,36 @@ export const checkActiveAutomations = async (): Promise<
           continue;
         }
 
-        const contractAddress =
-          coin.coinPaprikaData?.contract_address?.[0]?.address;
-        if (contractAddress || coin.symbol) {
+        try {
+          const allPrices = await AggregatorService.getAllPrices(coinId);
+          dexscreenerPrice = allPrices.dexscreener?.price || null;
+          binancePrice = allPrices.binance?.price || null;
+          coingeckoPrice = allPrices.coingecko?.price || null;
+        } catch (error) {
+          console.warn(`Failed to fetch all prices for ${coinId}:`, error);
+        }
+
+        if (
+          dexscreenerPrice === null &&
+          coin.dexscreenerData?.baseToken?.address
+        ) {
           try {
-            const dexResult = await DexScreenerService.search(
-              contractAddress || coin.symbol
+            const dexResult = await DexScreenerService.getByTokenId(
+              coin.dexscreenerData.baseToken.address
             );
             if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
-              const pair = dexResult.pairs[0];
-              const priceValue = parseFloat(pair.priceUsd || "0");
-              if (priceValue && priceValue > 0) {
-                dexscreenerPrice = priceValue;
+              const pair = dexResult.pairs.find(
+                (p) =>
+                  p.baseToken.address.toLowerCase() ===
+                  coin.dexscreenerData!.baseToken.address.toLowerCase()
+              );
+              if (pair) {
+                const priceValue = parseFloat(pair.priceUsd || "0");
+                if (priceValue && priceValue > 0) dexscreenerPrice = priceValue;
               }
             }
           } catch (dexError) {
             console.warn(`DexScreener failed for ${coinId}:`, dexError);
-          }
-        }
-
-        if (dexscreenerPrice === null) {
-          try {
-            const allPrices = await AggregatorService.getAllPrices(coinId);
-            dexscreenerPrice = allPrices.dexscreener?.price || null;
-            binancePrice = allPrices.binance?.price || null;
-            coingeckoPrice = allPrices.coingecko?.price || null;
-          } catch (error) {
-            console.warn(`Failed to fetch all prices for ${coinId}:`, error);
           }
         }
 
