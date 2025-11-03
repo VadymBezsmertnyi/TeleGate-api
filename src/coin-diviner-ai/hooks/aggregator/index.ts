@@ -269,6 +269,25 @@ const AggregatorService = {
       return `${normSymbol}-${normName}`;
     };
 
+    const normalizeAddress = (address: string): string => {
+      return address.toLowerCase().trim();
+    };
+
+    const getContractAddress = (
+      paprika?: TCoinPaprikaData,
+      gecko?: TCoinGeckoData,
+      dex?: TDexScreenerData
+    ): string | null => {
+      if (dex?.baseToken.address)
+        return normalizeAddress(dex.baseToken.address);
+      if (paprika?.contract_address?.[0]?.address)
+        return normalizeAddress(paprika.contract_address[0].address);
+      if (gecko?.id && isTokenAddress(gecko.id))
+        return normalizeAddress(gecko.id);
+
+      return null;
+    };
+
     const coinMap = new Map<
       string,
       {
@@ -278,25 +297,57 @@ const AggregatorService = {
       }
     >();
 
+    const addressMap = new Map<string, string>();
+
     paprikaResults.forEach((coin) => {
       const key = normalizeKey(coin.symbol, coin.name);
-      const existing = coinMap.get(key);
-      if (existing) coinMap.set(key, { ...existing, paprika: coin });
-      else coinMap.set(key, { paprika: coin });
+      const address = coin.contract_address?.[0]?.address
+        ? normalizeAddress(coin.contract_address[0].address)
+        : null;
+
+      if (address && addressMap.has(address)) {
+        const existingKey = addressMap.get(address)!;
+        const existing = coinMap.get(existingKey);
+        if (existing) coinMap.set(existingKey, { ...existing, paprika: coin });
+      } else {
+        const existing = coinMap.get(key);
+        if (existing) coinMap.set(key, { ...existing, paprika: coin });
+        else coinMap.set(key, { paprika: coin });
+        if (address) addressMap.set(address, key);
+      }
     });
 
     geckoResults.forEach((coin) => {
       const key = normalizeKey(coin.symbol, coin.name);
-      const existing = coinMap.get(key);
-      if (existing) coinMap.set(key, { ...existing, gecko: coin });
-      else coinMap.set(key, { gecko: coin });
+      const address =
+        coin.id && isTokenAddress(coin.id) ? normalizeAddress(coin.id) : null;
+
+      if (address && addressMap.has(address)) {
+        const existingKey = addressMap.get(address)!;
+        const existing = coinMap.get(existingKey);
+        if (existing) coinMap.set(existingKey, { ...existing, gecko: coin });
+      } else {
+        const existing = coinMap.get(key);
+        if (existing) coinMap.set(key, { ...existing, gecko: coin });
+        else coinMap.set(key, { gecko: coin });
+        if (address) addressMap.set(address, key);
+      }
     });
 
     dexResults.forEach((pair) => {
       const key = normalizeKey(pair.baseToken.symbol, pair.baseToken.name);
-      const existing = coinMap.get(key);
-      if (existing) coinMap.set(key, { ...existing, dex: pair });
-      else coinMap.set(key, { dex: pair });
+      const address = normalizeAddress(pair.baseToken.address);
+
+      if (address && addressMap.has(address)) {
+        const existingKey = addressMap.get(address)!;
+        const existing = coinMap.get(existingKey);
+        if (existing) coinMap.set(existingKey, { ...existing, dex: pair });
+      } else {
+        const existing = coinMap.get(key);
+        if (existing) coinMap.set(key, { ...existing, dex: pair });
+        else coinMap.set(key, { dex: pair });
+        addressMap.set(address, key);
+      }
     });
 
     if (coinMap.size > 0) {
@@ -329,15 +380,35 @@ const AggregatorService = {
             paprika?.name || gecko?.name || dex?.baseToken.name || "";
           const symbol =
             paprika?.symbol || gecko?.symbol || dex?.baseToken.symbol || "";
-          const existingCoin = await CryptoCoinModel.findOne({ symbol, name });
+
+          const contractAddress = getContractAddress(paprika, gecko, dex);
+          let existingCoin = null;
+          if (contractAddress) {
+            const normalizedAddress = normalizeAddress(contractAddress);
+
+            existingCoin = await CryptoCoinModel.findOne({
+              $or: [
+                {
+                  "coinPaprikaData.contract_address.address": normalizedAddress,
+                },
+                { "dexscreenerData.baseToken.address": normalizedAddress },
+                { "coinGeckoData.id": normalizedAddress },
+                { symbol, name },
+              ],
+            });
+          } else existingCoin = await CryptoCoinModel.findOne({ symbol, name });
+
           const sources: Set<string> = new Set(existingCoin?.source || []);
           if (paprika) sources.add("coinpaprika");
           if (gecko) sources.add("coingecko");
           if (dex) sources.add("dexscreener");
 
+          const finalName = existingCoin?.name || name;
+          const finalSymbol = existingCoin?.symbol || symbol;
+
           const setData: any = {
-            name,
-            symbol,
+            name: finalName,
+            symbol: finalSymbol,
             source: Array.from(sources),
           };
           if (paprika) {
@@ -353,11 +424,21 @@ const AggregatorService = {
             setData.lastUpdatedDexScreener = new Date();
           }
 
-          const savedCoin = await CryptoCoinModel.findOneAndUpdate(
-            { symbol, name },
-            { $set: setData },
-            { upsert: true, new: true }
-          );
+          let savedCoin;
+          if (existingCoin) {
+            savedCoin = await CryptoCoinModel.findByIdAndUpdate(
+              existingCoin._id,
+              { $set: setData },
+              { new: true }
+            );
+          } else {
+            savedCoin = await CryptoCoinModel.findOneAndUpdate(
+              { symbol: finalSymbol, name: finalName },
+              { $set: setData },
+              { upsert: true, new: true }
+            );
+          }
+
           if (savedCoin) savedCoinsIds.push(savedCoin._id.toString());
         }
       } catch (error) {
