@@ -105,7 +105,7 @@ export const cryptoCoinSchema = z.object({
   lastUpdatedDexScreener: z.date().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
-  source: z.enum(["coinpaprika", "coingecko", "both"]).optional(),
+  source: z.array(z.enum(["coinpaprika", "coingecko", "dexscreener"])).optional(),
 });
 
 export const searchQueryParamsSchema = z.object({

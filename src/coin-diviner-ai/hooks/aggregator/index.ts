@@ -70,9 +70,10 @@ const AggregatorService = {
 
         if (cachedCoins && cachedCoins.length > 0) {
           const results: TCryptoCoin[] = cachedCoins.map((coin) => {
-            let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
-            if (coin.coinPaprikaData && coin.coinGeckoData) source = "both";
-            else if (coin.coinGeckoData) source = "coingecko";
+            const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] = [];
+            if (coin.coinPaprikaData) sources.push("coinpaprika");
+            if (coin.coinGeckoData) sources.push("coingecko");
+            if (coin.dexscreenerData) sources.push("dexscreener");
 
             return {
               _id: coin._id,
@@ -92,7 +93,7 @@ const AggregatorService = {
                 : undefined,
               createdAt: coin.createdAt,
               updatedAt: coin.updatedAt,
-              source,
+              source: sources.length > 0 ? sources : undefined,
             };
           });
 
@@ -253,6 +254,12 @@ const AggregatorService = {
       }
     }
 
+    const normalizeKey = (symbol: string, name: string): string => {
+      const normSymbol = symbol.toLowerCase().trim().replace(/\s+/g, "");
+      const normName = name.toLowerCase().trim().replace(/\s+/g, "");
+      return `${normSymbol}-${normName}`;
+    };
+
     const coinMap = new Map<
       string,
       {
@@ -263,18 +270,24 @@ const AggregatorService = {
     >();
 
     paprikaResults.forEach((coin) => {
-      const key = `${coin.symbol.toLowerCase()}-${coin.name.toLowerCase()}`;
-      coinMap.set(key, { ...coinMap.get(key), paprika: coin });
+      const key = normalizeKey(coin.symbol, coin.name);
+      const existing = coinMap.get(key);
+      if (existing) coinMap.set(key, { ...existing, paprika: coin });
+      else coinMap.set(key, { paprika: coin });
     });
 
     geckoResults.forEach((coin) => {
-      const key = `${coin.symbol.toLowerCase()}-${coin.name.toLowerCase()}`;
-      coinMap.set(key, { ...coinMap.get(key), gecko: coin });
+      const key = normalizeKey(coin.symbol, coin.name);
+      const existing = coinMap.get(key);
+      if (existing) coinMap.set(key, { ...existing, gecko: coin });
+      else coinMap.set(key, { gecko: coin });
     });
 
     dexResults.forEach((pair) => {
-      const key = `${pair.baseToken.symbol.toLowerCase()}-${pair.baseToken.name.toLowerCase()}`;
-      coinMap.set(key, { ...coinMap.get(key), dex: pair });
+      const key = normalizeKey(pair.baseToken.symbol, pair.baseToken.name);
+      const existing = coinMap.get(key);
+      if (existing) coinMap.set(key, { ...existing, dex: pair });
+      else coinMap.set(key, { dex: pair });
     });
 
     if (coinMap.size > 0) {
@@ -308,9 +321,15 @@ const AggregatorService = {
           const symbol =
             paprika?.symbol || gecko?.symbol || dex?.baseToken.symbol || "";
 
+          const sources: string[] = [];
+          if (paprika) sources.push("coinpaprika");
+          if (gecko) sources.push("coingecko");
+          if (dex) sources.push("dexscreener");
+
           const setData: any = {
             name,
             symbol,
+            source: sources,
           };
 
           if (paprika) {
@@ -343,9 +362,10 @@ const AggregatorService = {
         });
 
         const results: TCryptoCoin[] = savedCoins.map((coin) => {
-          let source: "coinpaprika" | "coingecko" | "both" = "coinpaprika";
-          if (coin.coinPaprikaData && coin.coinGeckoData) source = "both";
-          else if (coin.coinGeckoData) source = "coingecko";
+          const sources: ("coinpaprika" | "coingecko" | "dexscreener")[] = [];
+          if (coin.coinPaprikaData) sources.push("coinpaprika");
+          if (coin.coinGeckoData) sources.push("coingecko");
+          if (coin.dexscreenerData) sources.push("dexscreener");
 
           return {
             _id: coin._id,
@@ -365,7 +385,7 @@ const AggregatorService = {
               : undefined,
             createdAt: coin.createdAt,
             updatedAt: coin.updatedAt,
-            source,
+            source: sources.length > 0 ? sources : undefined,
           };
         });
 
