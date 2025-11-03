@@ -9,6 +9,7 @@ import type {
   TPriceResponse,
   TCoinPaprikaData,
   TCoinGeckoData,
+  TDexScreenerData,
   TCryptoCoin,
   TAllPricesResponse,
   TAllPriceHistoryResponse,
@@ -79,11 +80,15 @@ const AggregatorService = {
               symbol: coin.symbol,
               coinPaprikaData: coin.coinPaprikaData,
               coinGeckoData: coin.coinGeckoData,
+              dexscreenerData: coin.dexscreenerData,
               lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
                 ? coin.lastUpdatedCoinPaprika
                 : undefined,
               lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
                 ? coin.lastUpdatedCoinGecko
+                : undefined,
+              lastUpdatedDexScreener: coin.lastUpdatedDexScreener
+                ? coin.lastUpdatedDexScreener
                 : undefined,
               createdAt: coin.createdAt,
               updatedAt: coin.updatedAt,
@@ -106,16 +111,47 @@ const AggregatorService = {
 
     let paprikaResults: TCoinPaprikaData[] = [];
     let geckoResults: TCoinGeckoData[] = [];
+    let dexResults: TDexScreenerData[] = [];
 
     if (deepSearch) {
-      const [paprikaData, geckoData] = await Promise.allSettled([
+      const [paprikaData, geckoData, dexData] = await Promise.allSettled([
         CoinPaprikaService.search(query),
         CoinGeckoService.search(query),
+        DexScreenerService.search(query),
       ]);
       if (paprikaData.status === "fulfilled" && paprikaData.value?.currencies)
         paprikaResults = paprikaData.value.currencies;
       if (geckoData.status === "fulfilled" && geckoData.value?.coins)
         geckoResults = geckoData.value.coins;
+      if (dexData.status === "fulfilled" && dexData.value?.pairs) {
+        const uniquePairs = new Map<string, any>();
+        for (const pair of dexData.value.pairs) {
+          const key = `${pair.baseToken.symbol.toLowerCase()}-${pair.baseToken.name.toLowerCase()}`;
+          if (!uniquePairs.has(key)) {
+            uniquePairs.set(key, {
+              chainId: pair.chainId,
+              dexId: pair.dexId,
+              url: pair.url,
+              pairAddress: pair.pairAddress,
+              priceNative: pair.priceNative,
+              priceUsd: pair.priceUsd,
+              fdv: pair.fdv,
+              marketCap: pair.marketCap,
+              pairCreatedAt: pair.pairCreatedAt,
+              labels: pair.labels,
+              volume: pair.volume,
+              priceChange: pair.priceChange,
+              baseToken: pair.baseToken,
+              quoteToken: pair.quoteToken,
+              liquidity: pair.liquidity,
+              boosts: pair.boosts,
+              txns: pair.txns,
+              info: pair.info,
+            });
+          }
+        }
+        dexResults = Array.from(uniquePairs.values());
+      }
     } else {
       try {
         const paprikaResult = await CoinPaprikaService.search(query);
@@ -133,14 +169,35 @@ const AggregatorService = {
             );
             if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
               const pair = dexResult.pairs[0];
+              const dexData: TDexScreenerData = {
+                chainId: pair.chainId,
+                dexId: pair.dexId,
+                url: pair.url,
+                pairAddress: pair.pairAddress,
+                priceNative: pair.priceNative,
+                priceUsd: pair.priceUsd,
+                fdv: pair.fdv,
+                marketCap: pair.marketCap,
+                pairCreatedAt: pair.pairCreatedAt,
+                labels: pair.labels,
+                volume: pair.volume,
+                priceChange: pair.priceChange,
+                baseToken: pair.baseToken,
+                quoteToken: pair.quoteToken,
+                liquidity: pair.liquidity,
+                boosts: pair.boosts,
+                txns: pair.txns,
+                info: pair.info,
+              };
+              dexResults.push(dexData);
               const mockGeckoResult: TCoinGeckoData = {
                 id: pair.baseToken.address,
                 symbol: pair.baseToken.symbol,
                 name: pair.baseToken.name,
                 api_symbol: pair.baseToken.symbol,
                 market_cap_rank: null,
-                thumb: pair.info.imageUrl || "",
-                large: pair.info.imageUrl || "",
+                thumb: pair.info?.imageUrl || "",
+                large: pair.info?.imageUrl || "",
               };
               geckoResults.push(mockGeckoResult);
             }
@@ -155,13 +212,54 @@ const AggregatorService = {
           } catch (error) {
             console.warn("❌ CoinGecko search failed:", error);
           }
+
+          if (geckoResults.length === 0) {
+            try {
+              const dexResult = await DexScreenerService.search(query);
+              if (dexResult && dexResult.pairs && dexResult.pairs.length > 0) {
+                const uniquePairs = new Map<string, any>();
+                for (const pair of dexResult.pairs) {
+                  const key = `${pair.baseToken.symbol.toLowerCase()}-${pair.baseToken.name.toLowerCase()}`;
+                  if (!uniquePairs.has(key)) {
+                    uniquePairs.set(key, {
+                      chainId: pair.chainId,
+                      dexId: pair.dexId,
+                      url: pair.url,
+                      pairAddress: pair.pairAddress,
+                      priceNative: pair.priceNative,
+                      priceUsd: pair.priceUsd,
+                      fdv: pair.fdv,
+                      marketCap: pair.marketCap,
+                      pairCreatedAt: pair.pairCreatedAt,
+                      labels: pair.labels,
+                      volume: pair.volume,
+                      priceChange: pair.priceChange,
+                      baseToken: pair.baseToken,
+                      quoteToken: pair.quoteToken,
+                      liquidity: pair.liquidity,
+                      boosts: pair.boosts,
+                      txns: pair.txns,
+                      info: pair.info,
+                    });
+                  }
+                }
+                dexResults = Array.from(uniquePairs.values());
+              }
+            } catch (error) {
+              console.warn("❌ DexScreener search failed:", error);
+            }
+          }
         }
       }
     }
 
     const coinMap = new Map<
       string,
-      { paprika?: TCoinPaprikaData; gecko?: TCoinGeckoData }
+      {
+        paprika?: TCoinPaprikaData;
+        gecko?: TCoinGeckoData;
+        dex?: TDexScreenerData;
+      }
     >();
 
     paprikaResults.forEach((coin) => {
@@ -172,6 +270,11 @@ const AggregatorService = {
     geckoResults.forEach((coin) => {
       const key = `${coin.symbol.toLowerCase()}-${coin.name.toLowerCase()}`;
       coinMap.set(key, { ...coinMap.get(key), gecko: coin });
+    });
+
+    dexResults.forEach((pair) => {
+      const key = `${pair.baseToken.symbol.toLowerCase()}-${pair.baseToken.name.toLowerCase()}`;
+      coinMap.set(key, { ...coinMap.get(key), dex: pair });
     });
 
     if (coinMap.size > 0) {
@@ -199,9 +302,11 @@ const AggregatorService = {
 
       try {
         for (const [, data] of coinMap.entries()) {
-          const { paprika, gecko } = data;
-          const name = paprika?.name || gecko?.name || "";
-          const symbol = paprika?.symbol || gecko?.symbol || "";
+          const { paprika, gecko, dex } = data;
+          const name =
+            paprika?.name || gecko?.name || dex?.baseToken.name || "";
+          const symbol =
+            paprika?.symbol || gecko?.symbol || dex?.baseToken.symbol || "";
 
           const setData: any = {
             name,
@@ -215,6 +320,10 @@ const AggregatorService = {
           if (gecko) {
             setData.coinGeckoData = gecko;
             setData.lastUpdatedCoinGecko = new Date();
+          }
+          if (dex) {
+            setData.dexscreenerData = dex;
+            setData.lastUpdatedDexScreener = new Date();
           }
 
           const savedCoin = await CryptoCoinModel.findOneAndUpdate(
@@ -244,11 +353,15 @@ const AggregatorService = {
             symbol: coin.symbol,
             coinPaprikaData: coin.coinPaprikaData,
             coinGeckoData: coin.coinGeckoData,
+            dexscreenerData: coin.dexscreenerData,
             lastUpdatedCoinPaprika: coin.lastUpdatedCoinPaprika
               ? coin.lastUpdatedCoinPaprika
               : undefined,
             lastUpdatedCoinGecko: coin.lastUpdatedCoinGecko
               ? coin.lastUpdatedCoinGecko
+              : undefined,
+            lastUpdatedDexScreener: coin.lastUpdatedDexScreener
+              ? coin.lastUpdatedDexScreener
               : undefined,
             createdAt: coin.createdAt,
             updatedAt: coin.updatedAt,

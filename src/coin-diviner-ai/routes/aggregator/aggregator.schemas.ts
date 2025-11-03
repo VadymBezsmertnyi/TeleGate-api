@@ -27,6 +27,65 @@ export const coinGeckoDataSchema = z.object({
   large: z.string().optional().nullable(),
 });
 
+export const dexScreenerTokenSchema = z.object({
+  address: z.string(),
+  name: z.string(),
+  symbol: z.string(),
+});
+
+export const dexScreenerLiquiditySchema = z.object({
+  usd: z.number().optional().nullable(),
+  base: z.number().optional().nullable(),
+  quote: z.number().optional().nullable(),
+});
+
+export const dexScreenerInfoSchema = z.object({
+  imageUrl: z.string().optional().nullable(),
+  websites: z
+    .array(
+      z.object({
+        url: z.string().optional().nullable(),
+      })
+    )
+    .optional()
+    .nullable(),
+  socials: z
+    .array(
+      z.object({
+        platform: z.string().optional().nullable(),
+        handle: z.string().optional().nullable(),
+      })
+    )
+    .optional()
+    .nullable(),
+});
+
+export const dexScreenerDataSchema = z.object({
+  chainId: z.string(),
+  dexId: z.string(),
+  url: z.string().optional().nullable(),
+  pairAddress: z.string(),
+  priceNative: z.string().optional().nullable(),
+  priceUsd: z.string().optional().nullable(),
+  fdv: z.number().optional().nullable(),
+  marketCap: z.number().optional().nullable(),
+  pairCreatedAt: z.number().optional().nullable(),
+  labels: z.array(z.string()).optional().nullable(),
+  volume: z.record(z.string(), z.number()).optional().nullable(),
+  priceChange: z.record(z.string(), z.number()).optional().nullable(),
+  baseToken: dexScreenerTokenSchema,
+  quoteToken: dexScreenerTokenSchema,
+  liquidity: dexScreenerLiquiditySchema.optional().nullable(),
+  boosts: z
+    .object({
+      active: z.number().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  txns: z.record(z.string(), z.any()).optional().nullable(),
+  info: dexScreenerInfoSchema.optional().nullable(),
+});
+
 export const cryptoCoinSchema = z.object({
   _id: z.any().optional(),
   name: z.string(),
@@ -34,8 +93,10 @@ export const cryptoCoinSchema = z.object({
   binancePair: z.string().optional().nullable(),
   coinPaprikaData: coinPaprikaDataSchema.optional().nullable(),
   coinGeckoData: coinGeckoDataSchema.optional().nullable(),
+  dexscreenerData: dexScreenerDataSchema.optional().nullable(),
   lastUpdatedCoinPaprika: z.date().optional(),
   lastUpdatedCoinGecko: z.date().optional(),
+  lastUpdatedDexScreener: z.date().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
   source: z.enum(["coinpaprika", "coingecko", "both"]).optional(),
