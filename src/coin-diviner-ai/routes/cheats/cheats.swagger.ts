@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /coin-diviner-ai/api/cheats/test:
+ * /cheats/test:
  *   get:
  *     summary: Тестовий роут для перевірки роботи cheats функцій
  *     description: Виконує тестування функції getNewPumpTokens та повертає результат
