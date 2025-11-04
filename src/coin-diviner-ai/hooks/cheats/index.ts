@@ -1,27 +1,30 @@
 import axios from "axios";
+import dayjs from "dayjs";
+import { PumpTokenResponse } from "./cheats.types";
 
-interface PumpToken {
-  id: string;
-  name: string;
-  symbol: string;
-  created_unix_timestamp: number;
-  image_uri: string;
-  twitter_handle?: string;
-  metadata_uri?: string;
-}
+const MORALIS_API_KEY = process.env.MORALIS_API_KEY || "";
 
-export const getNewPumpTokens = async () => {
+const threeHoursInMs = 3 * 60 * 60 * 1000;
+
+export const getNewPumpTokensMoralis = async () => {
   try {
-    const { data } = await axios.get<PumpToken[]>(
-      "https://pump.fun/api/coins?sort=created_timestamp&limit=20"
+    const { data } = await axios.get<PumpTokenResponse>(
+      "https://solana-gateway.moralis.io/token/mainnet/exchange/pumpfun/new?limit=10",
+      { headers: { "X-API-Key": MORALIS_API_KEY } }
     );
+    console.log("✅ Успішно завантажено нові токени:", data.result);
 
-    const formatted = data.map((token) => ({
+    const formatted = data.result.map((token) => ({
       name: token.name,
       symbol: token.symbol,
-      createdAt: new Date(token.created_unix_timestamp * 1000).toLocaleString(),
-      image: token.image_uri,
-      twitter: token.twitter_handle || "—",
+      createdAt: new Date(token.createdAt).toLocaleString(),
+      spentTime: dayjs(
+        new Date().getTime() -
+          new Date(token.createdAt).getTime() -
+          threeHoursInMs
+      ).format("HH:mm:ss"),
+      tokenAddress: token.tokenAddress,
+      priceUsd: token.priceUsd || "N/A",
     }));
 
     console.table(formatted);

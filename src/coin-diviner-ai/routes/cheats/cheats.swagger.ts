@@ -1,9 +1,9 @@
 /**
  * @swagger
- * /cheats/test:
+ * /cheats/moralis/new-pump-tokens:
  *   get:
- *     summary: Тестовий роут для перевірки роботи cheats функцій
- *     description: Виконує тестування функції getNewPumpTokens та повертає результат
+ *     summary: Отримати нові pump токени через Moralis
+ *     description: Виконує отримання нових pump токенів за допомогою Moralis API та повертає результат
  *     tags: [Coin Diviner AI - Cheats]
  *     responses:
  *       200:
