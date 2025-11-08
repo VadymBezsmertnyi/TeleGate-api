@@ -9,13 +9,14 @@ const contactSendHistorySchema = new Schema(
     status: { type: String, enum: ["success", "failed"], required: true },
     sentAt: { type: Date, required: true },
     errorMessage: { type: String },
+    integrationId: { type: Types.ObjectId, ref: "Integration" },
   },
   { _id: false }
 );
 
 const companyContactSchema = new Schema(
   {
-    companyId: { type: Types.ObjectId, ref: "Company", required: true },
+    companyId: { type: Types.ObjectId, ref: "Company", default: null },
     fullName: { type: String, required: true },
     position: { type: String },
     email: { type: String },

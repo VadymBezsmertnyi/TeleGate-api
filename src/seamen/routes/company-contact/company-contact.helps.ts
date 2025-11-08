@@ -40,12 +40,19 @@ export const normalizeCompanyContact = (
         })
       : [];
 
+  const companyId =
+    typeof contact.companyId === "undefined" || contact.companyId === null
+      ? null
+      : String(contact.companyId);
+
   return companyContactSchema.parse({
     _id: String(contact._id),
-    company: {
-      id: String(contact.companyId),
-      name: companyName,
-    },
+    company: companyId
+      ? {
+          id: companyId,
+          name: companyName,
+        }
+      : null,
     fullName: contact.fullName,
     position:
       typeof contact.position === "undefined" ? null : contact.position,

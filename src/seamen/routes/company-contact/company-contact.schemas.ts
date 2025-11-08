@@ -59,7 +59,7 @@ export const companyContactStatisticsSchema = z.object({
 
 export const companyContactSchema = z.object({
   _id: z.any(),
-  company: companyContactCompanySchema,
+  company: companyContactCompanySchema.nullable(),
   fullName: z.string().min(1),
   position: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
@@ -75,7 +75,7 @@ export const companyContactSchema = z.object({
 export const companyContactListSchema = z.array(companyContactSchema);
 
 export const companyContactCreateSchema = z.object({
-  companyId: z.string().min(1),
+  companyId: z.string().min(1).optional(),
   fullName: z.string().min(1),
   position: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),

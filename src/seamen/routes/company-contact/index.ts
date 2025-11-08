@@ -121,7 +121,9 @@ router.get(
         contacts.map((contact) =>
           normalizeCompanyContact(
             contact,
-            companyMap.get(String(contact.companyId)) ?? null,
+            contact.companyId
+              ? companyMap.get(String(contact.companyId)) ?? null
+              : null,
             templateMap
           )
         )
@@ -183,7 +185,9 @@ router.get(
       ]);
       const normalized = normalizeCompanyContact(
         contact,
-        companyMap.get(String(contact.companyId)) ?? null,
+        contact.companyId
+          ? companyMap.get(String(contact.companyId)) ?? null
+          : null,
         templateMap
       );
       return res.status(200).json(normalized);
@@ -226,11 +230,19 @@ router.post(
       });
 
     try {
-      const company = await CompanyModel.findById(bodyValidation.data.companyId)
-        .lean()
-        .exec();
-      if (!company)
-        return res.status(404).json({ message: "Компанію не знайдено" });
+      let companyName: string | null = null;
+      let companyObjectId: Types.ObjectId | null = null;
+      if (bodyValidation.data.companyId) {
+        const company = await CompanyModel.findById(
+          bodyValidation.data.companyId
+        )
+          .lean()
+          .exec();
+        if (!company)
+          return res.status(404).json({ message: "Компанію не знайдено" });
+        companyName = company.name ?? null;
+        companyObjectId = new Types.ObjectId(bodyValidation.data.companyId);
+      }
 
       const templateIds =
         bodyValidation.data.sendHistory
@@ -247,7 +259,7 @@ router.post(
       const sendHistory = mapSendHistoryToDb(bodyValidation.data.sendHistory);
 
       const newContact = new CompanyContactModel({
-        companyId: new Types.ObjectId(bodyValidation.data.companyId),
+        companyId: companyObjectId,
         fullName: bodyValidation.data.fullName,
         position: bodyValidation.data.position ?? null,
         email: bodyValidation.data.email ?? null,
@@ -263,7 +275,7 @@ router.post(
       );
       const normalized = normalizeCompanyContact(
         savedObject,
-        company.name ?? null,
+        companyName,
         templateMap
       );
       return res.status(201).json(normalized);

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
+import { Types } from "mongoose";
 import {
   emailPasswordQuerySchema,
   emailSendSchema,
@@ -14,11 +15,35 @@ import {
 } from "./email.types";
 import { sendEmailFromIntegration } from "./email.helps";
 import TemplateModel from "../template/template.model";
+import CompanyContactModel from "../company-contact/company-contact.model";
 import "./email.swagger";
 
 dotenv.config();
 
 const router = Router();
+
+const buildHistoryEntry = (
+  data: EmailSendBodyT,
+  status: "success" | "failed",
+  error: string | null
+) => {
+  const history: Record<string, unknown> = {
+    type: data.templateId ? "template" : "custom",
+    status,
+    sentAt: new Date(),
+    integrationId: new Types.ObjectId(data.integrationId),
+  };
+  if (data.templateId) {
+    history.templateId = new Types.ObjectId(data.templateId);
+  } else {
+    history.subject = data.subject;
+    history.content = data.html;
+  }
+  if (error) {
+    history.errorMessage = error;
+  }
+  return history;
+};
 
 const validatePassword = (
   query: EmailPasswordQueryT,
@@ -104,8 +129,10 @@ router.post(
           ? nodemailerResult!.rejected.map((item) => item.toLowerCase())
           : []
       );
-
       const results: EmailSendResultT[] = [];
+      const companyObjectId = body.companyId
+        ? new Types.ObjectId(body.companyId)
+        : null;
 
       for (const email of normalizedEmails) {
         const status: "success" | "failed" =
@@ -116,9 +143,44 @@ router.post(
             : "failed";
         const errorMessage =
           status === "failed" ? sendResult.error ?? null : null;
+        const historyEntry = buildHistoryEntry(body, status, errorMessage);
+        const contactQuery: Record<string, unknown> = { email };
+        if (companyObjectId) contactQuery.companyId = companyObjectId;
+        else contactQuery.companyId = null;
+
+        const updateData: Record<string, unknown> = {
+          $setOnInsert: {
+            companyId: companyObjectId,
+            fullName: email,
+            email,
+            position: null,
+            phone: null,
+            notes: null,
+            tags: [],
+          },
+          $push: { sendHistory: historyEntry },
+        };
+
+        updateData.$set = {
+          companyId: companyObjectId,
+        };
+
+        const updatedContact = await CompanyContactModel.findOneAndUpdate(
+          contactQuery,
+          updateData,
+          {
+            upsert: true,
+            new: true,
+            lean: true,
+            setDefaultsOnInsert: true,
+          }
+        ).exec();
+
+        const contactId = updatedContact?._id ? String(updatedContact._id) : "";
 
         results.push({
           email,
+          contactId,
           status,
           error: errorMessage,
         });
