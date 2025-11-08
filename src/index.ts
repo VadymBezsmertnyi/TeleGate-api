@@ -36,6 +36,9 @@ import coinDivinerAiRedirectRouter from "./coin-diviner-ai/routes/redirect";
 import coinDivinerAiUserBalanceRouter from "./coin-diviner-ai/routes/user-balance";
 import coinDivinerAiCheatsRouter from "./coin-diviner-ai/routes/cheats";
 
+// Seamen routes
+import seamenTemplateRouter from "./seamen/routes/template";
+
 // start bot telegram
 import startBotTelegram from "./routes/bot-telegram/bot-telegram";
 
@@ -128,6 +131,8 @@ app.use("/coin-diviner-ai/api/telegram", coinDivinerAiTelegramRouter);
 app.use("/coin-diviner-ai/api/redirect", coinDivinerAiRedirectRouter);
 app.use("/coin-diviner-ai/api/user-balance", coinDivinerAiUserBalanceRouter);
 app.use("/coin-diviner-ai/api/cheats", coinDivinerAiCheatsRouter);
+// Seamen routes
+app.use("/api/seamen/template", seamenTemplateRouter);
 
 const startHelps = () => {
   try {
