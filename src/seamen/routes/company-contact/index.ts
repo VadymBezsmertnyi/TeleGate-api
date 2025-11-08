@@ -236,10 +236,10 @@ router.post(
         const company = await CompanyModel.findById(
           bodyValidation.data.companyId
         )
-          .lean()
-          .exec();
-        if (!company)
-          return res.status(404).json({ message: "Компанію не знайдено" });
+        .lean()
+        .exec();
+      if (!company)
+        return res.status(404).json({ message: "Компанію не знайдено" });
         companyName = company.name ?? null;
         companyObjectId = new Types.ObjectId(bodyValidation.data.companyId);
       }
