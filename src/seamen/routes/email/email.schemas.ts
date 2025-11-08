@@ -12,7 +12,6 @@ export const emailPasswordQuerySchema = z.object({
 
 export const emailSendSchema = z.object({
   integrationId: z.string().min(1),
-  companyId: z.string().min(1),
   to: z.array(emailAddressSchema).min(1),
   subject: z.string().min(1),
   html: z.string().min(1),
@@ -21,7 +20,6 @@ export const emailSendSchema = z.object({
 
 export const emailSendResultSchema = z.object({
   email: emailAddressSchema,
-  contactId: z.string().min(1),
   status: z.enum(["success", "failed"]),
   error: z.string().nullable().optional(),
 });
@@ -34,4 +32,3 @@ export const emailSendResponseSchema = z.object({
 export const emailMessageSchema = z.object({
   message: z.string(),
 });
-

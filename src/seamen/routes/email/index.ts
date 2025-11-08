@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
-import { Types } from "mongoose";
 import {
   emailPasswordQuerySchema,
   emailSendSchema,
@@ -14,7 +13,6 @@ import {
   EmailSendResultT,
 } from "./email.types";
 import { sendEmailFromIntegration } from "./email.helps";
-import CompanyContactModel from "../company-contact/company-contact.model";
 import TemplateModel from "../template/template.model";
 import "./email.swagger";
 
@@ -38,28 +36,6 @@ const validatePassword = (
   return true;
 };
 
-const buildHistoryEntry = (
-  data: EmailSendBodyT,
-  status: "success" | "failed",
-  error: string | null
-) => {
-  const history: Record<string, unknown> = {
-    type: data.templateId ? "template" : "custom",
-    status,
-    sentAt: new Date(),
-  };
-  if (data.templateId) {
-    history.templateId = new Types.ObjectId(data.templateId);
-  } else {
-    history.subject = data.subject;
-    history.content = data.html;
-  }
-  if (error) {
-    history.errorMessage = error;
-  }
-  return history;
-};
-
 router.post(
   "/send",
   async (
@@ -73,9 +49,11 @@ router.post(
   ) => {
     const queryValidation = emailPasswordQuerySchema.safeParse(req.query);
     if (!queryValidation.success) {
-      return res
-        .status(400)
-        .json({ message: queryValidation.error.issues[0]?.message ?? "Некоректні параметри запиту" });
+      return res.status(400).json({
+        message:
+          queryValidation.error.issues[0]?.message ??
+          "Некоректні параметри запиту",
+      });
     }
     if (!validatePassword(queryValidation.data, res)) {
       return res;
@@ -83,14 +61,14 @@ router.post(
 
     const bodyValidation = emailSendSchema.safeParse(req.body);
     if (!bodyValidation.success) {
-      return res
-        .status(400)
-        .json({ message: bodyValidation.error.issues[0]?.message ?? "Некоректні дані запиту" });
+      return res.status(400).json({
+        message:
+          bodyValidation.error.issues[0]?.message ?? "Некоректні дані запиту",
+      });
     }
     const body = bodyValidation.data;
 
     try {
-      const companyObjectId = new Types.ObjectId(body.companyId);
       const normalizedEmails = Array.from(
         new Set(body.to.map((item) => item.trim().toLowerCase()))
       );
@@ -99,9 +77,8 @@ router.post(
         const templateExists = await TemplateModel.exists({
           _id: body.templateId,
         }).exec();
-        if (!templateExists) {
+        if (!templateExists)
           return res.status(404).json({ message: "Шаблон не знайдено" });
-        }
       }
 
       const sendResult = await sendEmailFromIntegration(
@@ -139,28 +116,9 @@ router.post(
             : "failed";
         const errorMessage =
           status === "failed" ? sendResult.error ?? null : null;
-        const historyEntry = buildHistoryEntry(body, status, errorMessage);
-
-        const updatedContact = await CompanyContactModel.findOneAndUpdate(
-          { companyId: companyObjectId, email },
-          {
-            $setOnInsert: {
-              companyId: companyObjectId,
-              fullName: email,
-              email,
-              position: null,
-              phone: null,
-              notes: null,
-              tags: [],
-            },
-            $push: { sendHistory: historyEntry },
-          },
-          { upsert: true, new: true, lean: true, setDefaultsOnInsert: true }
-        ).exec();
 
         results.push({
           email,
-          contactId: String(updatedContact?._id ?? ""),
           status,
           error: errorMessage,
         });
@@ -184,12 +142,9 @@ router.post(
       console.warn("Помилка обробки відправки листів", error);
       const message =
         error instanceof Error ? error.message : "Невідома помилка";
-      return res
-        .status(500)
-        .json({ message: "Помилка сервера: " + message });
+      return res.status(500).json({ message: "Помилка сервера: " + message });
     }
   }
 );
 
 export default router;
-
