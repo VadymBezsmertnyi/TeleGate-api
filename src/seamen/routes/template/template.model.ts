@@ -10,6 +10,6 @@ const templateSM = new Schema(
   { timestamps: true }
 );
 
-const TemplateModel = model("Template", templateSM);
+const TemplateModel = model("seamen-template", templateSM);
 
 export default TemplateModel;

@@ -12,7 +12,6 @@ const companySchema = new Schema(
   { timestamps: true }
 );
 
-const CompanyModel = model("Company", companySchema);
+const CompanyModel = model("seamen-company", companySchema);
 
 export default CompanyModel;
-

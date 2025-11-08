@@ -21,7 +21,6 @@ const integrationSchema = new Schema(
   { timestamps: true }
 );
 
-const IntegrationModel = model("Integration", integrationSchema);
+const IntegrationModel = model("seamen-integration", integrationSchema);
 
 export default IntegrationModel;
-

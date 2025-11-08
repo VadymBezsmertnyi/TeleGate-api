@@ -28,6 +28,9 @@ const companyContactSchema = new Schema(
   { timestamps: true }
 );
 
-const CompanyContactModel = model("CompanyContact", companyContactSchema);
+const CompanyContactModel = model(
+  "seamen-company-contact",
+  companyContactSchema
+);
 
 export default CompanyContactModel;
