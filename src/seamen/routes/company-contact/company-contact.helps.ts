@@ -14,12 +14,22 @@ export const normalizeCompanyContact = (
   const sendHistory =
     Array.isArray(contact.sendHistory) && contact.sendHistory.length > 0
       ? contact.sendHistory.map((item: any) => {
-          const templateId = String(item.templateId);
+          const templateId =
+            typeof item.templateId === "undefined"
+              ? null
+              : String(item.templateId);
           return {
-            template: {
-              id: templateId,
-              name: templateMap.get(templateId) ?? null,
-            },
+            type: item.type,
+            template: templateId
+              ? {
+                  id: templateId,
+                  name: templateMap.get(templateId) ?? null,
+                }
+              : null,
+            subject:
+              typeof item.subject === "undefined" ? null : item.subject,
+            content:
+              typeof item.content === "undefined" ? null : item.content,
             status: item.status,
             sentAt: new Date(item.sentAt),
             errorMessage:

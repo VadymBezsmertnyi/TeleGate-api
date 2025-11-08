@@ -6,18 +6,46 @@ export const companyContactTemplateSchema = z.object({
 });
 
 export const companyContactSendHistorySchema = z.object({
-  template: companyContactTemplateSchema,
+  type: z.enum(["template", "custom"]),
+  template: companyContactTemplateSchema.nullable(),
+  subject: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
   status: z.enum(["success", "failed"]),
   sentAt: z.date(),
   errorMessage: z.string().nullable().optional(),
 });
 
-export const companyContactSendHistoryInputSchema = z.object({
-  templateId: z.string().min(1),
-  status: z.enum(["success", "failed"]),
-  sentAt: z.coerce.date(),
-  errorMessage: z.string().nullable().optional(),
-});
+export const companyContactSendHistoryInputSchema = z
+  .object({
+    type: z.enum(["template", "custom"]),
+    templateId: z.string().min(1).optional(),
+    subject: z.string().min(1).optional(),
+    content: z.string().min(1).optional(),
+    status: z.enum(["success", "failed"]),
+    sentAt: z.coerce.date(),
+    errorMessage: z.string().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "template" && !data.templateId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "templateId обов'язковий для типу template",
+        path: ["templateId"],
+      });
+    }
+    if (
+      data.type === "custom" &&
+      !data.subject &&
+      !data.content
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Потрібно вказати subject або content для кастомної відправки",
+        path: ["subject"],
+      });
+    }
+  });
 
 export const companyContactCompanySchema = z.object({
   id: z.string().min(1),

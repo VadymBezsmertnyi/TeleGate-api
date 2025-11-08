@@ -135,10 +135,10 @@ app.use("/coin-diviner-ai/api/redirect", coinDivinerAiRedirectRouter);
 app.use("/coin-diviner-ai/api/user-balance", coinDivinerAiUserBalanceRouter);
 app.use("/coin-diviner-ai/api/cheats", coinDivinerAiCheatsRouter);
 // Seamen routes
-app.use("/api/seamen/template", seamenTemplateRouter);
-app.use("/api/seamen/integration", seamenIntegrationRouter);
-app.use("/api/seamen/company", seamenCompanyRouter);
-app.use("/api/seamen/company-contact", seamenCompanyContactRouter);
+app.use("/seamen/api/template", seamenTemplateRouter);
+app.use("/seamen/api/integration", seamenIntegrationRouter);
+app.use("/seamen/api/company", seamenCompanyRouter);
+app.use("/seamen/api/company-contact", seamenCompanyContactRouter);
 
 const startHelps = () => {
   try {

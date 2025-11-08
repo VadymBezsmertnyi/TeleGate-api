@@ -2,7 +2,10 @@ import { Schema, model, Types } from "mongoose";
 
 const contactSendHistorySchema = new Schema(
   {
-    templateId: { type: Types.ObjectId, ref: "Template", required: true },
+    type: { type: String, enum: ["template", "custom"], required: true },
+    templateId: { type: Types.ObjectId, ref: "Template" },
+    subject: { type: String },
+    content: { type: String },
     status: { type: String, enum: ["success", "failed"], required: true },
     sentAt: { type: Date, required: true },
     errorMessage: { type: String },

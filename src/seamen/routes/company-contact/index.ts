@@ -56,7 +56,8 @@ const collectTemplateIds = (contacts: any[]) => {
   contacts.forEach((contact) => {
     if (Array.isArray(contact.sendHistory)) {
       contact.sendHistory.forEach((item: any) => {
-        if (item?.templateId) templateIds.add(String(item.templateId));
+        if (item?.type === "template" && item.templateId)
+          templateIds.add(String(item.templateId));
       });
     }
   });
@@ -73,7 +74,13 @@ const collectCompanyIds = (contacts: any[]) => {
 
 const mapSendHistoryToDb = (sendHistory: any[] | undefined) =>
   sendHistory?.map((item) => ({
-    templateId: new Types.ObjectId(item.templateId),
+    type: item.type,
+    templateId:
+      item.type === "template" && item.templateId
+        ? new Types.ObjectId(item.templateId)
+        : undefined,
+    subject: typeof item.subject === "undefined" ? null : item.subject,
+    content: typeof item.content === "undefined" ? null : item.content,
     status: item.status,
     sentAt: item.sentAt,
     errorMessage:
@@ -91,8 +98,9 @@ router.get(
     >,
     res: Response<CompanyContactListResponseT | CompanyContactMessageResponseT>
   ) => {
-    const queryValidation =
-      companyContactPasswordQuerySchema.safeParse(req.query);
+    const queryValidation = companyContactPasswordQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(400).json({
         message:
@@ -139,8 +147,9 @@ router.get(
     >,
     res: Response<CompanyContactT | CompanyContactMessageResponseT>
   ) => {
-    const queryValidation =
-      companyContactPasswordQuerySchema.safeParse(req.query);
+    const queryValidation = companyContactPasswordQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(400).json({
         message:
@@ -149,8 +158,7 @@ router.get(
       });
     if (!validateCompanyContactPassword(queryValidation.data, res)) return res;
 
-    const paramsValidation =
-      companyContactIdParamsSchema.safeParse(req.params);
+    const paramsValidation = companyContactIdParamsSchema.safeParse(req.params);
     if (!paramsValidation.success)
       return res.status(400).json({
         message:
@@ -199,8 +207,9 @@ router.post(
     >,
     res: Response<CompanyContactT | CompanyContactMessageResponseT>
   ) => {
-    const queryValidation =
-      companyContactPasswordQuerySchema.safeParse(req.query);
+    const queryValidation = companyContactPasswordQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(400).json({
         message:
@@ -217,16 +226,16 @@ router.post(
       });
 
     try {
-      const company = await CompanyModel.findById(
-        bodyValidation.data.companyId
-      )
+      const company = await CompanyModel.findById(bodyValidation.data.companyId)
         .lean()
         .exec();
       if (!company)
         return res.status(404).json({ message: "Компанію не знайдено" });
 
       const templateIds =
-        bodyValidation.data.sendHistory?.map((item) => item.templateId) ?? [];
+        bodyValidation.data.sendHistory
+          ?.filter((item) => item.type === "template")
+          .map((item) => item.templateId as string) ?? [];
       if (templateIds.length > 0) {
         const templatesCount = await TemplateModel.countDocuments({
           _id: { $in: templateIds },
@@ -278,8 +287,9 @@ router.put(
     >,
     res: Response<CompanyContactT | CompanyContactMessageResponseT>
   ) => {
-    const queryValidation =
-      companyContactPasswordQuerySchema.safeParse(req.query);
+    const queryValidation = companyContactPasswordQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(400).json({
         message:
@@ -288,8 +298,7 @@ router.put(
       });
     if (!validateCompanyContactPassword(queryValidation.data, res)) return res;
 
-    const paramsValidation =
-      companyContactIdParamsSchema.safeParse(req.params);
+    const paramsValidation = companyContactIdParamsSchema.safeParse(req.params);
     if (!paramsValidation.success)
       return res.status(400).json({
         message:
@@ -318,7 +327,9 @@ router.put(
       }
 
       const templateIds =
-        bodyValidation.data.sendHistory?.map((item) => item.templateId) ?? [];
+        bodyValidation.data.sendHistory
+          ?.filter((item) => item.type === "template")
+          .map((item) => item.templateId as string) ?? [];
       if (templateIds.length > 0) {
         const templatesCount = await TemplateModel.countDocuments({
           _id: { $in: templateIds },
@@ -406,8 +417,9 @@ router.delete(
     >,
     res: Response<CompanyContactMessageResponseT>
   ) => {
-    const queryValidation =
-      companyContactPasswordQuerySchema.safeParse(req.query);
+    const queryValidation = companyContactPasswordQuerySchema.safeParse(
+      req.query
+    );
     if (!queryValidation.success)
       return res.status(400).json({
         message:
@@ -416,8 +428,7 @@ router.delete(
       });
     if (!validateCompanyContactPassword(queryValidation.data, res)) return res;
 
-    const paramsValidation =
-      companyContactIdParamsSchema.safeParse(req.params);
+    const paramsValidation = companyContactIdParamsSchema.safeParse(req.params);
     if (!paramsValidation.success)
       return res.status(400).json({
         message:
@@ -443,4 +454,3 @@ router.delete(
 );
 
 export default router;
-
