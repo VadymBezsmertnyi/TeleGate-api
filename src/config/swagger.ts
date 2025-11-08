@@ -512,6 +512,7 @@ const options = {
   apis: [
     "./src/routes/**/*.swagger.ts",
     "./src/coin-diviner-ai/routes/**/*.swagger.ts",
+    "./src/seamen/routes/**/*.swagger.ts",
   ],
 };
 
