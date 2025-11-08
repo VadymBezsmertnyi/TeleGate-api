@@ -57,8 +57,8 @@ export const normalizeCompanyContact = (
       : [],
     sendHistory,
     statistics: {
-      success: sendHistory.filter((item) => item.status === "success").length,
-      failed: sendHistory.filter((item) => item.status === "failed").length,
+      success: sendHistory.filter((historyItem: any) => historyItem.status === "success").length,
+      failed: sendHistory.filter((historyItem: any) => historyItem.status === "failed").length,
     },
     createdAt: new Date(contact.createdAt),
     updatedAt: new Date(contact.updatedAt),

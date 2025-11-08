@@ -12,23 +12,35 @@
  *           type: string
  *           nullable: true
  *           description: Назва шаблону
- *     SeamenCompanyContactSendHistory:
- *       type: object
- *       properties:
- *         template:
- *           $ref: '#/components/schemas/SeamenCompanyContactTemplate'
- *         status:
- *           type: string
- *           enum: ["success", "failed"]
- *           description: Статус відправки
- *         sentAt:
- *           type: string
- *           format: date-time
- *           description: Час відправлення
- *         errorMessage:
- *           type: string
- *           nullable: true
- *           description: Повідомлення про помилку
+*     SeamenCompanyContactSendHistory:
+*       type: object
+*       properties:
+*         type:
+*           type: string
+*           enum: ["template", "custom"]
+*           description: Тип відправки
+*         template:
+*           $ref: '#/components/schemas/SeamenCompanyContactTemplate'
+*         subject:
+*           type: string
+*           nullable: true
+*           description: Тема листа
+*         content:
+*           type: string
+*           nullable: true
+*           description: Текст листа
+*         status:
+*           type: string
+*           enum: ["success", "failed"]
+*           description: Статус відправки
+*         sentAt:
+*           type: string
+*           format: date-time
+*           description: Час відправлення
+*         errorMessage:
+*           type: string
+*           nullable: true
+*           description: Повідомлення про помилку
  *     SeamenCompanyContact:
  *       type: object
  *       properties:
@@ -110,22 +122,29 @@
  *           type: array
  *           items:
  *             type: string
- *         sendHistory:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               templateId:
- *                 type: string
- *               status:
- *                 type: string
- *                 enum: ["success", "failed"]
- *               sentAt:
- *                 type: string
- *                 format: date-time
- *               errorMessage:
- *                 type: string
- *                 nullable: true
+*         sendHistory:
+*           type: array
+*           items:
+*             type: object
+*             properties:
+*               type:
+*                 type: string
+*                 enum: ["template", "custom"]
+*               templateId:
+*                 type: string
+*               subject:
+*                 type: string
+*               content:
+*                 type: string
+*               status:
+*                 type: string
+*                 enum: ["success", "failed"]
+*               sentAt:
+*                 type: string
+*                 format: date-time
+*               errorMessage:
+*                 type: string
+*                 nullable: true
  *     SeamenCompanyContactUpdateRequest:
  *       type: object
  *       properties:
@@ -149,22 +168,29 @@
  *           type: array
  *           items:
  *             type: string
- *         sendHistory:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               templateId:
- *                 type: string
- *               status:
- *                 type: string
- *                 enum: ["success", "failed"]
- *               sentAt:
- *                 type: string
- *                 format: date-time
- *               errorMessage:
- *                 type: string
- *                 nullable: true
+*         sendHistory:
+*           type: array
+*           items:
+*             type: object
+*             properties:
+*               type:
+*                 type: string
+*                 enum: ["template", "custom"]
+*               templateId:
+*                 type: string
+*               subject:
+*                 type: string
+*               content:
+*                 type: string
+*               status:
+*                 type: string
+*                 enum: ["success", "failed"]
+*               sentAt:
+*                 type: string
+*                 format: date-time
+*               errorMessage:
+*                 type: string
+*                 nullable: true
  *   parameters:
  *     SeamenCompanyContactPasswordToken:
  *       in: query
