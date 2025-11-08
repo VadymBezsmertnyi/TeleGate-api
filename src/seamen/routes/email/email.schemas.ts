@@ -12,7 +12,6 @@ export const emailPasswordQuerySchema = z.object({
 
 export const emailSendSchema = z.object({
   integrationId: z.string().min(1),
-  companyId: z.string().min(1).optional(),
   to: z.array(emailAddressSchema).min(1),
   subject: z.string().min(1),
   html: z.string().min(1),

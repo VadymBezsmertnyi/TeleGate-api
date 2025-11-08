@@ -130,9 +130,6 @@ router.post(
           : []
       );
       const results: EmailSendResultT[] = [];
-      const companyObjectId = body.companyId
-        ? new Types.ObjectId(body.companyId)
-        : null;
 
       for (const email of normalizedEmails) {
         const status: "success" | "failed" =
@@ -145,12 +142,9 @@ router.post(
           status === "failed" ? sendResult.error ?? null : null;
         const historyEntry = buildHistoryEntry(body, status, errorMessage);
         const contactQuery: Record<string, unknown> = { email };
-        if (companyObjectId) contactQuery.companyId = companyObjectId;
-        else contactQuery.companyId = null;
 
         const updateData: Record<string, unknown> = {
           $setOnInsert: {
-            companyId: companyObjectId,
             fullName: email,
             email,
             position: null,
@@ -159,10 +153,6 @@ router.post(
             tags: [],
           },
           $push: { sendHistory: historyEntry },
-        };
-
-        updateData.$set = {
-          companyId: companyObjectId,
         };
 
         const updatedContact = await CompanyContactModel.findOneAndUpdate(

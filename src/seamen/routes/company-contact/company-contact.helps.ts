@@ -50,7 +50,7 @@ export const normalizeCompanyContact = (
     company: companyId
       ? {
           id: companyId,
-          name: companyName,
+      name: companyName,
         }
       : null,
     fullName: contact.fullName,
