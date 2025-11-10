@@ -22,6 +22,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
         type: "buy",
         token: postTok.mint,
         amount: postAmount - preAmount,
+        date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
       };
     if (preAmount < postAmount)
       return {
@@ -29,6 +30,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
         type: "sell",
         token: postTok.mint,
         amount: preAmount - postAmount,
+        date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
       };
   }
 
@@ -67,12 +69,13 @@ export const generateTelegramMessage = (
   mint: string,
   nameOwnerWallet: string,
   type: string,
-  amount: number
+  amount: number,
+  date: Date | null
 ) => {
   const firstMainTitle = type === "buy" ? "🟢 Купівля" : "🔴 Продаж";
   const mainTitle = `${firstMainTitle} токена ${nameToken} (${nameOwnerWallet})`;
   const message = `Тип: ${type.toUpperCase()}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
-  const footer = "Токен ID:";
+  const footer = `Дата: ${date ? date.toUTCString() : "Невідома"}. Токен ID:`;
   const firstMessage = `${mainTitle}\n${message}\n${footer}`;
 
   return {

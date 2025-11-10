@@ -9,6 +9,7 @@ const walletSpyTransactionSM = new Schema(
     type: { type: String, enum: ["buy", "sell"] },
     tokenMint: { type: String },
     amount: { type: Number },
+    data: { type: Date, default: null },
   },
   { timestamps: true }
 );

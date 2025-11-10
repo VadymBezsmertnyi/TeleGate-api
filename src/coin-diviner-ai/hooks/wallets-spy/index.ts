@@ -54,7 +54,7 @@ const displayTransactionHistory = async (
         console.log(`No transaction data for signature: ${signature}`);
         continue;
       }
-
+      console.log(result);
       const buySellInfo = detectBuySell(result, wallet);
       if (!buySellInfo || !buySellInfo?.token) continue;
       if (buySellInfo?.token === "SOL") continue;
@@ -109,7 +109,8 @@ const displayTransactionHistory = async (
         buySellInfo.token,
         nameOwnerWallet,
         buySellInfo.type,
-        buySellInfo.amount
+        buySellInfo.amount,
+        buySellInfo.date
       );
 
       for (const notifyUser of notificationUsers) {
@@ -127,6 +128,7 @@ const displayTransactionHistory = async (
         type: buySellInfo.type,
         tokenMint: buySellInfo.token,
         amount: buySellInfo.amount,
+        date: buySellInfo.date ? buySellInfo.date : undefined,
       });
     }
   } catch (error) {
