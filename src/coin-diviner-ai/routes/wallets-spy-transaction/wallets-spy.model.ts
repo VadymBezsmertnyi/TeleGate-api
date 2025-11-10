@@ -6,7 +6,10 @@ const walletSpyTransactionSM = new Schema(
     signatureId: { type: String, required: true },
     nameOwnerWallet: { type: String },
     nameToken: { type: String },
-    type: { type: String, enum: ["buy", "sell"] },
+    type: {
+      type: String,
+      enum: ["buy", "sell", "transfer", "receive", "unknown"],
+    },
     tokenMint: { type: String },
     amount: { type: Number },
     data: { type: Date, default: null },

@@ -1,4 +1,4 @@
-import { createSolanaRpc, mainnet, Address } from "@solana/kit";
+import { createSolanaRpc, mainnet, Address, Signature } from "@solana/kit";
 import {
   checkHistoryNew,
   detectBuySell,
@@ -14,17 +14,26 @@ import { GetSignaturesForAddressTransaction } from "./wallets-spy.types";
 
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || "";
 const rpc = createSolanaRpc(mainnet(SOLANA_RPC_URL));
+const lastSignatureCache: Record<string, Signature> = {};
 
 /**
  * Отримує історію транзакцій для вказаної адреси гаманця.
  * Повертає масив об'єктів транзакцій.
  */
 const getTransactionHistory = async (address: string) => {
+  const lastSeenSig = lastSignatureCache[address];
   try {
     const transactions = rpc.getSignaturesForAddress(address as Address, {
-      limit: 5,
+      limit: 10,
+      commitment: "finalized",
+      ...(lastSeenSig ? { until: lastSeenSig } : {}),
     });
-    return await transactions.send();
+
+    const transactionsData = await transactions.send();
+    if (transactionsData && transactionsData.length > 0)
+      lastSignatureCache[address] = transactionsData[0].signature;
+
+    return transactionsData;
   } catch (error) {
     console.error("Error fetching transaction history:", error);
     return [];
@@ -52,12 +61,39 @@ const displayTransactionHistory = async (
       const result = await tx.send();
       if (!result) {
         console.log(`No transaction data for signature: ${signature}`);
+        await WalletSpyTransactionModel.create({
+          walletAddress: wallet,
+          signatureId: signature,
+          nameOwnerWallet,
+          nameToken: "Unknown",
+          type: "unknown",
+        });
         continue;
       }
-      console.log(result);
       const buySellInfo = detectBuySell(result, wallet);
-      if (!buySellInfo || !buySellInfo?.token) continue;
-      if (buySellInfo?.token === "SOL") continue;
+      if (!buySellInfo || !buySellInfo?.token) {
+        await WalletSpyTransactionModel.create({
+          walletAddress: wallet,
+          signatureId: signature,
+          nameOwnerWallet,
+          nameToken: "Unknown",
+          type: "unknown",
+        });
+        continue;
+      }
+      if (buySellInfo?.token === "SOL") {
+        await WalletSpyTransactionModel.create({
+          walletAddress: wallet,
+          signatureId: signature,
+          nameOwnerWallet,
+          nameToken: "SOL",
+          type: buySellInfo.type,
+          tokenMint: "SOL",
+          amount: buySellInfo.amount,
+          date: buySellInfo.date ? buySellInfo.date : undefined,
+        });
+        continue;
+      }
 
       let nameToken = "Unknown";
 
@@ -76,12 +112,12 @@ const displayTransactionHistory = async (
           ],
         });
         if (coinDB) {
-          if (coinDB.dexscreenerData?.baseToken?.name)
-            nameToken = coinDB.dexscreenerData.baseToken.name;
-          else if (coinDB.coinGeckoData?.name)
-            nameToken = coinDB.coinGeckoData.name;
-          else if (coinDB.coinPaprikaData?.name)
-            nameToken = coinDB.coinPaprikaData.name;
+          if (coinDB.dexscreenerData?.baseToken?.symbol)
+            nameToken = coinDB.dexscreenerData.baseToken.symbol;
+          else if (coinDB.coinGeckoData?.symbol)
+            nameToken = coinDB.coinGeckoData.symbol;
+          else if (coinDB.coinPaprikaData?.symbol)
+            nameToken = coinDB.coinPaprikaData.symbol;
         }
       }
 
@@ -137,9 +173,12 @@ const displayTransactionHistory = async (
 };
 
 export const checkWalletsSpy = async () => {
-  for (const walletData of WALLETS_FOR_SPY)
+  for (const walletData of WALLETS_FOR_SPY) {
+    if (!walletData.isActive) continue;
+
     await displayTransactionHistory(
       walletData.address,
       walletData.nameOwnerWallet
     );
+  }
 };

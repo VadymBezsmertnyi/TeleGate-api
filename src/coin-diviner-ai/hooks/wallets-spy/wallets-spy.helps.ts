@@ -19,7 +19,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
     if (!preTok || (preAmount === 0 && postAmount > 0))
       return {
         signature: tx.transaction.signatures[0],
-        type: "buy",
+        type: "sell",
         token: postTok.mint,
         amount: postAmount - preAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
@@ -27,7 +27,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
     if (preAmount < postAmount)
       return {
         signature: tx.transaction.signatures[0],
-        type: "sell",
+        type: "buy",
         token: postTok.mint,
         amount: preAmount - postAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
@@ -49,7 +49,7 @@ export const checkHistoryNew = async (
     for (const { signature } of history) {
       const transactionDB = await WalletSpyTransactionModel.findOne({
         walletAddress: wallet,
-        signature,
+        signatureId: signature.toString(),
       });
       if (transactionDB) continue;
       results.push(signature);
@@ -72,7 +72,8 @@ export const generateTelegramMessage = (
   amount: number,
   date: Date | null
 ) => {
-  const firstMainTitle = type === "buy" ? "🟢 Купівля" : "🔴 Продаж";
+  const firstMainTitle =
+    type.toLocaleLowerCase() === "buy" ? "🟢 Купівля" : "🔴 Продаж";
   const mainTitle = `${firstMainTitle} токена ${nameToken} (${nameOwnerWallet})`;
   const message = `Тип: ${type.toUpperCase()}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
   const footer = `Дата: ${date ? date.toUTCString() : "Невідома"}. Токен ID:`;
