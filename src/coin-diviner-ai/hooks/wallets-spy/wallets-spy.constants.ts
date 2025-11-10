@@ -6,7 +6,7 @@ export const WALLETS_FOR_SPY = [
   },
   {
     address: "BXAWg4JbaeyvAHpiyYQ3Xr3bUh6FsyDHwwSkB5dmyGF",
-    nameOwnerWallet: "fibs(Не вчасно продає)",
+    nameOwnerWallet: "fibs --->>>Не вчасно продає<<<---",
     isActive: true,
   },
 ];
