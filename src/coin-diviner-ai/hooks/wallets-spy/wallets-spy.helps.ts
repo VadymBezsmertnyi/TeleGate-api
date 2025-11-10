@@ -54,10 +54,22 @@ export const checkHistoryNew = async (
       if (transactionDB) continue;
       results.push(signature);
     }
-    return results;
+    const isNew =
+      history.length === results.length
+        ? (await WalletSpyTransactionModel.countDocuments({
+            walletAddress: wallet,
+          })) === 0
+        : false;
+    return {
+      transactions: results,
+      isNew,
+    };
   } catch (error) {
     console.error("Error checking new history:", error);
-    return [];
+    return {
+      transactions: [],
+      isNew: false,
+    };
   }
 };
 

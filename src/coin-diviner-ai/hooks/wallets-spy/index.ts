@@ -52,8 +52,11 @@ const displayTransactionHistory = async (
     const history = (await getTransactionHistory(
       wallet
     )) as GetSignaturesForAddressTransaction[];
-    const newTrasactions = await checkHistoryNew(history || [], wallet);
-    for (const signature of newTrasactions) {
+    const { transactions, isNew } = await checkHistoryNew(
+      history || [],
+      wallet
+    );
+    for (const signature of transactions) {
       const tx = rpc.getTransaction(signature, {
         maxSupportedTransactionVersion: 0,
         encoding: "jsonParsed",
@@ -148,14 +151,15 @@ const displayTransactionHistory = async (
         buySellInfo.amount,
         buySellInfo.date
       );
+      if (!isNew)
+        for (const notifyUser of notificationUsers) {
+          const chatId = notifyUser?.telegram?.chatId;
+          if (!chatId) continue;
 
-      for (const notifyUser of notificationUsers) {
-        const chatId = notifyUser?.telegram?.chatId;
-        if (!chatId) continue;
+          await sendMessageToChatId(chatId, firstMessage);
+          await sendMessageToChatId(chatId, secondMessage);
+        }
 
-        await sendMessageToChatId(chatId, firstMessage);
-        await sendMessageToChatId(chatId, secondMessage);
-      }
       await WalletSpyTransactionModel.create({
         walletAddress: wallet,
         signatureId: signature,

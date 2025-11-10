@@ -9,4 +9,10 @@ export const WALLETS_FOR_SPY = [
     nameOwnerWallet: "fibs --->>>Не вчасно продає<<<---",
     isActive: true,
   },
+  //66xALX4WMAEPSZHPbhx9qeHQS8zmEt3xNRgBhDze1YUm
+  {
+    address: "66xALX4WMAEPSZHPbhx9qeHQS8zmEt3xNRgBhDze1YUm",
+    nameOwnerWallet: "--->>>Успішно купляє та продає<<<---(НОВИЙ-1)",
+    isActive: true,
+  },
 ];
