@@ -24,7 +24,7 @@ const getTransactionHistory = async (address: string) => {
   const lastSeenSig = lastSignatureCache[address];
   try {
     const transactions = rpc.getSignaturesForAddress(address as Address, {
-      limit: 10,
+      limit: 5,
       commitment: "finalized",
       ...(lastSeenSig ? { until: lastSeenSig } : {}),
     });
