@@ -19,7 +19,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
     if (!preTok || (preAmount === 0 && postAmount > 0))
       return {
         signature: tx.transaction.signatures[0],
-        type: "sell",
+        type: "buy",
         token: postTok.mint,
         amount: postAmount - preAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
@@ -27,7 +27,7 @@ export const detectBuySell = (tx: any, wallet: string) => {
     if (preAmount < postAmount)
       return {
         signature: tx.transaction.signatures[0],
-        type: "buy",
+        type: "sell",
         token: postTok.mint,
         amount: preAmount - postAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
