@@ -24,10 +24,10 @@ export const detectBuySell = (tx: any, wallet: string) => {
         amount: postAmount - preAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
       };
-    if (preAmount < postAmount)
+    if (preAmount > 0 && preAmount < postAmount)
       return {
         signature: tx.transaction.signatures[0],
-        type: "buy",
+        type: "buy_more",
         token: postTok.mint,
         amount: postAmount - preAmount,
         date: tx.blockTime ? new Date(Number(tx.blockTime) * 1000) : null,
@@ -92,10 +92,23 @@ export const generateTelegramMessage = (
   amount: number,
   date: Date | null
 ) => {
-  const firstMainTitle =
-    type.toLocaleLowerCase() === "buy" ? "🟢 Купівля" : "🔴 Продаж";
+  const typeLower = type.toLocaleLowerCase();
+  let firstMainTitle: string;
+  let typeText: string;
+
+  if (typeLower === "buy") {
+    firstMainTitle = "🟢 Купівля";
+    typeText = "BUY";
+  } else if (typeLower === "buy_more") {
+    firstMainTitle = "🟡 Докупка";
+    typeText = "BUY_MORE";
+  } else {
+    firstMainTitle = "🔴 Продаж";
+    typeText = "SELL";
+  }
+
   const mainTitle = `${firstMainTitle} токена ${nameToken} (${nameOwnerWallet})`;
-  const message = `Тип: ${type.toUpperCase()}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
+  const message = `Тип: ${typeText}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
   const footer = `Дата: ${date ? date.toUTCString() : "Невідома"}. Токен ID:`;
   const firstMessage = `${mainTitle}\n${message}\n${footer}`;
 
