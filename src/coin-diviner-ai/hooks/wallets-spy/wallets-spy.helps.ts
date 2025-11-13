@@ -108,7 +108,8 @@ export const generateTelegramMessage = (
   }
 
   const mainTitle = `${firstMainTitle} токена ${nameToken} (${nameOwnerWallet})`;
-  const message = `Тип: ${typeText}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
+  const nameWalletLine = `Гаманець: ${nameOwnerWallet}`;
+  const message = `Назва гаманця: ${nameWalletLine}\nТип: ${typeText}\nМінт: ${mint}\nКількість: ${amount}\n\n`;
   const footer = `Дата: ${date ? date.toUTCString() : "Невідома"}. Токен ID:`;
   const firstMessage = `${mainTitle}\n${message}\n${footer}`;
 
