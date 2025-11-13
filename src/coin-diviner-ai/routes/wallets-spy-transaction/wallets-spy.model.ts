@@ -8,7 +8,7 @@ const walletSpyTransactionSM = new Schema(
     nameToken: { type: String },
     type: {
       type: String,
-      enum: ["buy", "sell", "transfer", "receive", "unknown"],
+      enum: ["buy", "sell", "transfer", "buy_more", "receive", "unknown"],
     },
     tokenMint: { type: String },
     amount: { type: Number },
