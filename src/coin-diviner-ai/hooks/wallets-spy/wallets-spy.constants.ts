@@ -17,6 +17,11 @@ export const WALLETS_FOR_SPY = [
   {
     address: "6mWEJG9LoRdto8TwTdZxmnJpkXpTsEerizcGiCNZvzXd",
     nameOwnerWallet: "slingoor.usduc --->>>НОВИЙ-2<<<---",
+    isActive: false,
+  },
+  {
+    address: "F6iorPhjNvAtEzwCDsJEj95Jq343XxWfuZtjp2j8zRGp",
+    nameOwnerWallet: "--->>>НОВИЙ-3<<<---",
     isActive: true,
   },
 ];
