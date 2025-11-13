@@ -6,22 +6,17 @@ export const WALLETS_FOR_SPY = [
   },
   {
     address: "BXAWg4JbaeyvAHpiyYQ3Xr3bUh6FsyDHwwSkB5dmyGF",
-    nameOwnerWallet: "fibs --->>>Не вчасно продає<<<---",
+    nameOwnerWallet: "fibs(Не вчасно продає)",
     isActive: true,
   },
   {
-    address: "66xALX4WMAEPSZHPbhx9qeHQS8zmEt3xNRgBhDze1YUm",
-    nameOwnerWallet: "--->>>НОВИЙ-1<<<---()",
-    isActive: false,
-  },
-  {
     address: "6mWEJG9LoRdto8TwTdZxmnJpkXpTsEerizcGiCNZvzXd",
-    nameOwnerWallet: "slingoor.usduc --->>>НОВИЙ-2<<<---",
+    nameOwnerWallet: "slingoor.usduc(Мутний)",
     isActive: false,
   },
   {
     address: "F6iorPhjNvAtEzwCDsJEj95Jq343XxWfuZtjp2j8zRGp",
-    nameOwnerWallet: "--->>>НОВИЙ-3<<<---",
+    nameOwnerWallet: "F6iorP...j8zRGp(НОВИЙ-3)",
     isActive: true,
   },
 ];
