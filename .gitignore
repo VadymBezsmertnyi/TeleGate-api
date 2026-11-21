@@ -4,3 +4,11 @@ build/
 .DS_Store
 package-lock.json
 yarn.lock
+
+# credentials
+keys/
+serviceAccounts/
+*.p8
+*.pem
+.env.*
+!.env.example

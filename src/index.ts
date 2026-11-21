@@ -70,7 +70,7 @@ app.use("/static", express.static("public"));
 app.set("view engine", "ejs");
 
 const PORT = process.env.PORT || 5008;
-const db = `mongodb://localhost:27017/telegate`;
+const db = process.env.MONGODB_URI || "mongodb://localhost:27017/telegate";
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 120 });
 
 mongoose
@@ -100,7 +100,7 @@ app.use(
 app.listen(PORT, () => {
   const isProduction = process.env.NODE_ENV === "production";
   const baseUrl = isProduction
-    ? "https://api.example.com"
+    ? process.env.API_BASE_URL || "https://api.example.com"
     : `http://localhost:${PORT}`;
 
   console.warn(`🚀 Express is listening at ${baseUrl}`);
